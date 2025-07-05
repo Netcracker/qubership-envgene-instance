@@ -1,0 +1,20 @@
+# The contents of this file is generated from template artifact: qubership_envgene_templates.
+# Contents will be overwritten by next generation.
+# Please modify this contents only for development purposes or as workaround.
+BSS_NAMESPACE: "e01-bss" # from namespace level
+CLOUD_DASHBOARD_URL: "https://dashboard.anru-test-01.managed.temp.cloud"  # from cloud level
+CMDB_URL: "https://anru-test-01.managed.temp.cloud" # from cloud level
+CORE_NAMESPACE: "e01-core" # from namespace level
+ENVGENE_CONFIG_REF_NAME: "main" # from namespace level
+ENVGENE_CONFIG_TAG: "" # from namespace level
+ENV_NAME: "e01" # from cloud level
+GRAFANA_UI_URL: "https://anru-test-01.managed.temp.cloud" # from cloud level
+GRAYLOG_UI_URL: "https://anru-test-01.managed.temp.cloud" # from cloud level
+POSTGRES_DBA_PASSWORD: "test" # from cloud level
+POSTGRES_DBA_USER: "test" # from cloud level
+PRODUCTION_MODE: "false" # from cloud level
+TBAPI_URL: "http://test" # from cloud level
+TRACING_UI_URL: "https://anru-test-01.managed.temp.cloud" # from cloud level
+VALUE: "true" # from cloud level
+key1: "value2" # from cloud level
+test_parameter: "e01-bss" # from namespace level

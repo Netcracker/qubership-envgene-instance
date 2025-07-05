@@ -1,0 +1,5 @@
+# The contents of this file is generated from template artifact: qubership_envgene_templates.
+# Contents will be overwritten by next generation.
+# Please modify this contents only for development purposes or as workaround.
+BSS_NAMESPACE: "e01-bss"  # from namespace level
+CORE_NAMESPACE: "e01-core" # from namespace level
