@@ -306,16 +306,12 @@ jobs:
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
           
-          CI_PROJECT_DIR="$CI_PROJECT_DIR"
           export CI_PROJECT_DIR
           
           ENV_TEMPLATE_VERSION="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_VERSION }}"
           export ENV_TEMPLATE_VERSION
           
-          GROUP_ID="$GROUP_ID"
           export GROUP_ID
-          
-          ARTIFACT_ID="$ARTIFACT_ID"
           export ARTIFACT_ID
           
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
@@ -345,25 +341,12 @@ jobs:
           COMMIT_ENV="true"
           export COMMIT_ENV
           
-          SECRET_KEY="${SECRET_KEY}"
           export SECRET_KEY
-          
-          GITHUB_ACTIONS="${GITHUB_ACTIONS}"
           export GITHUB_ACTIONS
-          
-          GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
           export GITHUB_REPOSITORY
-          
-          GITHUB_REF_NAME="${GITHUB_REF_NAME}"
           export GITHUB_REF_NAME
-          
-          GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
           export GITHUB_USER_EMAIL
-          
-          GITHUB_USER_NAME="${GITHUB_USER_NAME}"
           export GITHUB_USER_NAME
-          
-          GITHUB_TOKEN="${GITHUB_TOKEN}"
           export GITHUB_TOKEN
           
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
@@ -449,7 +432,6 @@ jobs:
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
           
-          ENV_TEMPLATE_TEST="$ENV_TEMPLATE_TEST"
           export ENV_TEMPLATE_TEST
           
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
@@ -461,16 +443,11 @@ jobs:
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
           
-          CI_PROJECT_DIR="$CI_PROJECT_DIR"
           export CI_PROJECT_DIR
           
-          ENV_TEMPLATE_VERSION="$ENV_TEMPLATE_VERSION"
           export ENV_TEMPLATE_VERSION
           
-          GROUP_ID="$GROUP_ID"
           export GROUP_ID
-          
-          ARTIFACT_ID="$ARTIFACT_ID"
           export ARTIFACT_ID
           
           GROUP_ID=""
@@ -506,25 +483,12 @@ jobs:
           COMMIT_ENV="true"
           export COMMIT_ENV
           
-          SECRET_KEY="${SECRET_KEY}"
           export SECRET_KEY
-          
-          GITHUB_ACTIONS="${GITHUB_ACTIONS}"
           export GITHUB_ACTIONS
-          
-          GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
           export GITHUB_REPOSITORY
-          
-          GITHUB_REF_NAME="${GITHUB_REF_NAME}"
           export GITHUB_REF_NAME
-          
-          GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
           export GITHUB_USER_EMAIL
-          
-          GITHUB_USER_NAME="${GITHUB_USER_NAME}"
           export GITHUB_USER_NAME
-          
-          GITHUB_TOKEN="${GITHUB_TOKEN}"
           export GITHUB_TOKEN
           
           /module/scripts/prepare.sh "generate_effective_set.yaml"
@@ -590,7 +554,6 @@ jobs:
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
           
-          ENV_TEMPLATE_TEST="$ENV_TEMPLATE_TEST"
           export ENV_TEMPLATE_TEST
           
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
@@ -602,16 +565,11 @@ jobs:
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
           
-          CI_PROJECT_DIR="$CI_PROJECT_DIR"
           export CI_PROJECT_DIR
           
-          ENV_TEMPLATE_VERSION="$ENV_TEMPLATE_VERSION"
           export ENV_TEMPLATE_VERSION
           
-          GROUP_ID="$GROUP_ID"
           export GROUP_ID
-          
-          ARTIFACT_ID="$ARTIFACT_ID"
           export ARTIFACT_ID
           
           GROUP_ID=""
@@ -647,25 +605,12 @@ jobs:
           COMMIT_ENV="true"
           export COMMIT_ENV
           
-          SECRET_KEY="${SECRET_KEY}"
           export SECRET_KEY
-          
-          GITHUB_ACTIONS="${GITHUB_ACTIONS}"
           export GITHUB_ACTIONS
-          
-          GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
           export GITHUB_REPOSITORY
-          
-          GITHUB_REF_NAME="${GITHUB_REF_NAME}"
           export GITHUB_REF_NAME
-          
-          GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
           export GITHUB_USER_EMAIL
-          
-          GITHUB_USER_NAME="${GITHUB_USER_NAME}"
           export GITHUB_USER_NAME
-          
-          GITHUB_TOKEN="${GITHUB_TOKEN}"
           export GITHUB_TOKEN
                     
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
