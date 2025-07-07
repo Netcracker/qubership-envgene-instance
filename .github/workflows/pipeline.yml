@@ -46,6 +46,11 @@ on:
         description: "Environment template version"
         required: false
         default: ""
+      commit_message:
+        description: "Commit message"
+        required: false
+        default: ""
+        type: string
 
 env:
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
@@ -87,16 +92,18 @@ jobs:
 
       - name: Read input variables
         run: |
-          echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
-          echo "ENV_INVENTORY_INIT=${{ github.event.inputs.ENV_INVENTORY_INIT }}" >> $GITHUB_ENV
-          echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
-          echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
-          echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
-          echo "GENERATE_EFFECTIVE_SET=${{ github.event.inputs.GENERATE_EFFECTIVE_SET }}" >> $GITHUB_ENV
-          echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
-          echo "COMMIT_MESSAGE=${{ github.event.inputs.commit_message }}" >> $GITHUB_ENV
-          echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
-          python .github/scripts/load_env_variables.py .github/vars.yaml >> $GITHUB_ENV
+          {
+            echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}"
+            echo "ENV_INVENTORY_INIT=${{ github.event.inputs.ENV_INVENTORY_INIT }}"
+            echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}"
+            echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}"
+            echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}"
+            echo "GENERATE_EFFECTIVE_SET=${{ github.event.inputs.GENERATE_EFFECTIVE_SET }}"
+            echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}"
+            echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}"
+            echo "COMMIT_MESSAGE=${{ github.event.inputs.commit_message }}"
+            python .github/scripts/load_env_variables.py .github/vars.yaml
+          } >> $GITHUB_ENV
 
       - name: Input Parameters
         run: |
@@ -153,7 +160,8 @@ jobs:
 
       - name: EnvGene parameters validation
         run: |
-          export ENV_NAMES="${{ matrix.environment }}"
+          ENV_NAMES="${{ matrix.environment }}"
+          export ENV_NAMES
           python /module/scripts/github_actions.py validate_pipeline
 
   generate_inventory:
@@ -193,15 +201,21 @@ jobs:
       - name: Generate inventory
         run: |
           
-          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENV_NAME=$ENVIRONMENT_NAME
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
           
-          export ENV_GENERATION_PARAMS="$(jq -nc \
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+          
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+          
+          ENV_GENERATION_PARAMS
+          ENV_GENERATION_PARAMS="$(jq -nc \
             --arg sd_source_type "${SD_SOURCE_TYPE:-""}" \
             --arg sd_version "${SD_VERSION:-""}" \
             --arg sd_data "${SD_DATA:-"{}"}" \
-            --arg sd_repo_merge_mode "${SD_REPO_MERGE_MODE:-""}"
+            --arg sd_repo_merge_mode "${SD_REPO_MERGE_MODE:-""}" \
             --arg sd_delta "${SD_DELTA:-""}" \
             --arg env_inventory_init "${ENV_INVENTORY_INIT:-""}" \
             --arg env_specific_params "${ENV_SPECIFIC_PARAMETERS:-""}" \
@@ -219,6 +233,7 @@ jobs:
               "ENV_TEMPLATE_VERSION": $env_template_version
             }'
           )"
+          export ENV_GENERATION_PARAMS
           
           python3 /build_env/scripts/build_env/env_inventory_generation.py
 
@@ -273,32 +288,83 @@ jobs:
       
       - name: Build Env
         run: |
-          export ENV_NAMES=${{ matrix.environment }}
-          export ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" "{print \$NF}")
-          export ENV_TEMPLATE_TEST=${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}
-          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENV_NAME=$ENVIRONMENT_NAME
-          export CI_PROJECT_DIR="$CI_PROJECT_DIR"
-          export ENV_TEMPLATE_VERSION=${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_VERSION }}
-          export GROUP_ID="$GROUP_ID"
-          export ARTIFACT_ID="$ARTIFACT_ID"
-          export INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
-          export module_ansible_dir="/module/ansible"
-          export module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
-          export module_ansible_cfg="/module/ansible/ansible.cfg"
-          export module_config_default="/module/templates/defaults.yaml"
-          export envgen_args=" -vvv"
-          export envgen_debug="true"
-          export GIT_STRATEGY="none"
-          export COMMIT_ENV="true"
-          export SECRET_KEY="${SECRET_KEY}"
-          export GITHUB_ACTIONS="${GITHUB_ACTIONS}"
-          export GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
-          export GITHUB_REF_NAME="${GITHUB_REF_NAME}"
-          export GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
-          export GITHUB_USER_NAME="${GITHUB_USER_NAME}" 
-          export GITHUB_TOKEN="${GITHUB_TOKEN}"
+          ENV_NAMES="${{ matrix.environment }}"
+          export ENV_NAMES
+          
+          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+          export ENV_NAME_SHORT
+          
+          ENV_TEMPLATE_TEST="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}"
+          export ENV_TEMPLATE_TEST
+          
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+          
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+          
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+          
+          CI_PROJECT_DIR="$CI_PROJECT_DIR"
+          export CI_PROJECT_DIR
+          
+          ENV_TEMPLATE_VERSION="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_VERSION }}"
+          export ENV_TEMPLATE_VERSION
+          
+          GROUP_ID="$GROUP_ID"
+          export GROUP_ID
+          
+          ARTIFACT_ID="$ARTIFACT_ID"
+          export ARTIFACT_ID
+          
+          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
+          export INSTANCES_DIR
+          
+          module_ansible_dir="/module/ansible"
+          export module_ansible_dir
+          
+          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
+          export module_inventory
+          
+          module_ansible_cfg="/module/ansible/ansible.cfg"
+          export module_ansible_cfg
+          
+          module_config_default="/module/templates/defaults.yaml"
+          export module_config_default
+          
+          envgen_args=" -vvv"
+          export envgen_args
+          
+          envgen_debug="true"
+          export envgen_debug
+          
+          GIT_STRATEGY="none"
+          export GIT_STRATEGY
+          
+          COMMIT_ENV="true"
+          export COMMIT_ENV
+          
+          SECRET_KEY="${SECRET_KEY}"
+          export SECRET_KEY
+          
+          GITHUB_ACTIONS="${GITHUB_ACTIONS}"
+          export GITHUB_ACTIONS
+          
+          GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
+          export GITHUB_REPOSITORY
+          
+          GITHUB_REF_NAME="${GITHUB_REF_NAME}"
+          export GITHUB_REF_NAME
+          
+          GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
+          export GITHUB_USER_EMAIL
+          
+          GITHUB_USER_NAME="${GITHUB_USER_NAME}"
+          export GITHUB_USER_NAME
+          
+          GITHUB_TOKEN="${GITHUB_TOKEN}"
+          export GITHUB_TOKEN
           
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
@@ -315,7 +381,8 @@ jobs:
             env_name=$(cat set_variable.txt)
             sed -i "s|\\\"envgeneNullValue\\\"|\\\"test_value\\\"|g" "${CI_PROJECT_DIR}/environments/$env_name/Credentials/credentials.yml"
           else
-            export env_name=$(echo "$ENV_NAME" | awk -F "/" "{print \$NF}")
+            env_name=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+            export env_name
           fi
     
           env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
@@ -376,35 +443,89 @@ jobs:
       - name: Generate Effective Set
         run: |
           
-          export ENV_NAMES=${{ matrix.environment }}
-          export ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" "{print \$NF}")
-          export ENV_TEMPLATE_TEST="$ENV_TEMPLATE_TEST"
-          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENV_NAME=$ENVIRONMENT_NAME
+          ENV_NAMES="${{ matrix.environment }}"
+          export ENV_NAMES
           
-          export CI_PROJECT_DIR="$CI_PROJECT_DIR"
-          export ENV_TEMPLATE_VERSION="$ENV_TEMPLATE_VERSION"
-          export GROUP_ID="$GROUP_ID"
-          export ARTIFACT_ID="$ARTIFACT_ID"
-          export GROUP_ID=""
-          export ARTIFACT_ID=""
-          export INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
-          export module_ansible_dir="/module/ansible"
-          export module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
-          export module_ansible_cfg="/module/ansible/ansible.cfg"
-          export module_config_default="/module/templates/defaults.yaml"
-          export envgen_args=" -vvv"
-          export envgen_debug="true"
-          export GIT_STRATEGY="none"
-          export COMMIT_ENV="true"
-          export SECRET_KEY="${SECRET_KEY}"
-          export GITHUB_ACTIONS="${GITHUB_ACTIONS}"
-          export GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
-          export GITHUB_REF_NAME="${GITHUB_REF_NAME}"
-          export GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
-          export GITHUB_USER_NAME="${GITHUB_USER_NAME}" 
-          export GITHUB_TOKEN="${GITHUB_TOKEN}"
+          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+          export ENV_NAME_SHORT
+          
+          ENV_TEMPLATE_TEST="$ENV_TEMPLATE_TEST"
+          export ENV_TEMPLATE_TEST
+          
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+          
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+          
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+          
+          CI_PROJECT_DIR="$CI_PROJECT_DIR"
+          export CI_PROJECT_DIR
+          
+          ENV_TEMPLATE_VERSION="$ENV_TEMPLATE_VERSION"
+          export ENV_TEMPLATE_VERSION
+          
+          GROUP_ID="$GROUP_ID"
+          export GROUP_ID
+          
+          ARTIFACT_ID="$ARTIFACT_ID"
+          export ARTIFACT_ID
+          
+          GROUP_ID=""
+          export GROUP_ID
+          
+          ARTIFACT_ID=""
+          export ARTIFACT_ID
+          
+          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
+          export INSTANCES_DIR
+          
+          module_ansible_dir="/module/ansible"
+          export module_ansible_dir
+          
+          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
+          export module_inventory
+          
+          module_ansible_cfg="/module/ansible/ansible.cfg"
+          export module_ansible_cfg
+          
+          module_config_default="/module/templates/defaults.yaml"
+          export module_config_default
+          
+          envgen_args=" -vvv"
+          export envgen_args
+          
+          envgen_debug="true"
+          export envgen_debug
+          
+          GIT_STRATEGY="none"
+          export GIT_STRATEGY
+          
+          COMMIT_ENV="true"
+          export COMMIT_ENV
+          
+          SECRET_KEY="${SECRET_KEY}"
+          export SECRET_KEY
+          
+          GITHUB_ACTIONS="${GITHUB_ACTIONS}"
+          export GITHUB_ACTIONS
+          
+          GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
+          export GITHUB_REPOSITORY
+          
+          GITHUB_REF_NAME="${GITHUB_REF_NAME}"
+          export GITHUB_REF_NAME
+          
+          GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
+          export GITHUB_USER_EMAIL
+          
+          GITHUB_USER_NAME="${GITHUB_USER_NAME}"
+          export GITHUB_USER_NAME
+          
+          GITHUB_TOKEN="${GITHUB_TOKEN}"
+          export GITHUB_TOKEN
           
           /module/scripts/prepare.sh "generate_effective_set.yaml"
           
@@ -466,40 +587,96 @@ jobs:
 
       - name: Git Commit
         run: |
-          export ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" "{print \$NF}")
-          export ENV_TEMPLATE_TEST="$ENV_TEMPLATE_TEST"
-          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENV_NAME=$ENVIRONMENT_NAME
-          export CI_PROJECT_DIR="$CI_PROJECT_DIR"
-          export ENV_TEMPLATE_VERSION="$ENV_TEMPLATE_VERSION"
-          export GROUP_ID="$GROUP_ID"
-          export ARTIFACT_ID="$ARTIFACT_ID"
-          export GROUP_ID=""
-          export ARTIFACT_ID=""
-          export INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
-          export module_ansible_dir="/module/ansible"
-          export module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
-          export module_ansible_cfg="/module/ansible/ansible.cfg"
-          export module_config_default="/module/templates/defaults.yaml"
-          export envgen_args=" -vvv"
-          export envgen_debug="true"
-          export GIT_STRATEGY="none"
-          export COMMIT_ENV="true"
-          export SECRET_KEY="${SECRET_KEY}"
-          export GITHUB_ACTIONS="${GITHUB_ACTIONS}"
-          export GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
-          export GITHUB_REF_NAME="${GITHUB_REF_NAME}"
-          export GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
-          export GITHUB_USER_NAME="${GITHUB_USER_NAME}" 
-          export GITHUB_TOKEN="${GITHUB_TOKEN}"
+          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+          export ENV_NAME_SHORT
+          
+          ENV_TEMPLATE_TEST="$ENV_TEMPLATE_TEST"
+          export ENV_TEMPLATE_TEST
+          
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+          
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+          
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+          
+          CI_PROJECT_DIR="$CI_PROJECT_DIR"
+          export CI_PROJECT_DIR
+          
+          ENV_TEMPLATE_VERSION="$ENV_TEMPLATE_VERSION"
+          export ENV_TEMPLATE_VERSION
+          
+          GROUP_ID="$GROUP_ID"
+          export GROUP_ID
+          
+          ARTIFACT_ID="$ARTIFACT_ID"
+          export ARTIFACT_ID
+          
+          GROUP_ID=""
+          export GROUP_ID
+          
+          ARTIFACT_ID=""
+          export ARTIFACT_ID
+          
+          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
+          export INSTANCES_DIR
+          
+          module_ansible_dir="/module/ansible"
+          export module_ansible_dir
+          
+          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
+          export module_inventory
+          
+          module_ansible_cfg="/module/ansible/ansible.cfg"
+          export module_ansible_cfg
+          
+          module_config_default="/module/templates/defaults.yaml"
+          export module_config_default
+          
+          envgen_args=" -vvv"
+          export envgen_args
+          
+          envgen_debug="true"
+          export envgen_debug
+          
+          GIT_STRATEGY="none"
+          export GIT_STRATEGY
+          
+          COMMIT_ENV="true"
+          export COMMIT_ENV
+          
+          SECRET_KEY="${SECRET_KEY}"
+          export SECRET_KEY
+          
+          GITHUB_ACTIONS="${GITHUB_ACTIONS}"
+          export GITHUB_ACTIONS
+          
+          GITHUB_REPOSITORY="${GITHUB_REPOSITORY}"
+          export GITHUB_REPOSITORY
+          
+          GITHUB_REF_NAME="${GITHUB_REF_NAME}"
+          export GITHUB_REF_NAME
+          
+          GITHUB_USER_EMAIL="${GITHUB_USER_EMAIL}"
+          export GITHUB_USER_EMAIL
+          
+          GITHUB_USER_NAME="${GITHUB_USER_NAME}"
+          export GITHUB_USER_NAME
+          
+          GITHUB_TOKEN="${GITHUB_TOKEN}"
+          export GITHUB_TOKEN
                     
-          echo 'Prepare git_commit job for ${ENVIRONMENT_NAME}...'
+          echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
-          echo 'Installing the certs if exist...'
+          echo "Installing the certs if exist..."
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
-          env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
-          for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
+            env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs")
+            for path in $env_path; do 
+              bash /module/scripts/update_ca_cert.sh "${CI_PROJECT_DIR}/configuration/certs/$path"
+            done
+          fi
             
           /module/scripts/prepare.sh "git_commit.yaml"
           
