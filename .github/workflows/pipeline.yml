@@ -275,10 +275,6 @@ jobs:
           full_env: ${{ env.FULL_ENV }}
           project_dir: ${{ env.PROJECT_DIR }}
 
-      - name: Check /module/scripts contents
-        run: |
-          ls -l /module/scripts
-      
       - name: Build Env
         run: |
           ENV_NAMES="${{ matrix.environment }}"
@@ -505,7 +501,7 @@ jobs:
     needs: [parameters_validation,show_environment_variables,generate_inventory,env_build,generate_effective_set]
     if: always() && (needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true')
     container:
-      image: ghcr.io/netcracker/qubership-envgene:feature-update_python_version_in_dockerimages
+      image: ghcr.io/netcracker/qubership-envgene:feature-optimize_docker_images
       options: --user root
     strategy:
       fail-fast: false
