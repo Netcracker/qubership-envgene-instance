@@ -46,11 +46,6 @@ on:
         description: "Environment template version"
         required: false
         default: ""
-      commit_message:
-        description: "Commit message"
-        required: false
-        default: ""
-        type: string
 
 env:
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
@@ -101,7 +96,6 @@ jobs:
             echo "GENERATE_EFFECTIVE_SET=${{ github.event.inputs.GENERATE_EFFECTIVE_SET }}"
             echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}"
             echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}"
-            echo "COMMIT_MESSAGE=${{ github.event.inputs.commit_message }}"
             python .github/scripts/load_env_variables.py .github/vars.yaml
           } >> $GITHUB_ENV
 
@@ -122,8 +116,7 @@ jobs:
           echo "SD_VERSION = $SD_VERSION"
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
-          echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"\
-          echo "COMMIT_MESSAGE = $COMMIT_MESSAGE"
+          echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
           
       - name: Prepare Parameters
         id: matrix-generator
