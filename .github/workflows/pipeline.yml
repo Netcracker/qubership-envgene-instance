@@ -245,7 +245,7 @@ jobs:
       - show_environment_variables
       - generate_inventory
     container:
-      image: ghcr.io/netcracker/qubership-envgene:feature-update_python_version_in_dockerimages
+      image: ghcr.io/netcracker/qubership-envgene:feature-optimize_docker_images
     strategy:
       fail-fast: false
       matrix:
