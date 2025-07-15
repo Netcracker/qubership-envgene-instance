@@ -1,0 +1,18 @@
+inventory:
+  environmentName: "e02"
+  clusterUrl: "test-val.com"
+  tenantName: "test-tenant"
+  deployer: "test-deployer"
+  cloudName: "test-env"
+  cloudPassport: "test-cloud-passport"
+envTemplate:
+  name: "dev"
+  envSpecificParamsets:
+    cloud: ["cloud-specific", "integrations", "paramsetA"]
+    main: ["internal-base-ns", "paramsetB"]
+  additionalTemplateVariables:
+    key: "value"
+  
+  template_download_zip: true
+generatedVersions:
+  generateEnvironmentLatestVersion: "0.0.10"  # This value is automatically generated during job run.

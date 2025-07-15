@@ -1,0 +1,55 @@
+# The contents of this file is generated from template artifact: qubership_envgene_templates.
+# Contents will be overwritten by next generation.
+# Please modify this contents only for development purposes or as workaround.
+name: "test-env"
+apiUrl: "temp.cloud.com" # cloud passport: test-env version: 1.5
+apiPort: "1111" # cloud passport: test-env version: 1.5
+privateUrl: "test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+publicUrl: "test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+dashboardUrl: "https://dashboard.test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+labels: []
+defaultCredentialsId: "cloud-deploy-sa-token" # cloud passport: test-env version: 1.5
+protocol: "https" # cloud passport: test-env version: 1.5
+dbMode: "db"
+productionMode: false # cloud passport: test-env version: 1.5
+databases: []
+mergeDeployParametersAndE2EParameters: false
+maasConfig:
+  credentialsId: "maas"
+  enable: true
+  maasUrl: "http://maas.None"
+  maasInternalAddress: "http://maas.maas:8888"
+vaultConfig:
+  credentialsId: ""
+  enable: false
+  url: ""
+dbaasConfigs:
+  - credentialsId: "dbaas"
+    enable: true
+    apiUrl: "http://dbaas.dbaas:8888"
+    aggregatorUrl: "https://dbaas.None"
+consulConfig:
+  tokenSecret: "consul-token"
+  enabled: true
+  publicUrl: "https://consul.None"
+  internalUrl: "http://consul.consul:8888"
+deployParameters:
+  CLOUD_DASHBOARD_URL: "https://dashboard.test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+  CMDB_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+  ENV_NAME: "e01"
+  GRAFANA_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+  GRAYLOG_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+  POSTGRES_DBA_PASSWORD: "test"                                            # paramset: cloud-specific version: n/a source: instance
+  POSTGRES_DBA_USER: "test"                                                # paramset: cloud-specific version: n/a source: instance
+  TBAPI_URL: "http://test"                                                 # paramset: integrations version: n/a source: instance
+  TRACING_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+  VALUE: "true" # cloud passport: test-env version: 1.5
+  key1: "value2"                                                           # paramset: paramsetA version: 1 source: instance
+e2eParameters:
+  INSTANSES_REPO: "https://github.com/Netcracker/qubership-envgene-instance"
+  url: "https://toolset.test-env.managed.temp.cloud"
+technicalConfigurationParameters: {}
+deployParameterSets: []
+e2eParameterSets: []
+technicalConfigurationParameterSets: []
+
