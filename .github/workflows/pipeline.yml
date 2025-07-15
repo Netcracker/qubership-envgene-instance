@@ -252,7 +252,7 @@ jobs:
       - show_environment_variables
       - generate_inventory
     container:
-      image: ghcr.io/netcracker/qubership-envgene:latest
+      image: ghcr.io/netcracker/qubership-envgene:feature-enchance_instance_pipeline
     strategy:
       fail-fast: false
       matrix:
