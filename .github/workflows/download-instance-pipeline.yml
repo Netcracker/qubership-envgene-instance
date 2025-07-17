@@ -90,6 +90,11 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
             echo "No changes detected in .github folder"
           fi
+          
+          # Clean up extracted github folder after processing
+          echo "🧹 Cleaning up extracted github folder..."
+          rm -rf ./github
+          echo "✅ Cleanup completed"
 
       - name: Configure Git
         if: steps.check-changes.outputs.changes == 'true'
