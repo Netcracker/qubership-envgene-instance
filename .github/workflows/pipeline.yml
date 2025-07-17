@@ -46,11 +46,6 @@ on:
         description: "Environment template version"
         required: false
         default: ""
-      commit_message:
-        description: "Commit message"
-        required: false
-        default: ""
-        type: string
 
 env:
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
