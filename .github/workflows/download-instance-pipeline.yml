@@ -64,15 +64,15 @@ jobs:
             find "$src_dir" -type f | while read -r src_file; do
               # Calculate relative path
               rel_path="${src_file#$src_dir/}"
-              dest_file="$dest_dir/$rel_path"
+              dest_file="${dest_dir}/${rel_path}"
               
-              # Create destination directory if needed
-              mkdir -p "$(dirname "$dest_file")"
+                        # Create destination directory if needed
+          mkdir -p "$(dirname "${dest_file}")"
               
               # Check if file exists and is different
-              if [ ! -f "$dest_file" ] || ! cmp -s "$src_file" "$dest_file"; then
-                echo "Updating: $rel_path"
-                cp "$src_file" "$dest_file"
+              if [ ! -f "${dest_file}" ] || ! cmp -s "${src_file}" "${dest_file}"; then
+                echo "Updating: ${rel_path}"
+                cp "${src_file}" "${dest_file}"
                 echo "changed" > /tmp/changes_detected
               fi
             done
