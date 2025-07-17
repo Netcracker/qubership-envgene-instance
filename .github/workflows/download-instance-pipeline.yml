@@ -84,11 +84,11 @@ jobs:
           # Check if any changes were made
           if [ -f /tmp/changes_detected ]; then
             echo "changes=true" >> $GITHUB_OUTPUT
-            echo "Changes detected and applied to .github folder"
+            echo "✅ Changes detected and applied to .github folder"
             rm /tmp/changes_detected
           else
             echo "changes=false" >> $GITHUB_OUTPUT
-            echo "No changes detected in .github folder"
+            echo "ℹ️ No changes detected in .github folder"
           fi
           
           # Clean up extracted github folder after processing
@@ -105,9 +105,18 @@ jobs:
       - name: Commit and push changes
         if: steps.check-changes.outputs.changes == 'true'
         run: |
+          # Check if there are actual changes to commit
+          if git diff --staged --quiet && git diff --quiet; then
+            echo "ℹ️ No changes to commit - working tree is clean"
+            exit 0
+          fi
+          
+          echo "📝 Committing changes..."
           git add .github/
           git commit -m "Update pipelines from Docker image ${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}:${{ github.event.inputs.image_tag || 'latest' }}"
+          echo "🚀 Pushing changes..."
           git push
+          echo "✅ Changes committed and pushed successfully"
 
       - name: Comment on PR (if triggered from PR)
         if: github.event_name == 'pull_request' && steps.check-changes.outputs.changes == 'true'
