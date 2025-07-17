@@ -1,6 +1,6 @@
 name: Install Instance Pipeline
 
-run-name: "Install Instance Pipeline from ${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}:${{ github.event.inputs.image_tag || 'latest' }}"
+run-name: "Install Instance Pipeline from ${{ github.event.inputs.image_tag || 'latest' }} tag"
 
 on:
   workflow_dispatch:
@@ -27,45 +27,25 @@ jobs:
 
       - name: Pull Docker image
         run: |
-          IMAGE_NAME="${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}"
-          IMAGE_TAG="${{ github.event.inputs.image_tag || 'latest' }}"
-          FULL_IMAGE="$IMAGE_NAME:$IMAGE_TAG"
-          
-          echo "🔄 Pulling Docker image: $FULL_IMAGE"
-          docker pull $FULL_IMAGE
-          echo "✅ Successfully pulled: $FULL_IMAGE"
+          docker pull ${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}:${{ github.event.inputs.image_tag || 'latest' }}
 
       - name: Create temporary container
         id: create-container
         run: |
-          IMAGE_NAME="${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}"
-          IMAGE_TAG="${{ github.event.inputs.image_tag || 'latest' }}"
-          FULL_IMAGE="$IMAGE_NAME:$IMAGE_TAG"
-          
-          echo "📦 Creating temporary container from: $FULL_IMAGE"
-          CONTAINER_ID=$(docker create $FULL_IMAGE)
+          CONTAINER_ID=$(docker create ${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}:${{ github.event.inputs.image_tag || 'latest' }})
           echo "container_id=$CONTAINER_ID" >> $GITHUB_OUTPUT
-          echo "✅ Container created with ID: $CONTAINER_ID"
 
       - name: Extract .github folder from container
         run: |
-          echo "📂 Extracting .github folder from container..."
           docker cp ${{ steps.create-container.outputs.container_id }}:/opt/github ./
           docker rm ${{ steps.create-container.outputs.container_id }}
-          echo "✅ Extraction completed and container removed"
 
       - name: Check for changes and update files
         id: check-changes
         run: |
-          IMAGE_NAME="${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}"
-          IMAGE_TAG="${{ github.event.inputs.image_tag || 'latest' }}"
-          FULL_IMAGE="$IMAGE_NAME:$IMAGE_TAG"
-          
-          echo "🔍 Checking for changes from Docker image: $FULL_IMAGE"
-          
           if [ ! -d "./github" ]; then
             echo "changes=false" >> $GITHUB_OUTPUT
-            echo "❌ No .github folder found in Docker image: $FULL_IMAGE"
+            echo "No .github folder found in Docker image"
             exit 0
           fi
           
@@ -104,11 +84,11 @@ jobs:
           # Check if any changes were made
           if [ -f /tmp/changes_detected ]; then
             echo "changes=true" >> $GITHUB_OUTPUT
-            echo "✅ Changes detected and applied to .github folder from: $FULL_IMAGE"
+            echo "Changes detected and applied to .github folder"
             rm /tmp/changes_detected
           else
             echo "changes=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ No changes detected in .github folder from: $FULL_IMAGE"
+            echo "No changes detected in .github folder"
           fi
 
       - name: Configure Git
@@ -139,6 +119,4 @@ jobs:
       - name: No changes notification
         if: steps.check-changes.outputs.changes == 'false'
         run: |
-          IMAGE_NAME="${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}"
-          IMAGE_TAG="${{ github.event.inputs.image_tag || 'latest' }}"
-          echo "ℹ️ No changes detected in .github folder from Docker image: $IMAGE_NAME:$IMAGE_TAG" 
+          echo "No changes detected in .github folder from Docker image" 
