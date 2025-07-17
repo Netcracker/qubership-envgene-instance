@@ -42,9 +42,8 @@ env:
   
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
-  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:latest'
+  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-enchance_instance_pipeline'
   DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: 'ghcr.io/netcracker/qubership-effective-set-generator:latest'
-  DOCKER_IMAGE_INSTANCE_REPO_PIPELINE: 'ghcr.io/netcracker/qubership-instance-repo-pipeline'
 
 jobs:
   show_environment_variables:
@@ -74,7 +73,6 @@ jobs:
       DOCKER_IMAGE_GCIP: ${{ steps.docker-images.outputs.DOCKER_IMAGE_GCIP }}
       DOCKER_IMAGE_ENVGENE: ${{ steps.docker-images.outputs.DOCKER_IMAGE_ENVGENE }}
       DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: ${{ steps.docker-images.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
-      DOCKER_IMAGE_INSTANCE_REPO_PIPELINE: ${{ steps.docker-images.outputs.DOCKER_IMAGE_INSTANCE_REPO_PIPELINE }}
 
     steps:
       - name: Repository Checkout
@@ -86,7 +84,6 @@ jobs:
           echo "DOCKER_IMAGE_GCIP=${{ env.DOCKER_IMAGE_GCIP }}" >> $GITHUB_OUTPUT
           echo "DOCKER_IMAGE_ENVGENE=${{ env.DOCKER_IMAGE_ENVGENE }}" >> $GITHUB_OUTPUT
           echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR=${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}" >> $GITHUB_OUTPUT
-          echo "DOCKER_IMAGE_INSTANCE_REPO_PIPELINE=${{ env.DOCKER_IMAGE_INSTANCE_REPO_PIPELINE }}" >> $GITHUB_OUTPUT
 
       - name: Read variables from vars.yaml
         run: |
@@ -120,7 +117,6 @@ jobs:
           echo "DOCKER_IMAGE_GCIP = $DOCKER_IMAGE_GCIP"
           echo "DOCKER_IMAGE_ENVGENE = $DOCKER_IMAGE_ENVGENE"
           echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR = $DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR"
-          echo "DOCKER_IMAGE_INSTANCE_REPO_PIPELINE = $DOCKER_IMAGE_INSTANCE_REPO_PIPELINE"
           echo ""
           echo "=== Environment Variables ==="
           echo "ENV_TEMPLATE_TEST = $ENV_TEMPLATE_TEST"
