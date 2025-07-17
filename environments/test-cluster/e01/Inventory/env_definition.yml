@@ -20,6 +20,6 @@ envTemplate:
       artifact_id: "qubership_envgene_templates"
       version: "0.0.10"
     templateRepository: "releaseTemplateRepository"
-  template_download_zip: true
+  artifactIsZip: true
 generatedVersions:
   generateEnvironmentLatestVersion: "0.0.10"  # This value is automatically generated during job run.
