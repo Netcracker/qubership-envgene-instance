@@ -67,17 +67,9 @@ def main():
         sys.exit(1)
 
     validators = {
-        # Pipeline Configuration
-        "DEPLOYMENT_TICKET_ID": validate_string,
-        "ENV_NAMES": validate_string,
+        # Variables from vars.yaml only
         "ENV_INVENTORY_INIT": validate_boolean,
-        "ENV_BUILDER": validate_boolean,
         "GENERATE_EFFECTIVE_SET": validate_boolean,
-        "CMDB_IMPORT": validate_boolean,
-        "GET_PASSPORT": validate_boolean,
-        "ENV_TEMPLATE_VERSION": validate_string,
-        
-        # Existing Variables
         "ENV_TEMPLATE_TEST": validate_boolean,
         "ENV_TEMPLATE_NAME": validate_string,
         "SD_DATA": validate_json,
