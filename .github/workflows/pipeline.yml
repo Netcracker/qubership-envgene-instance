@@ -37,9 +37,6 @@ env:
   GITHUB_USER_NAME: 'envgene'
   GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   
-  # Commit message - use input for manual runs, commit message for automatic runs
-  PIPELINE_COMMIT_MESSAGE: ${{ github.event_name == 'push' && github.event.head_commit.message || github.event.inputs.commit_message }}
-  
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
   DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-enchance_instance_pipeline'
@@ -63,9 +60,8 @@ jobs:
       ENV_TEMPLATE_VERSION: ${{ env.ENV_TEMPLATE_VERSION }}
       ENV_TEMPLATE_TEST: ${{ env.ENV_TEMPLATE_TEST }}
       ENV_INVENTORY_INIT: ${{ env.ENV_INVENTORY_INIT }}
-      ENV_TEMPLATE_NAME: ${{ env.ENV_INVENTORY_INIT }}
+      ENV_TEMPLATE_NAME: ${{ env.ENV_TEMPLATE_NAME }}
       SD_DATA: ${{ env.SD_DATA }}
-      SD_REPO_MERGE_MODE: ${{ env.SD_REPO_MERGE_MODE }}
       SD_VERSION: ${{ env.SD_VERSION }}
       SD_SOURCE_TYPE: ${{ env.SD_SOURCE_TYPE }}
       SD_DELTA: ${{ env.SD_DELTA }}
@@ -103,6 +99,11 @@ jobs:
             echo "COMMIT_MESSAGE = ${{ github.event.inputs.commit_message }}"
           fi
           echo ""
+          echo "=== Docker Images (from env variables) ==="
+          echo "DOCKER_IMAGE_GCIP = $DOCKER_IMAGE_GCIP"
+          echo "DOCKER_IMAGE_ENVGENE = $DOCKER_IMAGE_ENVGENE"
+          echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR = $DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR"
+          echo ""
           echo "=== Pipeline Configuration ==="
           echo "DEPLOYMENT_TICKET_ID = $DEPLOYMENT_TICKET_ID"
           echo "ENV_NAMES = $ENV_NAMES"
@@ -112,13 +113,6 @@ jobs:
           echo "CMDB_IMPORT = $CMDB_IMPORT"
           echo "GET_PASSPORT = $GET_PASSPORT"
           echo "ENV_TEMPLATE_VERSION = $ENV_TEMPLATE_VERSION"
-          echo ""
-          echo "=== Docker Images (from env variables) ==="
-          echo "DOCKER_IMAGE_GCIP = $DOCKER_IMAGE_GCIP"
-          echo "DOCKER_IMAGE_ENVGENE = $DOCKER_IMAGE_ENVGENE"
-          echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR = $DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR"
-          echo ""
-          echo "=== Environment Variables ==="
           echo "ENV_TEMPLATE_TEST = $ENV_TEMPLATE_TEST"
           echo "ENV_TEMPLATE_NAME = $ENV_TEMPLATE_NAME"
           echo "SD_DATA = $SD_DATA"
@@ -185,7 +179,6 @@ jobs:
       SD_SOURCE_TYPE: ${{ needs.show_environment_variables.outputs.SD_SOURCE_TYPE }}
       SD_VERSION: ${{ needs.show_environment_variables.outputs.SD_VERSION }}
       SD_DATA: ${{ needs.show_environment_variables.outputs.SD_DATA }}
-      SD_REPO_MERGE_MODE: ${{ needs.show_environment_variables.outputs.SD_REPO_MERGE_MODE }}
       SD_DELTA: ${{ needs.show_environment_variables.outputs.SD_DELTA }}
       ENV_INVENTORY_INIT: ${{ needs.show_environment_variables.outputs.ENV_INVENTORY_INIT }}
       ENV_SPECIFIC_PARAMETERS: ${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}
@@ -217,7 +210,6 @@ jobs:
             --arg sd_source_type "${SD_SOURCE_TYPE:-""}" \
             --arg sd_version "${SD_VERSION:-""}" \
             --arg sd_data "${SD_DATA:-"{}"}" \
-            --arg sd_repo_merge_mode "${SD_REPO_MERGE_MODE:-""}" \
             --arg sd_delta "${SD_DELTA:-""}" \
             --arg env_inventory_init "${ENV_INVENTORY_INIT:-""}" \
             --arg env_specific_params "${ENV_SPECIFIC_PARAMETERS:-""}" \
@@ -227,7 +219,6 @@ jobs:
               "SD_SOURCE_TYPE": $sd_source_type,
               "SD_VERSION": $sd_version,
               "SD_DATA": $sd_data,
-              "SD_REPO_MERGE_MODE": $sd_repo_merge_mode,
               "SD_DELTA": $sd_delta,
               "ENV_INVENTORY_INIT": $env_inventory_init,
               "ENV_SPECIFIC_PARAMETERS": $env_specific_params,
@@ -312,9 +303,6 @@ jobs:
           
           ENV_TEMPLATE_VERSION="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_VERSION }}"
           export ENV_TEMPLATE_VERSION
-          
-          export GROUP_ID
-          export ARTIFACT_ID
           
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
@@ -449,15 +437,6 @@ jobs:
           
           export ENV_TEMPLATE_VERSION
           
-          export GROUP_ID
-          export ARTIFACT_ID
-          
-          GROUP_ID=""
-          export GROUP_ID
-          
-          ARTIFACT_ID=""
-          export ARTIFACT_ID
-          
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
           
@@ -570,15 +549,6 @@ jobs:
           export CI_PROJECT_DIR
           
           export ENV_TEMPLATE_VERSION
-          
-          export GROUP_ID
-          export ARTIFACT_ID
-          
-          GROUP_ID=""
-          export GROUP_ID
-          
-          ARTIFACT_ID=""
-          export ARTIFACT_ID
           
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
