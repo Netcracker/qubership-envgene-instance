@@ -524,11 +524,41 @@ jobs:
 
       - name: Download artifact
         if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
-        uses: ./.github/actions/download_artifact
+        uses: actions/download-artifact@v4
         with:
-          sanitized_name: ${{ env.artifact_name }}
-          full_env: ${{ env.FULL_ENV }}
-          project_dir: ${{ env.PROJECT_DIR }}
+          name: ${{ env.artifact_name }}
+          path: ./downloaded_artifact
+
+      - name: Extract artifact to environment directory
+        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        run: |
+          echo "=== Extracting artifact to environment directory ==="
+          
+          # Ensure destination directory exists
+          mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          
+          echo "Copying artifact files to destination..."
+          echo "Source: ./downloaded_artifact/*"
+          echo "Destination: ${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          
+          # Copy files from artifact, overwriting existing ones
+          cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          echo "Copy completed with exit code: $?"
+          
+          # Verify the copy worked
+          if [ -f "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
+            echo "✅ env_definition.yml found after copy"
+            if grep -q "0.0.2" "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"; then
+              echo "✅ Version 0.0.2 successfully extracted from artifact"
+            else
+              echo "❌ Version 0.0.2 not found after extraction"
+            fi
+          else
+            echo "❌ env_definition.yml not found after copy"
+          fi
+          
+          # Clean up
+          rm -rf ./downloaded_artifact
 
       - name: Verify artifact extraction
         if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
