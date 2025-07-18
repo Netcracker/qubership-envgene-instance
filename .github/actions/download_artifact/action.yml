@@ -61,3 +61,31 @@ runs:
           "$ARTIFACT_URL")
         
         curl -L -o artifact.zip "$REDIRECT_URL"
+        
+        # Extract artifact to correct location
+        echo "Extracting artifact to correct location..."
+        unzip -o artifact.zip
+        
+        # Copy extracted files to the project directory
+        if [ -d "${{ inputs.full_env }}" ]; then
+          echo "Copying files from extracted artifact..."
+          cp -rf "${{ inputs.full_env }}"/* "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/"
+          echo "Files copied successfully"
+          
+          # Show what was actually copied
+          echo "=== Artifact contents ==="
+          find "${{ inputs.full_env }}" -type f -name "*.yml" -o -name "*.yaml" | head -5 | while read file; do
+            echo "File: $file"
+            echo "Content preview:"
+            head -n 5 "$file" || echo "Cannot read file"
+            echo "---"
+          done
+        else
+          echo "ERROR: Expected directory '${{ inputs.full_env }}' not found in artifact"
+          echo "Available contents:"
+          ls -la
+        fi
+        
+        # Clean up
+        rm -f artifact.zip
+        rm -rf "${{ inputs.full_env }}"

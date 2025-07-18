@@ -530,6 +530,17 @@ jobs:
           full_env: ${{ env.FULL_ENV }}
           project_dir: ${{ env.PROJECT_DIR }}
 
+      - name: Verify artifact extraction
+        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        run: |
+          echo "=== Verifying artifact extraction ==="
+          if [ -f "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
+            echo "Content of env_definition.yml AFTER artifact download:"
+            cat "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
+          else
+            echo "env_definition.yml not found after artifact download"
+          fi
+
       - name: Git Commit
         run: |
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
@@ -605,6 +616,9 @@ jobs:
           fi
           echo "=== Directory listing ==="
           ls -la "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/" || echo "Directory not found"
+          
+          # Fix git ownership issues
+          git config --global --add safe.directory "${CI_PROJECT_DIR}"
           
           # Check if git sees any changes before git_commit script
           echo "=== Git status before git_commit.yaml ==="
