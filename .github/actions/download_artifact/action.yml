@@ -36,10 +36,35 @@ runs:
         echo "=== Downloaded artifact contents ==="
         ls -la ./downloaded_artifact
         
+        echo "=== Full directory tree of downloaded artifact ==="
+        find ./downloaded_artifact -type f | head -20
+        
+        # Check if env_definition.yml exists in artifact
+        if [ -f "./downloaded_artifact/${{ inputs.full_env }}/Inventory/env_definition.yml" ]; then
+          echo "=== Found env_definition.yml in artifact ==="
+          echo "Content in artifact:"
+          cat "./downloaded_artifact/${{ inputs.full_env }}/Inventory/env_definition.yml"
+        else
+          echo "=== env_definition.yml not found in expected location ==="
+          echo "Looking for env_definition.yml anywhere in artifact..."
+          find ./downloaded_artifact -name "env_definition.yml" -exec echo "Found at: {}" \; -exec cat {} \;
+        fi
+        
         # Find the environment directory in downloaded artifact
         ENV_DIR="./downloaded_artifact/${{ inputs.full_env }}"
         if [ -d "$ENV_DIR" ]; then
           echo "Found environment directory: $ENV_DIR"
+          echo "Contents of environment directory:"
+          find "$ENV_DIR" -type f | head -10
+          
+          # Show destination before copy
+          echo "=== Destination BEFORE copy ==="
+          if [ -f "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml" ]; then
+            echo "Current content in destination:"
+            cat "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml"
+          else
+            echo "env_definition.yml not found in destination"
+          fi
           
           # Ensure destination directory exists
           mkdir -p "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/"
@@ -50,16 +75,20 @@ runs:
           
           # Copy files recursively, overwriting existing ones
           cp -rf "$ENV_DIR"/* "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/"
-          echo "Files copied successfully"
+          echo "Copy command completed with exit code: $?"
+          
+          # Show destination after copy
+          echo "=== Destination AFTER copy ==="
+          if [ -f "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml" ]; then
+            echo "Content in destination after copy:"
+            cat "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml"
+          else
+            echo "env_definition.yml still not found in destination after copy"
+          fi
           
           # Show what was copied
-          echo "=== Copied files preview ==="
-          find "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}" -name "*.yml" -o -name "*.yaml" | head -3 | while read file; do
-            echo "File: $file"
-            echo "Content preview:"
-            head -n 5 "$file" || echo "Cannot read file"
-            echo "---"
-          done
+          echo "=== Files in destination after copy ==="
+          find "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}" -name "*.yml" -o -name "*.yaml" | head -5
           
         else
           echo "ERROR: Environment directory '${{ inputs.full_env }}' not found in artifact"

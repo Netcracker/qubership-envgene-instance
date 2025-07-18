@@ -534,15 +534,49 @@ jobs:
         if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
         run: |
           echo "=== Verifying artifact extraction ==="
+          echo "Project directory: ${{ env.PROJECT_DIR }}"
+          echo "Full environment path: ${{ env.FULL_ENV }}"
+          echo "Target file path: ${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
+          
+          echo "=== Directory structure check ==="
+          ls -la "${{ env.PROJECT_DIR }}/environments/" || echo "environments directory not found"
+          ls -la "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/" || echo "environment directory not found"
+          ls -la "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/" || echo "Inventory directory not found"
+          
+          echo "=== File permissions ==="
+          ls -la "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" || echo "env_definition.yml not found"
+          
           if [ -f "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
             echo "Content of env_definition.yml AFTER artifact download:"
             cat "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
+            
+            echo "=== Checking for version 0.0.2 in file ==="
+            if grep -q "0.0.2" "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"; then
+              echo "✅ Version 0.0.2 found in file"
+            else
+              echo "❌ Version 0.0.2 NOT found in file"
+            fi
           else
             echo "env_definition.yml not found after artifact download"
+            echo "=== Searching for env_definition.yml anywhere ==="
+            find "${{ env.PROJECT_DIR }}/environments" -name "env_definition.yml" -exec echo "Found: {}" \; -exec cat {} \;
           fi
 
       - name: Git Commit
         run: |
+          echo "=== Git Commit START - checking file state ==="
+          if [ -f "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
+            echo "env_definition.yml content AT START of git_commit:"
+            cat "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
+            if grep -q "0.0.2" "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"; then
+              echo "✅ Version 0.0.2 found at START of git_commit"
+            else
+              echo "❌ Version 0.0.2 NOT found at START of git_commit"
+            fi
+          else
+            echo "env_definition.yml not found at START of git_commit"
+          fi
+          
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
           
