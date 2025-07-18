@@ -91,13 +91,48 @@ runs:
           find "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}" -name "*.yml" -o -name "*.yaml" | head -5
           
         else
-          echo "ERROR: Environment directory '${{ inputs.full_env }}' not found in artifact"
-          echo "Available contents:"
-          find ./downloaded_artifact -type d
+          echo "Environment directory '${{ inputs.full_env }}' not found in artifact"
+          echo "Artifact contains files directly in root - using alternative copy method"
           
-          # Try to find any matching directory pattern
-          echo "Looking for any pattern containing environment name..."
-          find ./downloaded_artifact -name "*e02*" -o -name "*test-cluster*" || echo "No matching patterns found"
+          # Show destination before copy
+          echo "=== Destination BEFORE copy (root method) ==="
+          if [ -f "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml" ]; then
+            echo "Current content in destination:"
+            cat "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml"
+          else
+            echo "env_definition.yml not found in destination"
+          fi
+          
+          # Ensure destination directory exists
+          mkdir -p "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/"
+          
+          echo "Copying files from artifact root to destination..."
+          echo "Source: ./downloaded_artifact/*"
+          echo "Destination: ${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/"
+          
+          # Copy files from artifact root, overwriting existing ones
+          cp -rf ./downloaded_artifact/* "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/"
+          echo "Copy command completed with exit code: $?"
+          
+          # Show destination after copy
+          echo "=== Destination AFTER copy (root method) ==="
+          if [ -f "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml" ]; then
+            echo "Content in destination after copy:"
+            cat "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml"
+            
+            echo "=== Checking for version 0.0.2 after copy ==="
+            if grep -q "0.0.2" "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}/Inventory/env_definition.yml"; then
+              echo "✅ Version 0.0.2 successfully copied from artifact"
+            else
+              echo "❌ Version 0.0.2 still not found after copy"
+            fi
+          else
+            echo "env_definition.yml still not found in destination after copy"
+          fi
+          
+          # Show what was copied
+          echo "=== Files in destination after copy (root method) ==="
+          find "${{ inputs.project_dir }}/environments/${{ inputs.full_env }}" -name "*.yml" -o -name "*.yaml" | head -5
         fi
         
         # Clean up
