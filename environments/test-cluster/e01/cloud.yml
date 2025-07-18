@@ -2,16 +2,15 @@
 # Contents will be overwritten by next generation.
 # Please modify this contents only for development purposes or as workaround.
 name: "test-env"
-apiUrl: "temp.cloud.com" # cloud passport: test-env version: 1.5
-apiPort: "1111" # cloud passport: test-env version: 1.5
-privateUrl: "test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
-publicUrl: "test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
-dashboardUrl: "https://dashboard.test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+apiUrl: "temp.cloud.com" # cloud passport: test-cloud-passport version: 1.5
+apiPort: "1111" # cloud passport: test-cloud-passport version: 1.5
+privateUrl: "test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
+publicUrl: "test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
+dashboardUrl: "https://dashboard.test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
 labels: []
-defaultCredentialsId: "cloud-deploy-sa-token" # cloud passport: test-env version: 1.5
-protocol: "https" # cloud passport: test-env version: 1.5
+defaultCredentialsId: "cloud-deploy-sa-token" # cloud passport: test-cloud-passport version: 1.5
+protocol: "https" # cloud passport: test-cloud-passport version: 1.5
 dbMode: "db"
-productionMode: false # cloud passport: test-env version: 1.5
 databases: []
 mergeDeployParametersAndE2EParameters: false
 maasConfig:
@@ -34,17 +33,17 @@ consulConfig:
   publicUrl: "https://consul.None"
   internalUrl: "http://consul.consul:8888"
 deployParameters:
-  CLOUD_DASHBOARD_URL: "https://dashboard.test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
-  CMDB_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
+  CLOUD_DASHBOARD_URL: "https://dashboard.test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
+  CMDB_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
   ENV_NAME: "e01"
-  GRAFANA_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
-  GRAYLOG_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
-  POSTGRES_DBA_PASSWORD: "test"                                            # paramset: cloud-specific version: n/a source: instance
-  POSTGRES_DBA_USER: "test"                                                # paramset: cloud-specific version: n/a source: instance
-  TBAPI_URL: "http://test"                                                 # paramset: integrations version: n/a source: instance
-  TRACING_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-env version: 1.5
-  VALUE: "true" # cloud passport: test-env version: 1.5
-  key1: "value2"                                                           # paramset: paramsetA version: 1 source: instance
+  GRAFANA_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
+  GRAYLOG_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
+  POSTGRES_DBA_PASSWORD: "test"                                        # paramset: cloud-specific version: n/a source: instance
+  POSTGRES_DBA_USER: "test"                                            # paramset: cloud-specific version: n/a source: instance
+  TBAPI_URL: "http://test"                                             # paramset: integrations version: n/a source: instance
+  TRACING_UI_URL: "https://test-env.managed.temp.cloud" # cloud passport: test-cloud-passport version: 1.5
+  VALUE: "true" # cloud passport: test-cloud-passport version: 1.5
+  key1: "value2"                                                       # paramset: paramsetA version: 1 source: instance
 e2eParameters:
   INSTANSES_REPO: "https://github.com/Netcracker/qubership-envgene-instance"
   url: "https://toolset.test-env.managed.temp.cloud"
@@ -52,4 +51,5 @@ technicalConfigurationParameters: {}
 deployParameterSets: []
 e2eParameterSets: []
 technicalConfigurationParameterSets: []
+productionMode: false # cloud passport: test-cloud-passport version: 1.5
 

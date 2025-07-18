@@ -18,7 +18,11 @@ deployParameters:
   CORE_NAMESPACE: "e01-core"
   ENVGENE_CONFIG_REF_NAME: "main"
   ENVGENE_CONFIG_TAG: ""
-  test_parameter: "bla bla bla"
+  test_parameter_2: "bla bla bla"
+
+
+
+
 
 e2eParameters: {}
 technicalConfigurationParameters:

@@ -12,14 +12,7 @@ envTemplate:
     main: ["internal-base-ns", "paramsetB"]
   additionalTemplateVariables:
     key: "value"
-  templateArtifact:
-    registry: "maven-central"
-    repository: "releaseRepository"
-    artifact:
-      group_id: "org.qubership"
-      artifact_id: "qubership_envgene_templates"
-      version: "0.0.10"
-    templateRepository: "releaseTemplateRepository"
   artifactIsZip: true
+  artifact: "qubership_envgene_templates:0.0.2"
 generatedVersions:
-  generateEnvironmentLatestVersion: "0.0.10"  # This value is automatically generated during job run.
+  generateEnvironmentLatestVersion: "qubership_envgene_templates:0.0.2"  # This value is automatically generated during job run.
