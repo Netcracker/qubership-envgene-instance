@@ -269,11 +269,17 @@ jobs:
 
       - name: Download artifact
         if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true'
-        uses: ./.github/actions/download_artifact
+        uses: actions/download-artifact@v4
         with:
-          sanitized_name: ${{ env.artifact_name }}
-          full_env: ${{ env.FULL_ENV }}
-          project_dir: ${{ env.PROJECT_DIR }}
+          name: ${{ env.artifact_name }}
+          path: ./downloaded_artifact
+
+      - name: Extract artifact to environment directory
+        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true'
+        run: |
+          mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          rm -rf ./downloaded_artifact
 
       - name: Check /module/scripts contents
         run: |
@@ -407,11 +413,17 @@ jobs:
 
       - name: Download artifact
         if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
-        uses: ./.github/actions/download_artifact
+        uses: actions/download-artifact@v4
         with:
-          sanitized_name: ${{ env.artifact_name }}
-          full_env: ${{ env.FULL_ENV }}
-          project_dir: ${{ env.PROJECT_DIR }}
+          name: ${{ env.artifact_name }}
+          path: ./downloaded_artifact
+
+      - name: Extract artifact to environment directory
+        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
+        run: |
+          mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          rm -rf ./downloaded_artifact
 
       - name: Generate Effective Set
         run: |
@@ -532,81 +544,12 @@ jobs:
       - name: Extract artifact to environment directory
         if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
         run: |
-          echo "=== Extracting artifact to environment directory ==="
-          
-          # Ensure destination directory exists
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
-          
-          echo "Copying artifact files to destination..."
-          echo "Source: ./downloaded_artifact/*"
-          echo "Destination: ${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
-          
-          # Copy files from artifact, overwriting existing ones
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
-          echo "Copy completed with exit code: $?"
-          
-          # Verify the copy worked
-          if [ -f "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
-            echo "✅ env_definition.yml found after copy"
-            if grep -q "0.0.2" "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"; then
-              echo "✅ Version 0.0.2 successfully extracted from artifact"
-            else
-              echo "❌ Version 0.0.2 not found after extraction"
-            fi
-          else
-            echo "❌ env_definition.yml not found after copy"
-          fi
-          
-          # Clean up
           rm -rf ./downloaded_artifact
-
-      - name: Verify artifact extraction
-        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
-        run: |
-          echo "=== Verifying artifact extraction ==="
-          echo "Project directory: ${{ env.PROJECT_DIR }}"
-          echo "Full environment path: ${{ env.FULL_ENV }}"
-          echo "Target file path: ${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
-          
-          echo "=== Directory structure check ==="
-          ls -la "${{ env.PROJECT_DIR }}/environments/" || echo "environments directory not found"
-          ls -la "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/" || echo "environment directory not found"
-          ls -la "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/" || echo "Inventory directory not found"
-          
-          echo "=== File permissions ==="
-          ls -la "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" || echo "env_definition.yml not found"
-          
-          if [ -f "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
-            echo "Content of env_definition.yml AFTER artifact download:"
-            cat "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
-            
-            echo "=== Checking for version 0.0.2 in file ==="
-            if grep -q "0.0.2" "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"; then
-              echo "✅ Version 0.0.2 found in file"
-            else
-              echo "❌ Version 0.0.2 NOT found in file"
-            fi
-          else
-            echo "env_definition.yml not found after artifact download"
-            echo "=== Searching for env_definition.yml anywhere ==="
-            find "${{ env.PROJECT_DIR }}/environments" -name "env_definition.yml" -exec echo "Found: {}" \; -exec cat {} \;
-          fi
 
       - name: Git Commit
         run: |
-          echo "=== Git Commit START - checking file state ==="
-          if [ -f "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
-            echo "env_definition.yml content AT START of git_commit:"
-            cat "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
-            if grep -q "0.0.2" "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"; then
-              echo "✅ Version 0.0.2 found at START of git_commit"
-            else
-              echo "❌ Version 0.0.2 NOT found at START of git_commit"
-            fi
-          else
-            echo "env_definition.yml not found at START of git_commit"
-          fi
-          
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
           
@@ -662,7 +605,6 @@ jobs:
                     
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
-          echo "Installing the certs if exist..."
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
             env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs")
             for path in $env_path; do 
@@ -670,33 +612,9 @@ jobs:
             done
           fi
           
-          # Show content of environment files BEFORE git_commit script
-          echo "=== Files before git_commit.yaml ==="
-          if [ -f "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
-            echo "Content of env_definition.yml:"
-            cat "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
-          else
-            echo "env_definition.yml not found"
-          fi
-          echo "=== Directory listing ==="
-          ls -la "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/" || echo "Directory not found"
-          
-          # Fix git ownership issues
           git config --global --add safe.directory "${CI_PROJECT_DIR}"
-          
-          # Check if git sees any changes before git_commit script
-          echo "=== Git status before git_commit.yaml ==="
-          cd "${CI_PROJECT_DIR}"
-          git status || echo "Git status failed"
-          git diff --name-only || echo "Git diff failed"
             
           /module/scripts/prepare.sh "git_commit.yaml"
-          
-          # Show git status after git_commit script
-          echo "=== Git status after git_commit.yaml ==="
-          cd "${CI_PROJECT_DIR}"
-          git status || echo "Git status failed"
-          git diff --name-only || echo "Git diff failed"
           
           env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
           for path in $env_path; do

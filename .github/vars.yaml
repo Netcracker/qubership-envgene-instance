@@ -1,7 +1,7 @@
 ---
 
 DEPLOYMENT_TICKET_ID: 'TEST-TICKET-1'
-ENV_NAMES: 'test-cluster/e02'
+ENV_NAMES: 'test-cluster/e02,test-cluster/e01'
 ENV_INVENTORY_INIT: false
 ENV_BUILDER: true
 GENERATE_EFFECTIVE_SET: false
