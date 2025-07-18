@@ -3,7 +3,7 @@
 
 name: "EnvGene Execution"
 
-run-name: "EnvGene Execution${{ github.event_name == 'push' && ' (Auto-triggered)' || ' (Manual)' }}"
+run-name: "EnvGene Execution - ${{ github.event.inputs.ENV_NAMES || 'Manual' }}"
 
 permissions:
   actions: read
@@ -11,23 +11,46 @@ permissions:
   pull-requests: write
 
 on:
-  # Automatic trigger on vars.yaml changes
-  push:
-    paths:
-      - '.github/vars.yaml'
-    branches:
-      - main
-      - develop
-      - 'feature/**'
-  
-  # Manual trigger
+  # Manual trigger only
   workflow_dispatch:
     inputs:
-      commit_message:
-        description: "Commit message (optional)"
+      ENV_NAMES:
+        description: "Set ENV_NAMES"
+        required: true
+        type: string
+      DEPLOYMENT_TICKET_ID:
+        description: "Jira ticket"
         required: false
         default: ""
         type: string
+      ENV_TEMPLATE_VERSION:
+        description: "Write the latest env_template_version"
+        required: true
+        type: string
+      ENV_BUILDER:
+        description: "Whether to run env_builder"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      GET_PASSPORT:
+        description: "Whether to get cloud passport"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      CMDB_IMPORT:
+        description: "Whether to import cmdb"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 env:
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
@@ -81,25 +104,29 @@ jobs:
           echo "DOCKER_IMAGE_ENVGENE=${{ env.DOCKER_IMAGE_ENVGENE }}" >> $GITHUB_OUTPUT
           echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR=${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}" >> $GITHUB_OUTPUT
 
-      - name: Read variables from vars.yaml
+      - name: Set variables from inputs and vars.yaml
         run: |
+          # Set variables from workflow inputs
+          echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
+          echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
+          echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
+          echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
+          echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
+          echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
+          
+          # Read remaining variables from vars.yaml
           python .github/scripts/load_env_variables.py .github/vars.yaml
 
       - name: Input Parameters
         run: |
-          echo "🚀 === Pipeline Trigger Information ==="
+          echo "🚀 === Pipeline Execution Information ==="
           echo "Event Type: ${{ github.event_name }}"
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
-          if [ "${{ github.event_name }}" = "push" ]; then
-            echo "Trigger: Automatic (vars.yaml changed)"
-            echo "Changed files: ${{ github.event.head_commit.modified }}"
-          else
-            echo "Trigger: Manual"
-            echo "COMMIT_MESSAGE = ${{ github.event.inputs.commit_message }}"
-          fi
+          echo "Trigger: Manual workflow dispatch"
+          echo "Parameters source: Manual inputs + vars.yaml"
           echo ""
-          echo "=== Docker Images (from env variables) ==="
+          echo "=== Docker Images ==="
           echo "DOCKER_IMAGE_GCIP = $DOCKER_IMAGE_GCIP"
           echo "DOCKER_IMAGE_ENVGENE = $DOCKER_IMAGE_ENVGENE"
           echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR = $DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR"

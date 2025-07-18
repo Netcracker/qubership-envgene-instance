@@ -1,14 +1,9 @@
 ---
 
-DEPLOYMENT_TICKET_ID: 'TEST-TICKET-1'
-ENV_NAMES: 'test-cluster/e02,test-cluster/e01'
+# Variables that are read from file (not manually input)
 ENV_INVENTORY_INIT: false
-ENV_BUILDER: true
 GENERATE_EFFECTIVE_SET: false
-CMDB_IMPORT: false
-GET_PASSPORT: false
-ENV_TEMPLATE_VERSION: 'qubership_envgene_templates:0.0.2'
-ENV_TEMPLATE_TEST: false #boolean - only true or false
+ENV_TEMPLATE_TEST: false
 ENV_TEMPLATE_NAME: ''
 SD_DATA: '{}'
 SD_VERSION: ''
