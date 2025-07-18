@@ -594,8 +594,31 @@ jobs:
               bash /module/scripts/update_ca_cert.sh "${CI_PROJECT_DIR}/configuration/certs/$path"
             done
           fi
+          
+          # Show content of environment files BEFORE git_commit script
+          echo "=== Files before git_commit.yaml ==="
+          if [ -f "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml" ]; then
+            echo "Content of env_definition.yml:"
+            cat "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/env_definition.yml"
+          else
+            echo "env_definition.yml not found"
+          fi
+          echo "=== Directory listing ==="
+          ls -la "${CI_PROJECT_DIR}/environments/${{ env.FULL_ENV }}/Inventory/" || echo "Directory not found"
+          
+          # Check if git sees any changes before git_commit script
+          echo "=== Git status before git_commit.yaml ==="
+          cd "${CI_PROJECT_DIR}"
+          git status || echo "Git status failed"
+          git diff --name-only || echo "Git diff failed"
             
           /module/scripts/prepare.sh "git_commit.yaml"
+          
+          # Show git status after git_commit script
+          echo "=== Git status after git_commit.yaml ==="
+          cd "${CI_PROJECT_DIR}"
+          git status || echo "Git status failed"
+          git diff --name-only || echo "Git diff failed"
           
           env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
           for path in $env_path; do
