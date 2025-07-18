@@ -15,20 +15,16 @@ on:
   workflow_dispatch:
     inputs:
       ENV_NAMES:
-        description: "Set ENV_NAMES"
         required: true
         type: string
       DEPLOYMENT_TICKET_ID:
-        description: "Jira ticket"
         required: false
         default: ""
         type: string
       ENV_TEMPLATE_VERSION:
-        description: "Write the latest env_template_version"
         required: true
         type: string
       ENV_BUILDER:
-        description: "Whether to run env_builder"
         required: true
         default: "true"
         type: choice
@@ -36,7 +32,6 @@ on:
           - "true"
           - "false"
       GET_PASSPORT:
-        description: "Whether to get cloud passport"
         required: true
         default: "false"
         type: choice
@@ -44,7 +39,6 @@ on:
           - "true"
           - "false"
       CMDB_IMPORT:
-        description: "Whether to import cmdb"
         required: true
         default: "false"
         type: choice
