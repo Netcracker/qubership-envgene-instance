@@ -1,6 +1,5 @@
 ---
 
-# Variables that are read from file (not manually input)
 ENV_INVENTORY_INIT: false
 GENERATE_EFFECTIVE_SET: false
 ENV_TEMPLATE_TEST: false

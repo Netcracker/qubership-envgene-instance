@@ -98,7 +98,7 @@ jobs:
           echo "DOCKER_IMAGE_ENVGENE=${{ env.DOCKER_IMAGE_ENVGENE }}" >> $GITHUB_OUTPUT
           echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR=${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}" >> $GITHUB_OUTPUT
 
-      - name: Set variables from inputs and vars.yaml
+      - name: Set variables from inputs and pipeline_vars.yaml
         run: |
           # Set variables from workflow inputs
           echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
@@ -108,8 +108,8 @@ jobs:
           echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
           echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
           
-          # Read remaining variables from vars.yaml
-          python .github/scripts/load_env_variables.py .github/vars.yaml
+          # Read remaining variables from pipeline_vars.yaml
+          python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
 
       - name: Input Parameters
         run: |
@@ -118,7 +118,7 @@ jobs:
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
           echo "Trigger: Manual workflow dispatch"
-          echo "Parameters source: Manual inputs + vars.yaml"
+          echo "Parameters source: Manual inputs + pipeline_vars.yaml"
           echo ""
           echo "=== Docker Images ==="
           echo "DOCKER_IMAGE_GCIP = $DOCKER_IMAGE_GCIP"

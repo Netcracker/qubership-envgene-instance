@@ -67,7 +67,7 @@ def main():
         sys.exit(1)
 
     validators = {
-        # Variables from vars.yaml only
+        # Variables from pipeline_vars.yaml only
         "ENV_INVENTORY_INIT": validate_boolean,
         "GENERATE_EFFECTIVE_SET": validate_boolean,
         "ENV_TEMPLATE_TEST": validate_boolean,
