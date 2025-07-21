@@ -83,6 +83,7 @@ jobs:
       SD_SOURCE_TYPE: ${{ env.SD_SOURCE_TYPE }}
       SD_DELTA: ${{ env.SD_DELTA }}
       ENV_SPECIFIC_PARAMETERS: ${{ env.ENV_SPECIFIC_PARAMETERS }}
+      ENV_GENERATION_PARAMS: ${{ steps.env-generation-params.outputs.ENV_GENERATION_PARAMS }}
       DOCKER_IMAGE_GCIP: ${{ steps.docker-images.outputs.DOCKER_IMAGE_GCIP }}
       DOCKER_IMAGE_ENVGENE: ${{ steps.docker-images.outputs.DOCKER_IMAGE_ENVGENE }}
       DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: ${{ steps.docker-images.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
@@ -110,6 +111,28 @@ jobs:
           
           # Read remaining variables from pipeline_vars.yaml
           python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
+
+      - name: Create ENV_GENERATION_PARAMS
+        id: env-generation-params
+        run: |
+          ENV_GENERATION_PARAMS=$(jq -nc \
+            --arg sd_source_type "${SD_SOURCE_TYPE:-""}" \
+            --arg sd_version "${SD_VERSION:-""}" \
+            --arg sd_data "${SD_DATA:-"{}"}" \
+            --arg sd_delta "${SD_DELTA:-""}" \
+            --arg env_specific_params "${ENV_SPECIFIC_PARAMETERS:-""}" \
+            --arg env_template_name "${ENV_TEMPLATE_NAME:-""}" \
+            '{
+              "SD_SOURCE_TYPE": $sd_source_type,
+              "SD_VERSION": $sd_version,
+              "SD_DATA": $sd_data,
+              "SD_DELTA": $sd_delta,
+              "ENV_SPECIFIC_PARAMETERS": $env_specific_params,
+              "ENV_TEMPLATE_NAME": $env_template_name
+            }'
+          )
+          echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_OUTPUT
+          echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_ENV
 
       - name: Input Parameters
         run: |
@@ -216,7 +239,6 @@ jobs:
 
       - name: Generate inventory
         run: |
-          
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
           
@@ -226,27 +248,8 @@ jobs:
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
           
-          ENV_GENERATION_PARAMS
-          ENV_GENERATION_PARAMS="$(jq -nc \
-            --arg sd_source_type "${SD_SOURCE_TYPE:-""}" \
-            --arg sd_version "${SD_VERSION:-""}" \
-            --arg sd_data "${SD_DATA:-"{}"}" \
-            --arg sd_delta "${SD_DELTA:-""}" \
-            --arg env_inventory_init "${ENV_INVENTORY_INIT:-""}" \
-            --arg env_specific_params "${ENV_SPECIFIC_PARAMETERS:-""}" \
-            --arg env_template_name "${ENV_TEMPLATE_NAME:-""}" \
-            --arg env_template_version "${ENV_TEMPLATE_VERSION:-""}" \
-            '{
-              "SD_SOURCE_TYPE": $sd_source_type,
-              "SD_VERSION": $sd_version,
-              "SD_DATA": $sd_data,
-              "SD_DELTA": $sd_delta,
-              "ENV_INVENTORY_INIT": $env_inventory_init,
-              "ENV_SPECIFIC_PARAMETERS": $env_specific_params,
-              "ENV_TEMPLATE_NAME": $env_template_name,
-              "ENV_TEMPLATE_VERSION": $env_template_version
-            }'
-          )"
+          # Use ENV_GENERATION_PARAMS from show_environment_variables job
+          ENV_GENERATION_PARAMS='${{ needs.show_environment_variables.outputs.ENV_GENERATION_PARAMS }}'
           export ENV_GENERATION_PARAMS
           
           python3 /build_env/scripts/build_env/env_inventory_generation.py

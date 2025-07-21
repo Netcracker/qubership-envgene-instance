@@ -57,7 +57,7 @@ def main():
     config_file = sys.argv[1]
 
     with open(config_file, 'r', encoding='utf-8') as f:
-        data = yaml.safe_load(f)
+        data = yaml.safe_load(f) or {}
 
     github_env_file = os.getenv('GITHUB_ENV')
     github_output_file = os.getenv('GITHUB_OUTPUT')
@@ -65,6 +65,19 @@ def main():
     if not github_env_file or not github_output_file:
         print("Error: GITHUB_ENV or GITHUB_OUTPUT variable is not set!")
         sys.exit(1)
+
+    # Default values for all variables
+    default_values = {
+        "ENV_INVENTORY_INIT": "false",
+        "GENERATE_EFFECTIVE_SET": "false",
+        "ENV_TEMPLATE_TEST": "false",
+        "ENV_TEMPLATE_NAME": "",
+        "SD_DATA": "{}",
+        "SD_VERSION": "",
+        "SD_SOURCE_TYPE": "",
+        "SD_DELTA": "false",
+        "ENV_SPECIFIC_PARAMETERS": "{}",
+    }
 
     validators = {
         # Variables from pipeline_vars.yaml only
@@ -82,22 +95,28 @@ def main():
     validated_data = {}
 
     for key, validator in validators.items():
-        raw_value = data.get(key, "")
+        # Use value from file if exists, otherwise use default
+        raw_value = data.get(key, default_values[key])
 
-        if validator == validate_boolean:
-            if isinstance(raw_value, bool):
-                validated_data[key] = convert_to_github_env(raw_value)
-            elif isinstance(raw_value, str) and raw_value.lower() in ["true", "false"]:
-                validated_data[key] = raw_value.lower()
-            else:
-                raise ValueError(f"{key} should be boolean (true/false). Got: {raw_value}")
-        elif validator == validate_json:
-            if not raw_value:
-                validated_data[key] = "{}"
-            else:
-                validated_data[key] = validate_json(raw_value, key)
-        else:  # string
-            validated_data[key] = validate_string(raw_value, key)
+        try:
+            if validator == validate_boolean:
+                if isinstance(raw_value, bool):
+                    validated_data[key] = convert_to_github_env(raw_value)
+                elif isinstance(raw_value, str) and raw_value.lower() in ["true", "false"]:
+                    validated_data[key] = raw_value.lower()
+                else:
+                    print(f"Warning: {key} has invalid value '{raw_value}', using default '{default_values[key]}'")
+                    validated_data[key] = default_values[key]
+            elif validator == validate_json:
+                if not raw_value:
+                    validated_data[key] = "{}"
+                else:
+                    validated_data[key] = validate_json(raw_value, key)
+            else:  # string
+                validated_data[key] = validate_string(raw_value, key)
+        except ValueError as e:
+            print(f"Warning: {e}, using default value '{default_values[key]}'")
+            validated_data[key] = default_values[key]
 
     with open(github_env_file, 'a', encoding='utf-8') as env_file, \
             open(github_output_file, 'a', encoding='utf-8') as output_file:
@@ -105,18 +124,6 @@ def main():
         for key, value in validated_data.items():
             env_file.write(f"{key}={convert_to_github_env(value)}\n")
             output_file.write(f"{key}={convert_to_github_env(value)}\n")
-
-        env_generation_params = {
-            "SD_SOURCE_TYPE": validated_data["SD_SOURCE_TYPE"],
-            "SD_VERSION": validated_data["SD_VERSION"],
-            "SD_DATA": validated_data["SD_DATA"],
-            "SD_DELTA": validated_data["SD_DELTA"],
-            "ENV_SPECIFIC_PARAMETERS": json.loads(validated_data.get("ENV_SPECIFIC_PARAMETERS", "{}")),
-            "ENV_TEMPLATE_NAME": data.get("ENV_TEMPLATE_NAME", "")
-        }
-
-        env_file.write(f'ENV_GENERATION_PARAMS={json.dumps(env_generation_params)}\n')
-        output_file.write(f'ENV_GENERATION_PARAMS={json.dumps(env_generation_params)}\n')
 
 
 if __name__ == "__main__":
