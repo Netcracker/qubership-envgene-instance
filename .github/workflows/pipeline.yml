@@ -109,7 +109,7 @@ jobs:
           echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
           echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
           
-          # Read remaining variables from pipeline_vars.yaml
+          # Load additional variables from pipeline_vars.yaml (with fallbacks to defaults)
           python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
 
       - name: Create ENV_GENERATION_PARAMS
@@ -207,7 +207,7 @@ jobs:
   generate_inventory:
     name: "${{ matrix.environment }} - Generate Inventory"
     runs-on: ubuntu-latest
-    if: always() && needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true'
+    if: always() && needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
     needs:
       - parameters_validation
       - show_environment_variables
