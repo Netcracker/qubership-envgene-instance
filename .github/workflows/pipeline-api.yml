@@ -100,6 +100,17 @@ jobs:
           echo "DEPLOYMENT_TICKET_ID=${DEPLOYMENT_TICKET_ID:-}" >> $GITHUB_ENV
           echo "ENV_TEMPLATE_VERSION=${ENV_TEMPLATE_VERSION:-}" >> $GITHUB_ENV
           
+          # Set defaults for variables that load_env_variables.py handles
+          echo "ENV_INVENTORY_INIT=${ENV_INVENTORY_INIT:-false}" >> $GITHUB_ENV
+          echo "GENERATE_EFFECTIVE_SET=${GENERATE_EFFECTIVE_SET:-false}" >> $GITHUB_ENV
+          echo "ENV_TEMPLATE_TEST=${ENV_TEMPLATE_TEST:-false}" >> $GITHUB_ENV
+          echo "ENV_TEMPLATE_NAME=${ENV_TEMPLATE_NAME:-}" >> $GITHUB_ENV
+          echo "SD_DATA=${SD_DATA:-{}}" >> $GITHUB_ENV
+          echo "SD_VERSION=${SD_VERSION:-}" >> $GITHUB_ENV
+          echo "SD_SOURCE_TYPE=${SD_SOURCE_TYPE:-}" >> $GITHUB_ENV
+          echo "SD_DELTA=${SD_DELTA:-false}" >> $GITHUB_ENV
+          echo "ENV_SPECIFIC_PARAMETERS=${ENV_SPECIFIC_PARAMETERS:-{}}" >> $GITHUB_ENV
+          
           # Load fallback variables from pipeline_vars.yaml for any missing values
           python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
 

@@ -86,10 +86,14 @@ curl -X POST \
   -d '{
     "ref": "main",
     "inputs": {
-      "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01\", \"ENV_INVENTORY_INIT\": \"true\", \"GENERATE_EFFECTIVE_SET\": \"true\"}"
+      "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01\"}"
     }
   }'
 ```
+
+> **Note**: Only `ENV_NAMES` is required. All other variables will use default values:
+> - `ENV_BUILDER=true`, `ENV_INVENTORY_INIT=false`, `GENERATE_EFFECTIVE_SET=false`, etc.
+> - You can override any defaults by including them in the JSON.
 
 ### Example 1.1: With template version
 

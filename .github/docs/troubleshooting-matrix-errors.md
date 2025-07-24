@@ -141,17 +141,45 @@ Use **"Debug - Matrix Generation"**:
 - Ensure repository path is correct
 - Try **"Debug - Simple Test"** first
 
-### 4. Workflow Step Order
+### 4. Missing Default Variables
+**Problem**: Jobs fail with `KeyError: 'ENV_INVENTORY_INIT'` or similar
+**Solution**: 
+- Check that **"Set Default Values and Load Fallbacks"** step shows all variables being set
+- Look for logs like: `Setting fallback value: ENV_INVENTORY_INIT=false`
+- This is now fixed - all required variables get default values
+
+### 5. Workflow Step Order
 **Problem**: Variables not available when matrix is generated
 **Solution**: Check that steps run in this order:
 1. Process API Input Variables
 2. Set Default Values and Load Fallbacks  
 3. Prepare Parameters (matrix generation)
 
+## 📋 Default Variables Reference
+
+The following variables are automatically set with default values:
+```
+ENV_BUILDER=true
+GET_PASSPORT=false
+CMDB_IMPORT=false
+DEPLOYMENT_TICKET_ID=""
+ENV_TEMPLATE_VERSION=""
+ENV_INVENTORY_INIT=false
+GENERATE_EFFECTIVE_SET=false
+ENV_TEMPLATE_TEST=false
+ENV_TEMPLATE_NAME=""
+SD_DATA={}
+SD_VERSION=""
+SD_SOURCE_TYPE=""
+SD_DELTA=false
+ENV_SPECIFIC_PARAMETERS={}
+```
+
 ## 📋 Monitoring Checklist
 
 - [ ] API input processing completed successfully
 - [ ] ENV_NAMES variable is set and non-empty
+- [ ] All required default variables are set
 - [ ] Matrix generation produces valid JSON array
 - [ ] Downstream jobs either run or skip appropriately
 - [ ] No "fromJson: empty input" errors

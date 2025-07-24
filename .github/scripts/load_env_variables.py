@@ -95,8 +95,14 @@ def main():
     validated_data = {}
 
     for key, validator in validators.items():
-        # Use value from file if exists, otherwise use default
-        raw_value = data.get(key, default_values[key])
+        # Priority: 1. Environment variable (from API input), 2. File value, 3. Default
+        env_value = os.getenv(key)
+        if env_value is not None:
+            raw_value = env_value
+            print(f"Using environment value for {key}: {raw_value}")
+        else:
+            raw_value = data.get(key, default_values[key])
+            print(f"Using {'file' if key in data else 'default'} value for {key}: {raw_value}")
 
         try:
             if validator == validate_boolean:
@@ -122,8 +128,13 @@ def main():
             open(github_output_file, 'a', encoding='utf-8') as output_file:
 
         for key, value in validated_data.items():
-            env_file.write(f"{key}={convert_to_github_env(value)}\n")
-            output_file.write(f"{key}={convert_to_github_env(value)}\n")
+            # Only write to files if the variable wasn't already set in environment
+            if os.getenv(key) is None:
+                print(f"Setting fallback value: {key}={convert_to_github_env(value)}")
+                env_file.write(f"{key}={convert_to_github_env(value)}\n")
+                output_file.write(f"{key}={convert_to_github_env(value)}\n")
+            else:
+                print(f"Skipping {key} - already set in environment")
 
 
 if __name__ == "__main__":
