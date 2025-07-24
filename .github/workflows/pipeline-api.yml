@@ -1,9 +1,9 @@
 #Important!
 #Please use your own runner and docker-images
 
-name: "EnvGene Execution"
+name: "EnvGene Execution (API)"
 
-run-name: "EnvGene Execution - ${{ github.event.inputs.ENV_NAMES || 'Manual' }}"
+run-name: "EnvGene Execution (API) - ${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT || 'API Call' }}"
 
 permissions:
   actions: read
@@ -11,41 +11,13 @@ permissions:
   pull-requests: write
 
 on:
-  # Manual trigger only
+  # API trigger only
   workflow_dispatch:
     inputs:
-      ENV_NAMES:
+      GITHUB_PIPELINE_API_INPUT:
         required: true
         type: string
-      DEPLOYMENT_TICKET_ID:
-        required: false
-        default: ""
-        type: string
-      ENV_TEMPLATE_VERSION:
-        required: false
-        default: ""
-        type: string
-      ENV_BUILDER:
-        required: true
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      GET_PASSPORT:
-        required: true
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      CMDB_IMPORT:
-        required: true
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
+        description: "API input string containing all variables in JSON/YAML/key=value format"
 
 env:
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
@@ -62,7 +34,7 @@ env:
 
 jobs:
   show_environment_variables:
-    name: "UI Input Parameters Processing"
+    name: "API Input Parameters Processing"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/netcracker/qubership-gcip:latest
@@ -100,17 +72,28 @@ jobs:
           echo "DOCKER_IMAGE_ENVGENE=${{ env.DOCKER_IMAGE_ENVGENE }}" >> $GITHUB_OUTPUT
           echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR=${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}" >> $GITHUB_OUTPUT
 
-      - name: Set variables from inputs and pipeline_vars.yaml
+      - name: Process API Input Variables
         run: |
-          # Set variables from workflow inputs
-          echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
-          echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
-          echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
-          echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
-          echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
-          echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
+          # Set API input for processing
+          echo "GITHUB_PIPELINE_API_INPUT=${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" >> $GITHUB_ENV
           
-          # Load additional variables from pipeline_vars.yaml (with fallbacks to defaults)
+          # Process API input variables (all variables come from here)
+          python .github/scripts/process_api_input.py
+          
+          # Validate that required variables are present
+          if [ -z "$ENV_NAMES" ]; then
+            echo "Error: ENV_NAMES is required but not provided in API input"
+            exit 1
+          fi
+          
+          # Set defaults for optional variables if not provided
+          echo "ENV_BUILDER=${ENV_BUILDER:-true}" >> $GITHUB_ENV
+          echo "GET_PASSPORT=${GET_PASSPORT:-false}" >> $GITHUB_ENV
+          echo "CMDB_IMPORT=${CMDB_IMPORT:-false}" >> $GITHUB_ENV
+          echo "DEPLOYMENT_TICKET_ID=${DEPLOYMENT_TICKET_ID:-}" >> $GITHUB_ENV
+          echo "ENV_TEMPLATE_VERSION=${ENV_TEMPLATE_VERSION:-}" >> $GITHUB_ENV
+          
+          # Load fallback variables from pipeline_vars.yaml for any missing values
           python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
 
       - name: Create ENV_GENERATION_PARAMS
@@ -135,14 +118,14 @@ jobs:
           echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_OUTPUT
           echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_ENV
 
-      - name: UI Input Parameters
+      - name: API Input Parameters
         run: |
-          echo "🚀 === Pipeline Execution Information (UI Mode) ==="
+          echo "🚀 === Pipeline Execution Information (API Mode) ==="
           echo "Event Type: ${{ github.event_name }}"
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
-          echo "Trigger: Manual workflow dispatch (UI)"
-          echo "Parameters source: Manual inputs + pipeline_vars.yaml"
+          echo "Trigger: API workflow dispatch"
+          echo "Parameters source: GITHUB_PIPELINE_API_INPUT + pipeline_vars.yaml fallbacks"
           echo ""
           echo "=== Docker Images ==="
           echo "DOCKER_IMAGE_GCIP = $DOCKER_IMAGE_GCIP"
@@ -395,8 +378,6 @@ jobs:
               chmod ugo+rw "$path/Credentials/"*
             fi
           done
-          
-      
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -654,4 +635,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: git_commit_${{ env.SANITIZED_NAME }}
-          path: ${{ github.workspace }}/git_envs
+          path: ${{ github.workspace }}/git_envs 
