@@ -10,6 +10,8 @@
 - **Cause**: The `env_matrix` output is completely empty (null or "")
 - **Location**: Same as above
 
+> **Note**: Matrix conditions have been removed from job conditions. Jobs now run based on their specific logic rather than matrix availability.
+
 ## 🔍 Debugging Steps
 
 ### 1. Check the First Job Logs
@@ -70,9 +72,12 @@ Look for the **"Prepare Parameters"** step output:
 - Should generate valid JSON array
 
 ### Step 3: Verify Downstream Jobs
-Jobs with matrix should either:
-- **Run normally** if matrix is valid: `["env1","env2"]`
-- **Skip completely** if matrix is empty: `[]`
+Jobs now run based on their specific conditions:
+- **parameters_validation**: Always runs if matrix is valid
+- **generate_inventory**: Runs if `ENV_TEMPLATE_TEST == 'false'` and parameters are provided
+- **env_build**: Runs if `ENV_BUILDER == 'true'`
+- **generate_effective_set**: Runs if `GENERATE_EFFECTIVE_SET == 'true'`
+- **git_commit**: Runs if any of the above jobs were executed
 
 ## 🧪 Test Requests
 
@@ -156,7 +161,16 @@ Use **"Debug - Matrix Generation"**:
 - Check that all variables are echoed to `$GITHUB_OUTPUT` in the first job
 - This is now fixed - all variables are properly passed between jobs
 
-### 6. Workflow Step Order
+### 6. Job Runs When It Shouldn't
+**Problem**: `generate_inventory` job runs even with empty parameters
+**Solution**: 
+- Check the job condition logic
+- `ENV_SPECIFIC_PARAMETERS = {}` is not empty (contains `{}`)
+- `ENV_TEMPLATE_NAME = ` is empty
+- Fixed: now checks for `!= '{}'` and `!= ''`
+- This is now fixed - job only runs when parameters are actually provided
+
+### 7. Workflow Step Order
 **Problem**: Variables not available when matrix is generated
 **Solution**: Check that steps run in this order:
 1. Process API Input Variables
@@ -190,7 +204,8 @@ ENV_SPECIFIC_PARAMETERS={}
 - [ ] All required default variables are set
 - [ ] All variables are set in `$GITHUB_OUTPUT` for downstream jobs
 - [ ] Matrix generation produces valid JSON array
-- [ ] Downstream jobs either run or skip appropriately
+- [ ] Jobs run based on their specific conditions (not matrix availability)
+- [ ] `generate_inventory` job only runs when parameters are provided
 - [ ] No "fromJson: empty input" errors
 - [ ] No `KeyError` in downstream jobs
 
@@ -201,4 +216,4 @@ API Request → Process Input → Set Defaults → Generate Matrix → Run Jobs
      ✅            ✅            ✅           ✅        ✅
 ```
 
-If any step fails, the matrix becomes `[]` and downstream jobs are skipped safely. 
+Jobs now run based on their specific conditions rather than matrix availability. 
