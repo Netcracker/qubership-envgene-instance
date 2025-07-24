@@ -287,6 +287,45 @@
       }
     },
     {
+      "name": "Debug - Variables in Outputs",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"{\\\"ENV_NAMES\\\": \\\"test-cluster/e02\\\", \\\"ENV_INVENTORY_INIT\\\": \\\"true\\\"}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Test that ENV_INVENTORY_INIT is properly passed to downstream jobs via outputs"
+      }
+    },
+    {
       "name": "Test - Complete JSON",
       "request": {
         "method": "POST",

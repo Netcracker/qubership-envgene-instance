@@ -146,9 +146,17 @@ Use **"Debug - Matrix Generation"**:
 **Solution**: 
 - Check that **"Set Default Values and Load Fallbacks"** step shows all variables being set
 - Look for logs like: `Setting fallback value: ENV_INVENTORY_INIT=false`
-- This is now fixed - all required variables get default values
+- Check that variables are set in `$GITHUB_OUTPUT` for downstream jobs
+- This is now fixed - all required variables get default values and are passed to downstream jobs
 
-### 5. Workflow Step Order
+### 5. Variables Not Passed to Downstream Jobs
+**Problem**: Variables set in `$GITHUB_ENV` but not available in `needs.job.outputs`
+**Solution**: 
+- Variables must be set in both `$GITHUB_ENV` (for current job) and `$GITHUB_OUTPUT` (for downstream jobs)
+- Check that all variables are echoed to `$GITHUB_OUTPUT` in the first job
+- This is now fixed - all variables are properly passed between jobs
+
+### 6. Workflow Step Order
 **Problem**: Variables not available when matrix is generated
 **Solution**: Check that steps run in this order:
 1. Process API Input Variables
@@ -180,9 +188,11 @@ ENV_SPECIFIC_PARAMETERS={}
 - [ ] API input processing completed successfully
 - [ ] ENV_NAMES variable is set and non-empty
 - [ ] All required default variables are set
+- [ ] All variables are set in `$GITHUB_OUTPUT` for downstream jobs
 - [ ] Matrix generation produces valid JSON array
 - [ ] Downstream jobs either run or skip appropriately
 - [ ] No "fromJson: empty input" errors
+- [ ] No `KeyError` in downstream jobs
 
 ## 🚀 Expected Workflow Flow
 
