@@ -145,14 +145,25 @@ jobs:
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
-          
+
       - name: Prepare Parameters
         id: matrix-generator
         shell: bash
         run: |
+          echo "🔧 Generating environment matrix from ENV_NAMES..."
+          echo "ENV_NAMES value: '$ENV_NAMES'"
+          
+          if [ -z "$ENV_NAMES" ]; then
+            echo "❌ ERROR: ENV_NAMES is empty or not set!"
+            echo "Available environment variables:"
+            env | grep -E "^(ENV_|GITHUB_)" | sort
+            exit 1
+          fi
+          
           arr="["
           first=1
           for name in $(echo "$ENV_NAMES" | tr ',' ' '); do
+            echo "Processing environment: '$name'"
             if [ "$first" = 1 ]; then
               first=0
             else
@@ -162,6 +173,7 @@ jobs:
           done
           arr="$arr]"
           
+          echo "Generated matrix: $arr"
           echo "env_matrix=$arr" >> $GITHUB_OUTPUT    
 
   parameters_validation:

@@ -291,20 +291,30 @@ This error indicates that the `ENV_NAMES` parameter is missing or empty. Check:
 
 If this minimal request fails, the issue is with JSON escaping or repository setup.
 
-### Local Testing Script
+### Local Testing Scripts
 
-Use the test script to validate your input locally before API calls:
+#### Quick Test (Command Line)
+Test your exact input string:
+
+```bash
+cd .github/scripts
+python quick_test.py '{"ENV_NAMES": "test-cluster/e02", "ENV_BUILDER": "true"}'
+```
+
+#### Interactive Test
+Full testing with multiple formats:
 
 ```bash
 cd .github/scripts
 python test_api_input.py
 ```
 
-This script will:
+Both scripts will:
 - Test your input string for parsing errors
 - Validate ENV_NAMES presence
 - Show exactly what variables are extracted
-- Allow interactive testing of different formats
+- Preview the environment matrix generation
+- Confirm readiness for API calls
 
 ## Testing with Postman
 

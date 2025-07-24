@@ -131,6 +131,45 @@
       }
     },
     {
+      "name": "Test - User's Original Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"{\\\"ENV_NAMES\\\": \\\"test-cluster/e02\\\", \\\"ENV_BUILDER\\\": \\\"true\\\", \\\"DEPLOYMENT_TICKET_ID\\\": \\\"TEST-TICKET-1\\\", \\\"ENV_TEMPLATE_VERSION\\\": \\\"qubership_envgene_templates:0.0.2\\\"}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Test the exact request that was failing before the fix"
+      }
+    },
+    {
       "name": "Test - Complete JSON",
       "request": {
         "method": "POST",
