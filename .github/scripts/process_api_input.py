@@ -101,13 +101,23 @@ def validate_variable(key, value):
 
 
 def main():
+    print("🐍 Python script started")
+    print("Environment variables:")
+    for key, value in os.environ.items():
+        if key.startswith('GITHUB_PIPELINE'):
+            print(f"  {key}={value}")
+    
     api_input = os.getenv('GITHUB_PIPELINE_API_INPUT', '')
+    print(f"Retrieved GITHUB_PIPELINE_API_INPUT: '{api_input}'")
+    print(f"Value type: {type(api_input)}")
+    print(f"Is empty: {not api_input}")
+    print(f"Is None: {api_input is None}")
     
     if not api_input:
-        print("No GITHUB_PIPELINE_API_INPUT provided, skipping API input processing")
+        print("❌ No GITHUB_PIPELINE_API_INPUT provided, skipping API input processing")
         return
     
-    print(f"Processing GITHUB_PIPELINE_API_INPUT: {api_input}")
+    print(f"✅ Processing GITHUB_PIPELINE_API_INPUT: {api_input}")
     print(f"Input length: {len(api_input)} characters")
     
     # Parse the API input string

@@ -43,11 +43,24 @@ Creating empty matrix to skip downstream jobs...
 
 ### Step 1: Verify API Input Processing
 Check that the **"Process API Input Variables"** step shows:
+
+**Expected logs:**
 ```
-Processing GITHUB_PIPELINE_API_INPUT: {"ENV_NAMES": "test-cluster/e02", ...}
+🔍 Raw GitHub input received:
+Input value: '{"ENV_NAMES": "test-cluster/e02", "ENV_BUILDER": "true"}'
+🐍 Python script started
+✅ Processing GITHUB_PIPELINE_API_INPUT: {"ENV_NAMES": "test-cluster/e02", ...}
 Parsed variables from API input:
   ENV_NAMES=test-cluster/e02
   ...
+```
+
+**Problem indicators:**
+```
+🔍 Raw GitHub input received:
+Input value: ''
+🐍 Python script started
+❌ No GITHUB_PIPELINE_API_INPUT provided, skipping API input processing
 ```
 
 ### Step 2: Check Matrix Generation
@@ -63,19 +76,19 @@ Jobs with matrix should either:
 
 ## 🧪 Test Requests
 
-### Debug Matrix Generation
-Use the **"Debug - Matrix Generation"** request in Postman:
+### Simple Input Test
+Use **"Debug - Simple Test"** to check if input is received at all:
 
 ```json
 {
   "ref": "main",
   "inputs": {
-    "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01,test-cluster/e02\"}"
+    "GITHUB_PIPELINE_API_INPUT": "test"
   }
 }
 ```
 
-### Minimal Test
+### Minimal JSON Test
 Use **"Debug - Test ENV_NAMES Only"**:
 
 ```json
@@ -83,6 +96,18 @@ Use **"Debug - Test ENV_NAMES Only"**:
   "ref": "main",
   "inputs": {
     "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01\"}"
+  }
+}
+```
+
+### Matrix Generation Test
+Use **"Debug - Matrix Generation"**:
+
+```json
+{
+  "ref": "main",
+  "inputs": {
+    "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01,test-cluster/e02\"}"
   }
 }
 ```
@@ -108,7 +133,15 @@ Use **"Debug - Test ENV_NAMES Only"**:
 ❌ Wrong:   {"ENV_NAMES": "   "}
 ```
 
-### 3. Workflow Step Order
+### 3. Input Not Received
+**Problem**: Raw input shows empty value `Input value: ''`
+**Solution**: 
+- Check Postman request format
+- Verify GitHub token has `actions:write` permission
+- Ensure repository path is correct
+- Try **"Debug - Simple Test"** first
+
+### 4. Workflow Step Order
 **Problem**: Variables not available when matrix is generated
 **Solution**: Check that steps run in this order:
 1. Process API Input Variables

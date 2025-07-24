@@ -74,8 +74,18 @@ jobs:
 
       - name: Process API Input Variables
         run: |
+          # Debug: Show raw input
+          echo "🔍 Raw GitHub input received:"
+          echo "Input value: '${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}'"
+          
           # Set API input for processing
+          export GITHUB_PIPELINE_API_INPUT="${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}"
           echo "GITHUB_PIPELINE_API_INPUT=${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" >> $GITHUB_ENV
+          
+          # Debug: Verify environment variable was set
+          echo "🔍 Environment variable check:"
+          echo "GITHUB_PIPELINE_API_INPUT value: '$GITHUB_PIPELINE_API_INPUT'"
+          echo "Exported value: '${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}'"
           
           # Process API input variables (all variables come from here)
           # This script validates ENV_NAMES and exits if not provided
@@ -160,7 +170,7 @@ jobs:
             echo "This likely means the API input processing failed."
             echo "Creating empty matrix to skip downstream jobs..."
             echo 'env_matrix=[]' >> $GITHUB_OUTPUT
-            return 0
+            exit 0
           fi
           
           # Validate ENV_NAMES is not just whitespace
@@ -168,7 +178,7 @@ jobs:
             echo "❌ ERROR: ENV_NAMES contains only whitespace!"
             echo "Creating empty matrix to skip downstream jobs..."
             echo 'env_matrix=[]' >> $GITHUB_OUTPUT
-            return 0
+            exit 0
           fi
           
           arr="["
@@ -193,7 +203,7 @@ jobs:
             echo "❌ ERROR: No valid environments found in ENV_NAMES!"
             echo "Creating empty matrix to skip downstream jobs..."
             echo 'env_matrix=[]' >> $GITHUB_OUTPUT
-            return 0
+            exit 0
           fi
           
           echo "Generated matrix with $count environment(s): $arr"
