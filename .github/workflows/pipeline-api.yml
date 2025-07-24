@@ -152,34 +152,58 @@ jobs:
         run: |
           echo "🔧 Generating environment matrix from ENV_NAMES..."
           echo "ENV_NAMES value: '$ENV_NAMES'"
+          echo "All environment variables starting with ENV_:"
+          env | grep "^ENV_" | sort || echo "No ENV_ variables found"
           
           if [ -z "$ENV_NAMES" ]; then
             echo "❌ ERROR: ENV_NAMES is empty or not set!"
-            echo "Available environment variables:"
-            env | grep -E "^(ENV_|GITHUB_)" | sort
-            exit 1
+            echo "This likely means the API input processing failed."
+            echo "Creating empty matrix to skip downstream jobs..."
+            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+            return 0
+          fi
+          
+          # Validate ENV_NAMES is not just whitespace
+          if [ -z "$(echo "$ENV_NAMES" | tr -d '[:space:]')" ]; then
+            echo "❌ ERROR: ENV_NAMES contains only whitespace!"
+            echo "Creating empty matrix to skip downstream jobs..."
+            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+            return 0
           fi
           
           arr="["
           first=1
+          count=0
           for name in $(echo "$ENV_NAMES" | tr ',' ' '); do
-            echo "Processing environment: '$name'"
-            if [ "$first" = 1 ]; then
-              first=0
-            else
-              arr="$arr,"
+            # Skip empty names
+            if [ -n "$(echo "$name" | tr -d '[:space:]')" ]; then
+              echo "Processing environment: '$name'"
+              if [ "$first" = 1 ]; then
+                first=0
+              else
+                arr="$arr,"
+              fi
+              arr="$arr\"$name\""
+              count=$((count + 1))
             fi
-            arr="$arr\"$name\""
           done
           arr="$arr]"
           
-          echo "Generated matrix: $arr"
+          if [ "$count" -eq 0 ]; then
+            echo "❌ ERROR: No valid environments found in ENV_NAMES!"
+            echo "Creating empty matrix to skip downstream jobs..."
+            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+            return 0
+          fi
+          
+          echo "Generated matrix with $count environment(s): $arr"
           echo "env_matrix=$arr" >> $GITHUB_OUTPUT    
 
   parameters_validation:
     name: "${{ matrix.environment }} - Parameters Validation"
     runs-on: ubuntu-latest
     needs: show_environment_variables
+    if: ${{ needs.show_environment_variables.outputs.env_matrix != '[]' }}
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_GCIP }}
       options: --user root
@@ -200,7 +224,7 @@ jobs:
   generate_inventory:
     name: "${{ matrix.environment }} - Generate Inventory"
     runs-on: ubuntu-latest
-    if: always() && needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+    if: always() && needs.show_environment_variables.outputs.env_matrix != '[]' && needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
     needs:
       - parameters_validation
       - show_environment_variables
@@ -255,7 +279,7 @@ jobs:
 
   env_build:
     name: "${{ matrix.environment }} - Env Build"
-    if: always() && needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
+    if: always() && needs.show_environment_variables.outputs.env_matrix != '[]' && needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
     runs-on: ubuntu-latest
     needs:
       - parameters_validation
@@ -396,7 +420,7 @@ jobs:
 
   generate_effective_set:
     name: "${{ matrix.environment }} - Generate Effective Set"
-    if: always() && needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+    if: always() && needs.show_environment_variables.outputs.env_matrix != '[]' && needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
     runs-on: ubuntu-latest
     needs: [parameters_validation,show_environment_variables,generate_inventory,env_build]
     container:
@@ -518,7 +542,7 @@ jobs:
     name: "${{ matrix.environment }} - Git Commit"
     runs-on: ubuntu-latest
     needs: [parameters_validation,show_environment_variables,generate_inventory,env_build,generate_effective_set]
-    if: always() && (needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true')
+    if: always() && needs.show_environment_variables.outputs.env_matrix != '[]' && (needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true')
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
       options: --user root

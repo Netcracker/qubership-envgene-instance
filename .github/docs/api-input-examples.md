@@ -291,6 +291,12 @@ This error indicates that the `ENV_NAMES` parameter is missing or empty. Check:
 
 If this minimal request fails, the issue is with JSON escaping or repository setup.
 
+### Matrix Generation Errors
+
+If you see errors like `Matrix vector 'environment' does not contain any values` or `Error from function 'fromJson': empty input`:
+
+📖 **See detailed troubleshooting guide**: [Troubleshooting Matrix Errors](troubleshooting-matrix-errors.md)
+
 ### Local Testing Scripts
 
 #### Quick Test (Command Line)
