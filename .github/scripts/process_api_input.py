@@ -108,12 +108,14 @@ def main():
         return
     
     print(f"Processing GITHUB_PIPELINE_API_INPUT: {api_input}")
+    print(f"Input length: {len(api_input)} characters")
     
     # Parse the API input string
     variables = parse_api_input(api_input)
     
     if not variables:
         print("No variables parsed from GITHUB_PIPELINE_API_INPUT")
+        print("This could be due to invalid JSON/YAML format or empty input")
         return
     
     github_env_file = os.getenv('GITHUB_ENV')
@@ -121,6 +123,12 @@ def main():
     
     if not github_env_file or not github_output_file:
         print("Error: GITHUB_ENV or GITHUB_OUTPUT variable is not set!")
+        sys.exit(1)
+    
+    # Validate required variables
+    if 'ENV_NAMES' not in variables or not variables['ENV_NAMES'].strip():
+        print("Error: ENV_NAMES is required but not provided in API input")
+        print("Available variables:", list(variables.keys()))
         sys.exit(1)
     
     print("Parsed variables from API input:")

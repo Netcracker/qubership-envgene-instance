@@ -253,4 +253,245 @@ Successfully processed 1 variables from API input
 - If GITHUB_PIPELINE_API_INPUT is empty or not specified - script is skipped
 - Invalid JSON/YAML formats are automatically processed as key=value
 - Incorrect data types are logged with warnings
-- Pipeline continues execution even with parsing errors 
+- Pipeline continues execution even with parsing errors
+
+## Common Issues and Solutions
+
+### "ENV_NAMES is required but not provided in API input"
+
+This error indicates that the `ENV_NAMES` parameter is missing or empty. Check:
+
+1. **JSON Escaping**: Ensure quotes are properly escaped in JSON strings:
+   ```json
+   ✅ Correct: "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01\"}"
+   ❌ Wrong: "GITHUB_PIPELINE_API_INPUT": "{"ENV_NAMES": "test-cluster/e01"}"
+   ```
+
+2. **Empty Values**: Make sure ENV_NAMES has a non-empty value:
+   ```json
+   ✅ Correct: {"ENV_NAMES": "test-cluster/e01"}
+   ❌ Wrong: {"ENV_NAMES": ""}
+   ```
+
+3. **Debug Steps**:
+   - Use the "Debug - Test ENV_NAMES Only" request in Postman collection
+   - Check GitHub Actions logs for parsing details
+   - Verify the input string in the workflow logs
+
+### Example Debug Request
+
+```json
+{
+  "ref": "main",
+  "inputs": {
+    "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01\"}"
+  }
+}
+```
+
+If this minimal request fails, the issue is with JSON escaping or repository setup.
+
+### Local Testing Script
+
+Use the test script to validate your input locally before API calls:
+
+```bash
+cd .github/scripts
+python test_api_input.py
+```
+
+This script will:
+- Test your input string for parsing errors
+- Validate ENV_NAMES presence
+- Show exactly what variables are extracted
+- Allow interactive testing of different formats
+
+## Testing with Postman
+
+### Quick Start
+
+📥 **Import Ready-to-Use Collection**: Download and import [EnvGene-Pipeline-API.postman_collection.json](../postman/EnvGene-Pipeline-API.postman_collection.json) directly into Postman.
+
+⚡ **5-minute setup**: See [Postman Quick Start Guide](postman-quick-start.md) for step-by-step instructions.
+
+### Setup
+
+1. **Create GitHub Personal Access Token**:
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Generate new token with `actions:write` scope
+   - Copy the token for use in Postman
+
+2. **Base Configuration**:
+   - **Method**: `POST`
+   - **URL**: `https://api.github.com/repos/OWNER/REPO/actions/workflows/pipeline-api.yml/dispatches`
+   - Replace `OWNER/REPO` with your actual repository
+
+### Headers
+
+```
+Authorization: token YOUR_GITHUB_TOKEN
+Accept: application/vnd.github.v3+json
+Content-Type: application/json
+```
+
+### Body Examples
+
+#### Example 1: Minimal Setup (JSON Body)
+
+```json
+{
+  "ref": "main",
+  "inputs": {
+    "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01\", \"ENV_INVENTORY_INIT\": \"true\"}"
+  }
+}
+```
+
+#### Example 2: Complete Setup (JSON Body)
+
+```json
+{
+  "ref": "main",
+  "inputs": {
+    "GITHUB_PIPELINE_API_INPUT": "{\"ENV_NAMES\": \"test-cluster/e01,test-cluster/e02\", \"DEPLOYMENT_TICKET_ID\": \"DEPLOY-12345\", \"ENV_TEMPLATE_VERSION\": \"2.1.0\", \"ENV_BUILDER\": \"true\", \"GET_PASSPORT\": \"false\", \"CMDB_IMPORT\": \"true\", \"ENV_INVENTORY_INIT\": \"true\", \"GENERATE_EFFECTIVE_SET\": \"true\", \"ENV_TEMPLATE_TEST\": \"false\", \"ENV_TEMPLATE_NAME\": \"production-template\", \"SD_DATA\": \"{\\\"region\\\": \\\"us-east-1\\\", \\\"instanceType\\\": \\\"m5.large\\\"}\", \"SD_VERSION\": \"3.2.1\", \"SD_SOURCE_TYPE\": \"git\", \"SD_DELTA\": \"false\", \"ENV_SPECIFIC_PARAMETERS\": \"{\\\"replicas\\\": 3, \\\"memory\\\": \\\"2Gi\\\"}\"}"
+  }
+}
+```
+
+#### Example 3: YAML Format (JSON Body)
+
+```json
+{
+  "ref": "main",
+  "inputs": {
+    "GITHUB_PIPELINE_API_INPUT": "ENV_NAMES: \"test-cluster/e01\"\nENV_INVENTORY_INIT: true\nGENERATE_EFFECTIVE_SET: true\nENV_TEMPLATE_NAME: \"my-template\""
+  }
+}
+```
+
+#### Example 4: Key=Value Format (JSON Body)
+
+```json
+{
+  "ref": "main",
+  "inputs": {
+    "GITHUB_PIPELINE_API_INPUT": "ENV_NAMES=test-cluster/e01\nENV_INVENTORY_INIT=true\nGENERATE_EFFECTIVE_SET=true\nENV_TEMPLATE_NAME=my-template"
+  }
+}
+```
+
+### Postman Environment Variables
+
+Create these variables in your Postman environment for easier testing:
+
+```
+GITHUB_TOKEN = your_personal_access_token
+GITHUB_OWNER = your_github_username_or_org
+GITHUB_REPO = your_repository_name
+GITHUB_BRANCH = main
+```
+
+Then use in your requests:
+
+- **URL**: `https://api.github.com/repos/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/actions/workflows/pipeline-api.yml/dispatches`
+- **Authorization**: `token {{GITHUB_TOKEN}}`
+- **Body ref**: `{{GITHUB_BRANCH}}`
+
+### Postman Collection Structure
+
+```
+📁 EnvGene Pipeline API
+├── 🔧 Setup & Auth Test
+├── 📋 Test - Minimal JSON
+├── 📋 Test - Complete JSON  
+├── 📋 Test - YAML Format
+├── 📋 Test - Key=Value Format
+└── 🔍 Check Workflow Runs
+```
+
+### Response Examples
+
+#### Success Response (HTTP 204)
+```
+Status: 204 No Content
+```
+
+#### Error Responses
+
+**Invalid Token (HTTP 401)**:
+```json
+{
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest"
+}
+```
+
+**Repository Not Found (HTTP 404)**:
+```json
+{
+  "message": "Not Found",
+  "documentation_url": "https://docs.github.com/rest"
+}
+```
+
+**Invalid Workflow (HTTP 422)**:
+```json
+{
+  "message": "Workflow does not have 'workflow_dispatch' trigger",
+  "documentation_url": "https://docs.github.com/rest/reference/actions#create-a-workflow-dispatch-event"
+}
+```
+
+### Testing Checklist
+
+- [ ] GitHub token has `actions:write` permission
+- [ ] Repository path is correct (`OWNER/REPO`)
+- [ ] Workflow file `pipeline-api.yml` exists in `.github/workflows/`
+- [ ] `ENV_NAMES` is provided in the API input
+- [ ] JSON strings are properly escaped (use `\"` for inner quotes)
+- [ ] YAML/Key=Value formats use `\n` for line breaks
+
+### Pre-request Script (Optional)
+
+Add this script to automatically generate test data:
+
+```javascript
+// Generate random deployment ticket ID
+const ticketId = "DEPLOY-" + Math.floor(Math.random() * 99999);
+
+// Set current timestamp
+const timestamp = new Date().toISOString();
+
+// Create dynamic API input
+const apiInput = {
+    ENV_NAMES: "test-cluster/e01",
+    DEPLOYMENT_TICKET_ID: ticketId,
+    ENV_INVENTORY_INIT: "true",
+    GENERATE_EFFECTIVE_SET: "true",
+    ENV_TEMPLATE_NAME: "test-template-" + timestamp.slice(0,10)
+};
+
+// Set as environment variable
+pm.environment.set("DYNAMIC_API_INPUT", JSON.stringify(apiInput));
+```
+
+Then use in body:
+```json
+{
+  "ref": "main",
+  "inputs": {
+    "GITHUB_PIPELINE_API_INPUT": "{{DYNAMIC_API_INPUT}}"
+  }
+}
+```
+
+### Monitoring Workflow Execution
+
+After successful trigger, monitor the execution:
+
+**Get Workflow Runs**:
+- **Method**: `GET`
+- **URL**: `https://api.github.com/repos/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/actions/runs`
+- **Headers**: `Authorization: token {{GITHUB_TOKEN}}`
+
+Check the most recent run for your pipeline execution results. 

@@ -78,14 +78,11 @@ jobs:
           echo "GITHUB_PIPELINE_API_INPUT=${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" >> $GITHUB_ENV
           
           # Process API input variables (all variables come from here)
+          # This script validates ENV_NAMES and exits if not provided
           python .github/scripts/process_api_input.py
-          
-          # Validate that required variables are present
-          if [ -z "$ENV_NAMES" ]; then
-            echo "Error: ENV_NAMES is required but not provided in API input"
-            exit 1
-          fi
-          
+
+      - name: Set Default Values and Load Fallbacks
+        run: |
           # Set defaults for optional variables if not provided
           echo "ENV_BUILDER=${ENV_BUILDER:-true}" >> $GITHUB_ENV
           echo "GET_PASSPORT=${GET_PASSPORT:-false}" >> $GITHUB_ENV

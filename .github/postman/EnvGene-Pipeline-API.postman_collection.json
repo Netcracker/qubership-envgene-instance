@@ -1,0 +1,350 @@
+{
+  "info": {
+    "name": "EnvGene Pipeline API",
+    "description": "Collection for testing GITHUB_PIPELINE_API_INPUT with various formats",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "github_owner",
+      "value": "YOUR_GITHUB_USERNAME",
+      "type": "string"
+    },
+    {
+      "key": "github_repo",
+      "value": "YOUR_REPOSITORY_NAME",
+      "type": "string"
+    },
+    {
+      "key": "github_token",
+      "value": "YOUR_GITHUB_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "github_branch",
+      "value": "main",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup & Auth Test",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows"]
+        },
+        "description": "Test GitHub authentication and list available workflows"
+      }
+    },
+    {
+      "name": "Test - Minimal JSON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"{\\\"ENV_NAMES\\\": \\\"test-cluster/e01\\\", \\\"ENV_INVENTORY_INIT\\\": \\\"true\\\", \\\"GENERATE_EFFECTIVE_SET\\\": \\\"true\\\"}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Test minimal JSON format with only required parameters"
+      }
+    },
+    {
+      "name": "Debug - Test ENV_NAMES Only",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"{\\\"ENV_NAMES\\\": \\\"test-cluster/e01\\\"}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Debug test with only ENV_NAMES to isolate parsing issues"
+      }
+    },
+    {
+      "name": "Test - Complete JSON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"{\\\"ENV_NAMES\\\": \\\"test-cluster/e01,test-cluster/e02\\\", \\\"DEPLOYMENT_TICKET_ID\\\": \\\"DEPLOY-12345\\\", \\\"ENV_TEMPLATE_VERSION\\\": \\\"2.1.0\\\", \\\"ENV_BUILDER\\\": \\\"true\\\", \\\"GET_PASSPORT\\\": \\\"false\\\", \\\"CMDB_IMPORT\\\": \\\"true\\\", \\\"ENV_INVENTORY_INIT\\\": \\\"true\\\", \\\"GENERATE_EFFECTIVE_SET\\\": \\\"true\\\", \\\"ENV_TEMPLATE_TEST\\\": \\\"false\\\", \\\"ENV_TEMPLATE_NAME\\\": \\\"production-template\\\", \\\"SD_DATA\\\": \\\"{\\\\\\\"region\\\\\\\": \\\\\\\"us-east-1\\\\\\\", \\\\\\\"instanceType\\\\\\\": \\\\\\\"m5.large\\\\\\\"}\\\", \\\"SD_VERSION\\\": \\\"3.2.1\\\", \\\"SD_SOURCE_TYPE\\\": \\\"git\\\", \\\"SD_DELTA\\\": \\\"false\\\", \\\"ENV_SPECIFIC_PARAMETERS\\\": \\\"{\\\\\\\"replicas\\\\\\\": 3, \\\\\\\"memory\\\\\\\": \\\\\\\"2Gi\\\\\\\"}\\\"}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Test complete JSON format with all available parameters"
+      }
+    },
+    {
+      "name": "Test - YAML Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"ENV_NAMES: \\\"test-cluster/e01\\\"\\nENV_INVENTORY_INIT: true\\nGENERATE_EFFECTIVE_SET: true\\nENV_TEMPLATE_NAME: \\\"my-template\\\"\\nSD_DATA: '{\\\"environment\\\": \\\"test\\\"}'\\nSD_VERSION: \\\"2.0.0\\\"\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Test YAML format for API input"
+      }
+    },
+    {
+      "name": "Test - Key=Value Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"ENV_NAMES=test-cluster/e01\\nENV_INVENTORY_INIT=true\\nGENERATE_EFFECTIVE_SET=true\\nENV_TEMPLATE_NAME=my-template\\nSD_DATA={\\\"environment\\\": \\\"test\\\"}\\nSD_VERSION=2.0.0\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Test Key=Value format for API input"
+      }
+    },
+    {
+      "name": "Test - Dynamic Generation",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate random deployment ticket ID",
+              "const ticketId = \"DEPLOY-\" + Math.floor(Math.random() * 99999);",
+              "",
+              "// Set current timestamp",
+              "const timestamp = new Date().toISOString();",
+              "",
+              "// Create dynamic API input",
+              "const apiInput = {",
+              "    ENV_NAMES: \"test-cluster/e01\",",
+              "    DEPLOYMENT_TICKET_ID: ticketId,",
+              "    ENV_INVENTORY_INIT: \"true\",",
+              "    GENERATE_EFFECTIVE_SET: \"true\",",
+              "    ENV_TEMPLATE_NAME: \"test-template-\" + timestamp.slice(0,10)",
+              "};",
+              "",
+              "// Set as environment variable",
+              "pm.environment.set(\"DYNAMIC_API_INPUT\", JSON.stringify(apiInput));",
+              "",
+              "console.log(\"Generated API Input:\", JSON.stringify(apiInput, null, 2));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ref\": \"{{github_branch}}\",\n  \"inputs\": {\n    \"GITHUB_PIPELINE_API_INPUT\": \"{{DYNAMIC_API_INPUT}}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/workflows/pipeline-api.yml/dispatches",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "workflows", "pipeline-api.yml", "dispatches"]
+        },
+        "description": "Test with dynamically generated parameters using pre-request script"
+      }
+    },
+    {
+      "name": "Check Workflow Runs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{github_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/vnd.github.v3+json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://api.github.com/repos/{{github_owner}}/{{github_repo}}/actions/runs?per_page=10",
+          "protocol": "https",
+          "host": ["api", "github", "com"],
+          "path": ["repos", "{{github_owner}}", "{{github_repo}}", "actions", "runs"],
+          "query": [
+            {
+              "key": "per_page",
+              "value": "10"
+            }
+          ]
+        },
+        "description": "Check recent workflow runs to monitor pipeline execution"
+      }
+    }
+  ]
+} 
