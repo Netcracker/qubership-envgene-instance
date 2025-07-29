@@ -49,6 +49,71 @@ def validate_string(value, key):
     raise ValueError(f"{key} must be a string. Got {type(value).__name__}")
 
 
+def validate_cred_rotation_payload(value, key):
+    """
+    Validates CRED_ROTATION_PAYLOAD structure according to the specified format:
+    {
+      "rotation_items": [
+        {
+          "namespace": "<namespace>",
+          "application": "<application-name>",  # optional
+          "context": "enum[`pipeline`,`deployment`, `runtime`]",
+          "parameter_key": "<parameter-key>",
+          "parameter_value": "<new-parameter-value>"
+        }
+      ]
+    }
+    """
+    try:
+        if isinstance(value, str):
+            value = value.strip().replace('\n', ' ')
+            if not value:  # Empty string is valid (default empty payload)
+                return "{}"
+            parsed_json = json.loads(value)
+        else:
+            parsed_json = value
+
+        # If empty object, return as is
+        if not parsed_json:
+            return "{}"
+
+        # Validate structure
+        if not isinstance(parsed_json, dict):
+            raise ValueError(f"{key} must be a JSON object")
+
+        if "rotation_items" not in parsed_json:
+            raise ValueError(f"{key} must contain 'rotation_items' field")
+
+        if not isinstance(parsed_json["rotation_items"], list):
+            raise ValueError(f"{key}.rotation_items must be an array")
+
+        # Validate each rotation item
+        valid_contexts = ["pipeline", "deployment", "runtime"]
+        for i, item in enumerate(parsed_json["rotation_items"]):
+            if not isinstance(item, dict):
+                raise ValueError(f"{key}.rotation_items[{i}] must be an object")
+
+            # Required fields
+            required_fields = ["namespace", "context", "parameter_key", "parameter_value"]
+            for field in required_fields:
+                if field not in item:
+                    raise ValueError(f"{key}.rotation_items[{i}] must contain '{field}' field")
+                if not isinstance(item[field], str):
+                    raise ValueError(f"{key}.rotation_items[{i}].{field} must be a string")
+
+            # Optional field - application
+            if "application" in item and not isinstance(item["application"], str):
+                raise ValueError(f"{key}.rotation_items[{i}].application must be a string if provided")
+
+            # Validate context enum
+            if item["context"] not in valid_contexts:
+                raise ValueError(f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}")
+
+        return json.dumps(parsed_json)
+    except (json.JSONDecodeError, TypeError) as e:
+        raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: load_env_params.py <yaml_config_file>")
@@ -77,10 +142,16 @@ def main():
         "SD_SOURCE_TYPE": "",
         "SD_DELTA": "false",
         "ENV_SPECIFIC_PARAMETERS": "{}",
+        "ENV_BUILDER": "true",
+        "GET_PASSPORT": "false",
+        "CMDB_IMPORT": "false",
+        "DEPLOYMENT_TICKET_ID": "",
+        "ENV_TEMPLATE_VERSION": "",
+        "CRED_ROTATION_PAYLOAD": "{}",
     }
 
     validators = {
-        # Variables from pipeline_vars.yaml only
+        # Variables from pipeline_vars.yaml
         "ENV_INVENTORY_INIT": validate_boolean,
         "GENERATE_EFFECTIVE_SET": validate_boolean,
         "ENV_TEMPLATE_TEST": validate_boolean,
@@ -90,6 +161,14 @@ def main():
         "SD_SOURCE_TYPE": validate_string,
         "SD_DELTA": validate_boolean,
         "ENV_SPECIFIC_PARAMETERS": validate_json,
+        # Additional variables from workflow inputs
+        "ENV_BUILDER": validate_boolean,
+        "GET_PASSPORT": validate_boolean,
+        "CMDB_IMPORT": validate_boolean,
+        "DEPLOYMENT_TICKET_ID": validate_string,
+        "ENV_TEMPLATE_VERSION": validate_string,
+        # New credential rotation payload variable
+        "CRED_ROTATION_PAYLOAD": validate_cred_rotation_payload,
     }
 
     validated_data = {}
@@ -118,6 +197,8 @@ def main():
                     validated_data[key] = "{}"
                 else:
                     validated_data[key] = validate_json(raw_value, key)
+            elif validator == validate_cred_rotation_payload:
+                validated_data[key] = validate_cred_rotation_payload(raw_value, key)
             else:  # string
                 validated_data[key] = validate_string(raw_value, key)
         except ValueError as e:

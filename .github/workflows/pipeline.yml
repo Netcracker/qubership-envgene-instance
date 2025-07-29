@@ -57,13 +57,13 @@ env:
   
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
-  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-enchance_instance_pipeline'
+  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-cred-rotation-test'
   DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: 'ghcr.io/netcracker/qubership-effective-set-generator:latest'
 
 jobs:
   show_environment_variables:
     name: "UI Input Parameters Processing"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
       image: ghcr.io/netcracker/qubership-gcip:latest
       options: --user root
@@ -84,6 +84,7 @@ jobs:
       SD_SOURCE_TYPE: ${{ env.SD_SOURCE_TYPE }}
       SD_DELTA: ${{ env.SD_DELTA }}
       ENV_SPECIFIC_PARAMETERS: ${{ env.ENV_SPECIFIC_PARAMETERS }}
+      CRED_ROTATION_PAYLOAD: ${{ env.CRED_ROTATION_PAYLOAD }}
       ENV_GENERATION_PARAMS: ${{ steps.env-generation-params.outputs.ENV_GENERATION_PARAMS }}
       DOCKER_IMAGE_GCIP: ${{ steps.docker-images.outputs.DOCKER_IMAGE_GCIP }}
       DOCKER_IMAGE_ENVGENE: ${{ steps.docker-images.outputs.DOCKER_IMAGE_ENVGENE }}
@@ -135,7 +136,7 @@ jobs:
           echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_OUTPUT
           echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_ENV
           
-          # Set all variables in outputs for downstream jobs
+          # Set all variables in outputs for downstream jobs (same order as API workflow)
           echo "ENV_INVENTORY_INIT=$ENV_INVENTORY_INIT" >> $GITHUB_OUTPUT
           echo "GENERATE_EFFECTIVE_SET=$GENERATE_EFFECTIVE_SET" >> $GITHUB_OUTPUT
           echo "ENV_TEMPLATE_TEST=$ENV_TEMPLATE_TEST" >> $GITHUB_OUTPUT
@@ -145,6 +146,7 @@ jobs:
           echo "SD_SOURCE_TYPE=$SD_SOURCE_TYPE" >> $GITHUB_OUTPUT
           echo "SD_DELTA=$SD_DELTA" >> $GITHUB_OUTPUT
           echo "ENV_SPECIFIC_PARAMETERS=$ENV_SPECIFIC_PARAMETERS" >> $GITHUB_OUTPUT
+          echo "CRED_ROTATION_PAYLOAD=$CRED_ROTATION_PAYLOAD" >> $GITHUB_OUTPUT
           echo "ENV_TEMPLATE_VERSION=$ENV_TEMPLATE_VERSION" >> $GITHUB_OUTPUT
           echo "ENV_BUILDER=$ENV_BUILDER" >> $GITHUB_OUTPUT
           echo "GET_PASSPORT=$GET_PASSPORT" >> $GITHUB_OUTPUT
@@ -181,6 +183,7 @@ jobs:
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
+          echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
           
       - name: Prepare Parameters
         id: matrix-generator
@@ -202,7 +205,7 @@ jobs:
 
   parameters_validation:
     name: "${{ matrix.environment }} - Parameters Validation"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: show_environment_variables
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_GCIP }}
@@ -223,7 +226,7 @@ jobs:
 
   generate_inventory:
     name: "${{ matrix.environment }} - Generate Inventory"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: always() && needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
     needs:
       - parameters_validation
@@ -277,14 +280,66 @@ jobs:
           name: generate_inventory_${{ env.SANITIZED_NAME }}
           path: ${{ github.workspace }}/environments/${{ env.FULL_ENV }}
 
-  env_build:
-    name: "${{ matrix.environment }} - Env Build"
-    if: always() && needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
-    runs-on: ubuntu-latest
+  credential_rotation:
+    name: "${{ matrix.environment }} - Credential Rotation"
+    runs-on: ubuntu-22.04
+    if: always() && needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
     needs:
       - parameters_validation
       - show_environment_variables
       - generate_inventory
+    container:
+      image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
+      options: --user root
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(needs.show_environment_variables.outputs.env_matrix) }}
+    env:
+      FULL_ENV: ${{ matrix.environment }}
+      CRED_ROTATION_PAYLOAD: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}      
+    steps:
+      - name: Repository Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare variables to download the artifacts
+        run: |
+          echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
+          echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
+
+      - name: Create the naming for artifact
+        run: |
+          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
+            echo "artifact_name=credential_rotation_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
+          fi
+
+      - name: Credential Rotation
+        run: |          
+          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)              
+          
+          CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
+          export CRED_ROTATION_PAYLOAD
+          
+          python3 /module/scripts/creds_rotation_handler.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: credential_rotation_${{ env.SANITIZED_NAME }}
+          path: |
+            ${{ github.workspace }}/environments/${{ env.FULL_ENV }}
+            ${{ github.workspace }}/affected-sensitive-parameters.yaml
+
+  env_build:
+    name: "${{ matrix.environment }} - Env Build"
+    if: always() && needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
+    runs-on: ubuntu-22.04
+    needs:
+      - parameters_validation
+      - show_environment_variables
+      - generate_inventory
+      - credential_rotation
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
     strategy:
@@ -304,28 +359,24 @@ jobs:
 
       - name: Create the naming for artifact
         run: |
-          if [ "${{ needs.show_environment_variables.outputs.ENV_INVENTORY_INIT }}" = "true" ]; then
+          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
             echo "artifact_name=generate_inventory_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
 
       - name: Download artifact
-        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true'
+        if: needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true'
+        if: needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
-      - name: Check /module/scripts contents
-        run: |
-          ls -l /module/scripts
-      
       - name: Build Env
         run: |
           ENV_NAMES="${{ matrix.environment }}"
@@ -423,7 +474,7 @@ jobs:
   generate_effective_set:
     name: "${{ matrix.environment }} - Generate Effective Set"
     if: always() && needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [parameters_validation,show_environment_variables,generate_inventory,env_build]
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
@@ -445,7 +496,7 @@ jobs:
           
       - name: Create the naming for artifact
         run: |
-          if [ "${{ needs.show_environment_variables.outputs.ENV_INVENTORY_INIT }}" = "true" ]; then
+          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
             echo "artifact_name=generate_inventory_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
           if [ "${{ needs.show_environment_variables.outputs.ENV_BUILDER }}" = "true" ]; then
@@ -453,14 +504,14 @@ jobs:
           fi
 
       - name: Download artifact
-        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
@@ -542,7 +593,7 @@ jobs:
 
   git_commit:
     name: "${{ matrix.environment }} - Git Commit"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [parameters_validation,show_environment_variables,generate_inventory,env_build,generate_effective_set]
     if: always() && (needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true')
     container:
@@ -565,7 +616,7 @@ jobs:
           
       - name: Create the naming for artifact
         run: |
-          if [ "${{ needs.show_environment_variables.outputs.ENV_INVENTORY_INIT }}" = "true" ]; then
+          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
             echo "artifact_name=generate_inventory_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
           if [ "${{ needs.show_environment_variables.outputs.ENV_BUILDER }}" = "true" ]; then
@@ -576,14 +627,14 @@ jobs:
           fi
 
       - name: Download artifact
-        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
