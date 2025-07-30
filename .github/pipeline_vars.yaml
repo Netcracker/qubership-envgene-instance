@@ -9,4 +9,33 @@
 #SD_SOURCE_TYPE: ''
 #SD_DELTA: false
 #ENV_SPECIFIC_PARAMETERS: {}
-#CRED_ROTATION_PAYLOAD: '{}'
+CRED_ROTATION_PAYLOAD: '{
+  "rotation_items": [
+    {
+      "namespace": "env-1-platform-monitoring",
+      "application": "MONITORING",
+      "context": "deployment",
+      "parameter_key": "db_login",
+      "parameter_value": "s3cr3tN3wLogin"
+    },
+    {
+      "namespace": "env-1-platform-monitoring",
+      "application": "MONITORING",
+      "context": "deployment",
+      "parameter_key": "db_password",
+      "parameter_value": "s3cr3tN3wP@ss"
+    },
+    {
+      "namespace": "env-1-platform-monitoring",
+      "context": "deployment",
+      "parameter_key": "db_password",
+      "parameter_value": "s3cr3tN3wP@ss"
+    },
+    {
+      "namespace": "env-1-platform-monitoring",
+      "context": "deployment",
+      "parameter_key": "global.secrets.password",
+      "parameter_value": "user"
+    }
+  ]
+}'
