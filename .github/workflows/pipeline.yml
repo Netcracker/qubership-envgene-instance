@@ -315,13 +315,12 @@ jobs:
           if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
             echo "artifact_name=credential_rotation_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
-
-             - name: Credential Rotation
-         run: |          
-           export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-           export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)              
-           
-           CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
+      - name: Credential Rotation
+        run: |          
+          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)              
+          
+          CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
            export CRED_ROTATION_PAYLOAD
            
            export ENVGENE_AGE_PRIVATE_KEY
@@ -384,11 +383,10 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
-       - name: Build Env
-         run: |
-           ENV_NAMES="${{ matrix.environment }}"
-           export ENV_NAMES
-           
+      - name: Build Env
+        run: |
+          ENV_NAMES="${{ matrix.environment }}"
+          export ENV_NAMES
            ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
            export ENV_NAME_SHORT
            
