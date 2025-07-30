@@ -313,6 +313,7 @@ jobs:
         environment: ${{ fromJson(needs.show_environment_variables.outputs.env_matrix) }}
     env:
       FULL_ENV: ${{ matrix.environment }}
+      CRED_ROTATION_FORCE: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_FORCE }}
       CRED_ROTATION_PAYLOAD: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}
       ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
       ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
@@ -335,6 +336,9 @@ jobs:
         run: |          
           export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)              
+          
+          CRED_ROTATION_FORCE="${{ needs.show_environment_variables.outputs.CRED_ROTATION_FORCE }}"
+          export CRED_ROTATION_FORCE
           
           CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
           export CRED_ROTATION_PAYLOAD
