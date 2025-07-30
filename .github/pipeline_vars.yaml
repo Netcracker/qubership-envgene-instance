@@ -10,4 +10,5 @@
 #SD_DELTA: false
 #ENV_SPECIFIC_PARAMETERS: {}
 #CRED_ROTATION_FORCE: false
-CRED_ROTATION_PAYLOAD: '{"rotation_items": [{"namespace": "env-1-platform-monitoring", "application": "MONITORING", "context": "deployment", "parameter_key": "db_login", "parameter_value": "newLogin123"}]}'
+CRED_ROTATION_PAYLOAD: |
+  {"rotation_items": [{"namespace": "env-1-platform-monitoring", "application": "MONITORING", "context": "deployment", "parameter_key": "db_login", "parameter_value": "newLogin123"}]}
