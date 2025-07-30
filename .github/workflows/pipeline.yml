@@ -452,30 +452,30 @@ jobs:
            export PUBLIC_AGE_KEYS
            
            if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
-          env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
-          for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
-    
-          if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" == "false" ]; then
-            /module/scripts/prepare.sh "set_template_version.yaml"
-            /module/scripts/prepare.sh "build_env.yaml"
-          else
-            /module/scripts/prepare.sh "build_env.yaml"
-          fi
-    
-          if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
-            env_name=$(cat set_variable.txt)
-            sed -i "s|\\\"envgeneNullValue\\\"|\\\"test_value\\\"|g" "${CI_PROJECT_DIR}/environments/$env_name/Credentials/credentials.yml"
-          else
-            env_name=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
-            export env_name
-          fi
-    
-          env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
-          for path in $env_path; do
-            if [ -d "$path/Credentials" ]; then
-              chmod ugo+rw "$path/Credentials/"*
+            env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
+            for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
+      
+            if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" == "false" ]; then
+              /module/scripts/prepare.sh "set_template_version.yaml"
+              /module/scripts/prepare.sh "build_env.yaml"
+            else
+              /module/scripts/prepare.sh "build_env.yaml"
             fi
-          done
+      
+            if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
+              env_name=$(cat set_variable.txt)
+              sed -i "s|\\\"envgeneNullValue\\\"|\\\"test_value\\\"|g" "${CI_PROJECT_DIR}/environments/$env_name/Credentials/credentials.yml"
+            else
+              env_name=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+              export env_name
+            fi
+      
+            env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
+            for path in $env_path; do
+              if [ -d "$path/Credentials" ]; then
+                chmod ugo+rw "$path/Credentials/"*
+              fi
+           done
           
       
 
