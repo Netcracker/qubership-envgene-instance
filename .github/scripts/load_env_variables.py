@@ -14,7 +14,7 @@ def getenv_and_log(key, default=""):
 def sanitize_json(value):
     try:
         json_object = json.loads(value)
-        return json.dumps(json_object)
+        return json.dumps(json_object, separators=(',', ':'))
     except (json.JSONDecodeError, TypeError):
         raise ValueError(f"Invalid JSON provided: {value}")
 
@@ -38,7 +38,7 @@ def validate_json(value, key):
         if isinstance(value, str):
             value = value.strip().replace('\n', ' ')
         parsed_json = json.loads(value)
-        return json.dumps(parsed_json)
+        return json.dumps(parsed_json, separators=(',', ':'))
     except (json.JSONDecodeError, TypeError):
         raise ValueError(f"{key} must be a valid JSON object")
 
@@ -116,7 +116,7 @@ def validate_cred_rotation_payload(value, key):
             if item["context"] not in valid_contexts:
                 raise ValueError(f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}")
 
-        return json.dumps(parsed_json)
+        return json.dumps(parsed_json, separators=(',', ':'))
     except (json.JSONDecodeError, TypeError) as e:
         raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
 
