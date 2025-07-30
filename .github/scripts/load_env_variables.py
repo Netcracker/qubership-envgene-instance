@@ -64,20 +64,13 @@ def validate_cred_rotation_payload(value, key):
       ]
     }
     """
-    print(f"🔍 validate_cred_rotation_payload called:")
-    print(f"  Input value type: {type(value)}")
-    print(f"  Input value repr: {repr(value)}")
-    print(f"  Input value first 100 chars: {repr(str(value)[:100])}")
-    
     try:
         if isinstance(value, str):
             value = value.strip().replace('\n', ' ')
-            print(f"  After strip/replace: {repr(value[:100])}")
             if not value:  # Empty string is valid (default empty payload)
                 return "{}"
             parsed_json = json.loads(value)
         else:
-            print(f"  Value is not string, treating as object: {type(value)}")
             parsed_json = value
 
         # If empty object, return as is
@@ -199,16 +192,7 @@ def main():
             raw_value = data.get(key, default_values[key])
             print(f"Using {'file' if key in data else 'default'} value for {key}: {raw_value}")
             
-            # Дополнительная отладка для CRED_ROTATION_PAYLOAD
-            if key == "CRED_ROTATION_PAYLOAD":
-                print(f"🔍 CRED_ROTATION_PAYLOAD Debug:")
-                print(f"  Raw value type: {type(raw_value)}")
-                print(f"  Raw value repr: {repr(raw_value)}")
-                print(f"  First 100 chars: {repr(str(raw_value)[:100])}")
-                if key in data:
-                    print(f"  Value from YAML file: {repr(data[key])}")
-                else:
-                    print(f"  Using default value: {repr(default_values[key])}")
+
 
         try:
             if validator == validate_boolean:
