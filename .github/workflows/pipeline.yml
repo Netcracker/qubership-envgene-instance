@@ -57,7 +57,7 @@ env:
   
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
-  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-optimize_docker_images'
+  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-cred-rotation'
   DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: 'ghcr.io/netcracker/qubership-effective-set-generator:latest'
 
 jobs:
@@ -321,7 +321,7 @@ jobs:
           CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
           export CRED_ROTATION_PAYLOAD
           
-          python3 /module/scripts/creds_rotation_handler.py
+          python3 /module/creds_rotation_scripts/creds_rotation_handler.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
