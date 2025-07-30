@@ -343,6 +343,13 @@ jobs:
           CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
           export CRED_ROTATION_PAYLOAD
           
+          # Debug: проверяем формат переменной перед передачей в Python
+          echo "=== Debug: CRED_ROTATION_PAYLOAD Analysis ==="
+          echo "CRED_ROTATION_PAYLOAD length: ${#CRED_ROTATION_PAYLOAD}"
+          echo "CRED_ROTATION_PAYLOAD first 100 chars: ${CRED_ROTATION_PAYLOAD:0:100}"
+          echo "CRED_ROTATION_PAYLOAD starts with |: $([ "${CRED_ROTATION_PAYLOAD:0:1}" = "|" ] && echo "YES" || echo "NO")"
+          echo "CRED_ROTATION_PAYLOAD contains newlines: $(echo "$CRED_ROTATION_PAYLOAD" | grep -q $'\n' && echo "YES" || echo "NO")"
+          
           export ENVGENE_AGE_PRIVATE_KEY
           export ENVGENE_AGE_PUBLIC_KEY
           export PUBLIC_AGE_KEYS
