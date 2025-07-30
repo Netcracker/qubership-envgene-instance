@@ -174,6 +174,16 @@ jobs:
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
+          
+          echo ""
+          echo "=== Debug: ENV_BUILDER Analysis ==="
+          echo "ENV_BUILDER value: '$ENV_BUILDER'"
+          echo "ENV_BUILDER length: ${#ENV_BUILDER}"
+          echo "ENV_BUILDER == 'true': $([ "$ENV_BUILDER" = "true" ] && echo "YES" || echo "NO")"
+          echo "ENV_BUILDER == true: $([ "$ENV_BUILDER" = true ] && echo "YES" || echo "NO")"
+          echo "ENV_BUILDER == 'false': $([ "$ENV_BUILDER" = "false" ] && echo "YES" || echo "NO")"
+          echo "ENV_BUILDER == false: $([ "$ENV_BUILDER" = false ] && echo "YES" || echo "NO")"
+          echo "ENV_BUILDER is empty: $([ -z "$ENV_BUILDER" ] && echo "YES" || echo "NO")"
 
       - name: Prepare Parameters
         id: matrix-generator
@@ -324,6 +334,18 @@ jobs:
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
+
+      - name: Debug ENV_BUILDER condition
+        run: |
+          echo "=== Debug: ENV_BUILDER Condition Analysis ==="
+          echo "ENV_BUILDER from outputs: '${{ needs.show_environment_variables.outputs.ENV_BUILDER }}'"
+          echo "ENV_BUILDER == 'true': ${{ needs.show_environment_variables.outputs.ENV_BUILDER == 'true' }}"
+          echo "ENV_BUILDER == true: ${{ needs.show_environment_variables.outputs.ENV_BUILDER == true }}"
+          echo "ENV_BUILDER == 'false': ${{ needs.show_environment_variables.outputs.ENV_BUILDER == 'false' }}"
+          echo "ENV_BUILDER == false: ${{ needs.show_environment_variables.outputs.ENV_BUILDER == false }}"
+          echo "ENV_BUILDER is empty: ${{ needs.show_environment_variables.outputs.ENV_BUILDER == '' }}"
+          echo "Condition evaluation: always() && needs.show_environment_variables.outputs.ENV_BUILDER == 'true'"
+          echo "This job should run if ENV_BUILDER is exactly 'true'"
 
       - name: Prepare variables to download the artifacts
         run: |
