@@ -158,10 +158,12 @@ jobs:
           echo "  CRED_ROTATION_PAYLOAD first 100 chars: ${CRED_ROTATION_PAYLOAD:0:100}"
           echo "  CRED_ROTATION_PAYLOAD repr: $(printf %q "$CRED_ROTATION_PAYLOAD")"
           
-          # Escape JSON for GitHub Actions outputs to preserve quotes
-          echo "CRED_ROTATION_PAYLOAD<<EOF" >> $GITHUB_OUTPUT
-          echo "$CRED_ROTATION_PAYLOAD" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Encode JSON in base64 to preserve quotes through GitHub Actions outputs
+          CRED_ROTATION_PAYLOAD_B64=$(echo -n "$CRED_ROTATION_PAYLOAD" | base64 -w 0)
+          echo "CRED_ROTATION_PAYLOAD=$CRED_ROTATION_PAYLOAD_B64" >> $GITHUB_OUTPUT
+          
+          # Debug: check encoded value
+          echo "🔍 Base64 encoded: $CRED_ROTATION_PAYLOAD_B64"
           echo "ENV_TEMPLATE_VERSION=$ENV_TEMPLATE_VERSION" >> $GITHUB_OUTPUT
           echo "ENV_BUILDER=$ENV_BUILDER" >> $GITHUB_OUTPUT
           echo "GET_PASSPORT=$GET_PASSPORT" >> $GITHUB_OUTPUT
@@ -350,12 +352,15 @@ jobs:
           CRED_ROTATION_FORCE="${{ needs.show_environment_variables.outputs.CRED_ROTATION_FORCE }}"
           export CRED_ROTATION_FORCE
           
-          CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
+          # Decode Base64 encoded CRED_ROTATION_PAYLOAD
+          CRED_ROTATION_PAYLOAD_B64="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
+          CRED_ROTATION_PAYLOAD=$(echo -n "$CRED_ROTATION_PAYLOAD_B64" | base64 -d)
           export CRED_ROTATION_PAYLOAD
           
           # Debug: проверяем что передается из outputs
           echo "🔍 From needs.show_environment_variables.outputs:"
-          echo "  Raw output: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
+          echo "  Base64 encoded: $CRED_ROTATION_PAYLOAD_B64"
+          echo "  Decoded JSON: $CRED_ROTATION_PAYLOAD"
           
           # Debug: проверяем формат переменной перед передачей в Python
           echo "=== Debug: CRED_ROTATION_PAYLOAD Analysis ==="
