@@ -59,6 +59,8 @@ jobs:
       SD_SOURCE_TYPE: ${{ env.SD_SOURCE_TYPE }}
       SD_DELTA: ${{ env.SD_DELTA }}
       ENV_SPECIFIC_PARAMETERS: ${{ env.ENV_SPECIFIC_PARAMETERS }}
+      CRED_ROTATION_FORCE: ${{ env.CRED_ROTATION_FORCE }}
+      CRED_ROTATION_PAYLOAD: ${{ env.CRED_ROTATION_PAYLOAD }}
       ENV_GENERATION_PARAMS: ${{ steps.env-generation-params.outputs.ENV_GENERATION_PARAMS }}
       DOCKER_IMAGE_GCIP: ${{ steps.docker-images.outputs.DOCKER_IMAGE_GCIP }}
       DOCKER_IMAGE_ENVGENE: ${{ steps.docker-images.outputs.DOCKER_IMAGE_ENVGENE }}
@@ -138,6 +140,8 @@ jobs:
           echo "SD_SOURCE_TYPE=$SD_SOURCE_TYPE" >> $GITHUB_OUTPUT
           echo "SD_DELTA=$SD_DELTA" >> $GITHUB_OUTPUT
           echo "ENV_SPECIFIC_PARAMETERS=$ENV_SPECIFIC_PARAMETERS" >> $GITHUB_OUTPUT
+          echo "CRED_ROTATION_FORCE=$CRED_ROTATION_FORCE" >> $GITHUB_OUTPUT
+          echo "CRED_ROTATION_PAYLOAD=$CRED_ROTATION_PAYLOAD" >> $GITHUB_OUTPUT
           echo "ENV_TEMPLATE_VERSION=$ENV_TEMPLATE_VERSION" >> $GITHUB_OUTPUT
           echo "ENV_BUILDER=$ENV_BUILDER" >> $GITHUB_OUTPUT
           echo "GET_PASSPORT=$GET_PASSPORT" >> $GITHUB_OUTPUT
@@ -174,6 +178,8 @@ jobs:
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
+          echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
+          echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
           
           echo ""
           echo "=== Debug: ENV_BUILDER Analysis ==="

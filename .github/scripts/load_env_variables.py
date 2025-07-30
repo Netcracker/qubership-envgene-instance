@@ -147,6 +147,7 @@ def main():
         "CMDB_IMPORT": "false",
         "DEPLOYMENT_TICKET_ID": "",
         "ENV_TEMPLATE_VERSION": "",
+        "CRED_ROTATION_FORCE": "false",
         "CRED_ROTATION_PAYLOAD": "{}",
         "ENVGENE_AGE_PRIVATE_KEY": "",
         "ENVGENE_AGE_PUBLIC_KEY": "",
@@ -170,7 +171,8 @@ def main():
         "CMDB_IMPORT": validate_boolean,
         "DEPLOYMENT_TICKET_ID": validate_string,
         "ENV_TEMPLATE_VERSION": validate_string,
-        # New credential rotation payload variable
+        # New credential rotation variables
+        "CRED_ROTATION_FORCE": validate_boolean,
         "CRED_ROTATION_PAYLOAD": validate_cred_rotation_payload,
         # Age encryption keys
         "ENVGENE_AGE_PRIVATE_KEY": validate_string,
