@@ -300,7 +300,10 @@ jobs:
         environment: ${{ fromJson(needs.show_environment_variables.outputs.env_matrix) }}
     env:
       FULL_ENV: ${{ matrix.environment }}
-      CRED_ROTATION_PAYLOAD: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}      
+      CRED_ROTATION_PAYLOAD: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}
+      ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
+      ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
+      PUBLIC_AGE_KEYS: ${{ secrets.PUBLIC_AGE_KEYS }}      
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
@@ -326,8 +329,8 @@ jobs:
           export ENVGENE_AGE_PRIVATE_KEY
           export ENVGENE_AGE_PUBLIC_KEY
           export PUBLIC_AGE_KEYS
-           
-           python3 /module/creds_rotation_scripts/creds_rotation_handler.py
+          
+          python3 /module/creds_rotation_scripts/creds_rotation_handler.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
