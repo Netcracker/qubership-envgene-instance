@@ -158,7 +158,10 @@ jobs:
           echo "  CRED_ROTATION_PAYLOAD first 100 chars: ${CRED_ROTATION_PAYLOAD:0:100}"
           echo "  CRED_ROTATION_PAYLOAD repr: $(printf %q "$CRED_ROTATION_PAYLOAD")"
           
-          echo "CRED_ROTATION_PAYLOAD=$CRED_ROTATION_PAYLOAD" >> $GITHUB_OUTPUT
+          # Escape JSON for GitHub Actions outputs to preserve quotes
+          echo "CRED_ROTATION_PAYLOAD<<EOF" >> $GITHUB_OUTPUT
+          echo "$CRED_ROTATION_PAYLOAD" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           echo "ENV_TEMPLATE_VERSION=$ENV_TEMPLATE_VERSION" >> $GITHUB_OUTPUT
           echo "ENV_BUILDER=$ENV_BUILDER" >> $GITHUB_OUTPUT
           echo "GET_PASSPORT=$GET_PASSPORT" >> $GITHUB_OUTPUT
