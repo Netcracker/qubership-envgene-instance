@@ -26,6 +26,9 @@ env:
   GITHUB_USER_EMAIL: 'fake@fake.com'
   GITHUB_USER_NAME: 'envgene'
   GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
+  ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
+  PUBLIC_AGE_KEYS: ${{ secrets.PUBLIC_AGE_KEYS }}
   
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
@@ -410,6 +413,9 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
+          export ENVGENE_AGE_PRIVATE_KEY
+          export ENVGENE_AGE_PUBLIC_KEY
+          export PUBLIC_AGE_KEYS
           
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
@@ -666,6 +672,9 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
+          export ENVGENE_AGE_PRIVATE_KEY
+          export ENVGENE_AGE_PUBLIC_KEY
+          export PUBLIC_AGE_KEYS
                     
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 

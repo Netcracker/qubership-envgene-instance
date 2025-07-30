@@ -148,6 +148,9 @@ def main():
         "DEPLOYMENT_TICKET_ID": "",
         "ENV_TEMPLATE_VERSION": "",
         "CRED_ROTATION_PAYLOAD": "{}",
+        "ENVGENE_AGE_PRIVATE_KEY": "",
+        "ENVGENE_AGE_PUBLIC_KEY": "",
+        "PUBLIC_AGE_KEYS": "",
     }
 
     validators = {
@@ -169,6 +172,10 @@ def main():
         "ENV_TEMPLATE_VERSION": validate_string,
         # New credential rotation payload variable
         "CRED_ROTATION_PAYLOAD": validate_cred_rotation_payload,
+        # Age encryption keys
+        "ENVGENE_AGE_PRIVATE_KEY": validate_string,
+        "ENVGENE_AGE_PUBLIC_KEY": validate_string,
+        "PUBLIC_AGE_KEYS": validate_string,
     }
 
     validated_data = {}
