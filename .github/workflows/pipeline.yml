@@ -321,11 +321,11 @@ jobs:
           export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)              
           
           CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
-           export CRED_ROTATION_PAYLOAD
-           
-           export ENVGENE_AGE_PRIVATE_KEY
-           export ENVGENE_AGE_PUBLIC_KEY
-           export PUBLIC_AGE_KEYS
+          export CRED_ROTATION_PAYLOAD
+          
+          export ENVGENE_AGE_PRIVATE_KEY
+          export ENVGENE_AGE_PUBLIC_KEY
+          export PUBLIC_AGE_KEYS
            
            python3 /module/creds_rotation_scripts/creds_rotation_handler.py
 
@@ -443,10 +443,6 @@ jobs:
            export GITHUB_TOKEN
            export ENVGENE_AGE_PRIVATE_KEY
            export ENVGENE_AGE_PUBLIC_KEY
-           export PUBLIC_AGE_KEYS
-           export ENVGENE_AGE_PRIVATE_KEY
-           export ENVGENE_AGE_PUBLIC_KEY
-           export PUBLIC_AGE_KEYS
            export PUBLIC_AGE_KEYS
            
            if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
@@ -587,6 +583,9 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
+          export ENVGENE_AGE_PRIVATE_KEY
+          export ENVGENE_AGE_PUBLIC_KEY
+          export PUBLIC_AGE_KEYS
           
           /module/scripts/prepare.sh "generate_effective_set.yaml"
           
@@ -706,6 +705,9 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
+          export ENVGENE_AGE_PRIVATE_KEY
+          export ENVGENE_AGE_PUBLIC_KEY
+          export PUBLIC_AGE_KEYS
                     
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
