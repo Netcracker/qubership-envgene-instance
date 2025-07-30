@@ -11,4 +11,21 @@
 #ENV_SPECIFIC_PARAMETERS: {}
 #CRED_ROTATION_FORCE: false
 CRED_ROTATION_PAYLOAD: |
-  {"rotation_items": [{"namespace": "env-1-platform-monitoring", "application": "MONITORING", "context": "deployment", "parameter_key": "db_login", "parameter_value": "newLogin123"}]}
+  {
+    "rotation_items": [
+      {
+        "namespace": "env-1-platform-monitoring",
+        "application": "MONITORING",
+        "context": "deployment",
+        "parameter_key": "db_login",
+        "parameter_value": "newLogin123"
+      },
+      {
+        "namespace": "env-1-platform-monitoring",
+        "application": "MONITORING",
+        "context": "deployment",
+        "parameter_key": "db_password",
+        "parameter_value": "newPassword456"
+      }
+    ]
+  }
