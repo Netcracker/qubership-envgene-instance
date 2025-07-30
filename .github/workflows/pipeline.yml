@@ -151,6 +151,13 @@ jobs:
           echo "SD_DELTA=$SD_DELTA" >> $GITHUB_OUTPUT
           echo "ENV_SPECIFIC_PARAMETERS=$ENV_SPECIFIC_PARAMETERS" >> $GITHUB_OUTPUT
           echo "CRED_ROTATION_FORCE=$CRED_ROTATION_FORCE" >> $GITHUB_OUTPUT
+          
+          # Debug CRED_ROTATION_PAYLOAD before writing to output
+          echo "🔍 Before writing to GITHUB_OUTPUT:"
+          echo "  CRED_ROTATION_PAYLOAD length: ${#CRED_ROTATION_PAYLOAD}"
+          echo "  CRED_ROTATION_PAYLOAD first 100 chars: ${CRED_ROTATION_PAYLOAD:0:100}"
+          echo "  CRED_ROTATION_PAYLOAD repr: $(printf %q "$CRED_ROTATION_PAYLOAD")"
+          
           echo "CRED_ROTATION_PAYLOAD=$CRED_ROTATION_PAYLOAD" >> $GITHUB_OUTPUT
           echo "ENV_TEMPLATE_VERSION=$ENV_TEMPLATE_VERSION" >> $GITHUB_OUTPUT
           echo "ENV_BUILDER=$ENV_BUILDER" >> $GITHUB_OUTPUT
@@ -342,6 +349,10 @@ jobs:
           
           CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
           export CRED_ROTATION_PAYLOAD
+          
+          # Debug: проверяем что передается из outputs
+          echo "🔍 From needs.show_environment_variables.outputs:"
+          echo "  Raw output: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
           
           # Debug: проверяем формат переменной перед передачей в Python
           echo "=== Debug: CRED_ROTATION_PAYLOAD Analysis ==="
