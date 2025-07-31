@@ -176,6 +176,8 @@ jobs:
           echo "ENV_NAMES = $ENV_NAMES"
           echo "ENV_INVENTORY_INIT = $ENV_INVENTORY_INIT"
           echo "ENV_BUILDER = $ENV_BUILDER"
+          echo "ENV_BUILDER type = $(echo "$ENV_BUILDER" | jq -R type)"
+          echo "ENV_BUILDER length = ${#ENV_BUILDER}"
           echo "GENERATE_EFFECTIVE_SET = $GENERATE_EFFECTIVE_SET"
           echo "CMDB_IMPORT = $CMDB_IMPORT"
           echo "GET_PASSPORT = $GET_PASSPORT"
@@ -364,6 +366,14 @@ jobs:
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
+
+      - name: Debug ENV_BUILDER value
+        run: |
+          echo "=== Debug ENV_BUILDER ==="
+          echo "ENV_BUILDER from outputs: ${{ needs.show_environment_variables.outputs.ENV_BUILDER }}"
+          echo "ENV_BUILDER type: $(echo "${{ needs.show_environment_variables.outputs.ENV_BUILDER }}" | jq -R type)"
+          echo "ENV_BUILDER length: ${#{{ needs.show_environment_variables.outputs.ENV_BUILDER }}}"
+          echo "Condition check: ${{ needs.show_environment_variables.outputs.ENV_BUILDER == 'true' }}"
 
       - name: Prepare variables to download the artifacts
         run: |
