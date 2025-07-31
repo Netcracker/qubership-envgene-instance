@@ -240,13 +240,16 @@ def main():
     ) as output_file:
 
         for key, value in validated_data.items():
-            # Only write to files if the variable wasn't already set in environment
-            if os.getenv(key) is None:
-                converted_value = convert_to_github_env(value)
-                env_file.write(f"{key}={converted_value}\n")
-                output_file.write(f"{key}={converted_value}\n")
+            # Always write to files to ensure consistency
+            converted_value = convert_to_github_env(value)
+            env_file.write(f"{key}={converted_value}\n")
+            output_file.write(f"{key}={converted_value}\n")
+            if os.getenv(key) is not None:
+                print(
+                    f"Overwriting {key} from environment with validated value: {converted_value}"
+                )
             else:
-                print(f"Skipping {key} - already set in environment")
+                print(f"Setting {key} to: {converted_value}")
 
 
 if __name__ == "__main__":
