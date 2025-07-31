@@ -9,6 +9,7 @@
 #SD_SOURCE_TYPE: ''
 #SD_DELTA: false
 #ENV_SPECIFIC_PARAMETERS: {}
+ENV_BUILDER: false
 CRED_ROTATION_PAYLOAD: |
   {
     "rotation_items": [
