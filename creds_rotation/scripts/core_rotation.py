@@ -95,6 +95,11 @@ def process_entry_in_payload(
         processed_cred_and_files.setdefault(cred_file, []).append(cred_map)
 
     # Collect affected parameters
+    logger.info(f"Searching for value: {value_to_search}")
+    logger.info(f"Cred ID: {cred_id}")
+    logger.info(f"Shared match files: {shared_match_files}")
+    logger.info(f"Env cred file: {env_cred_file}")
+
     affected = search_yaml_files(
         value_to_search,
         entity_files_map,
