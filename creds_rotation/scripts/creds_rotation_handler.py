@@ -62,8 +62,22 @@ def load_payload(payload: str):
                 f.write(f"Payload hex: {payload.encode('utf-8').hex()}\n")
 
             logger.info(f"About to parse JSON: {repr(payload)}")
-            config = json.loads(payload)
-            return config
+
+            # Try to decode as base64 first
+            try:
+                import base64
+
+                decoded_payload = base64.b64decode(payload.encode("utf-8")).decode(
+                    "utf-8"
+                )
+                logger.info(f"Base64 decoded payload: {repr(decoded_payload)}")
+                config = json.loads(decoded_payload)
+                return config
+            except Exception as e:
+                logger.info(f"Base64 decoding failed: {e}, trying direct JSON parsing")
+                # Fallback to direct JSON parsing
+                config = json.loads(payload)
+                return config
         except json.JSONDecodeError as e:
             logger.error(f"JSON parse error at position {e.pos}: {e.msg}")
             logger.error(

@@ -148,10 +148,14 @@ def validate_cred_rotation_payload(value, key):
                     f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}"
                 )
 
-        # Return JSON in simple format without extra spaces
-        result = json.dumps(parsed_json, separators=(",", ":"))
-        print(f"Final result: {repr(result)}")
-        return result
+        # Return JSON encoded as base64 to avoid quote loss
+        json_str = json.dumps(parsed_json, separators=(",", ":"))
+        import base64
+
+        encoded_json = base64.b64encode(json_str.encode("utf-8")).decode("utf-8")
+        print(f"Original JSON: {repr(json_str)}")
+        print(f"Base64 encoded: {repr(encoded_json)}")
+        return encoded_json
     except (json.JSONDecodeError, TypeError) as e:
         print(f"JSON parsing failed: {e}")
         print(f"Failed value: {repr(value)}")
