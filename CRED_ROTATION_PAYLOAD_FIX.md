@@ -28,25 +28,30 @@ CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss","application":
 1. **YAML Block Scalar (|)** - YAML interpreted JSON as a multi-line string, causing issues when passed to Python
 2. **Quote loss** - During processing, JSON lost quotes around keys
 3. **Environment variables** - Format could be corrupted when passed through GitHub Actions
+4. **Base64 encoding** - Prevents quote loss by encoding JSON as base64 string
 
 ## Solution
 
-Changed format to simple string in single quotes and optimized JSON formatting:
+**Root Cause Found:** JSON quotes are being stripped during environment variable processing.
+
+**Solution:** Use base64 encoding to prevent quote loss:
 
 ```yaml
-# Before (incorrect):
-CRED_ROTATION_PAYLOAD: |
-  {"rotation_items":[{"namespace":"e02-bss",...}]}
-
-# After (correct):
+# The format in pipeline_vars.yaml remains the same:
 CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss","application":"postgres","context":"deployment","parameter_key":"POSTGRES_DBA_USER","parameter_value":"new_postgres_user"}]}'
 ```
+
+**But the processing has changed:**
+- `load_env_variables.py` now encodes JSON as base64
+- `creds_rotation_handler.py` now decodes base64 before parsing JSON
 
 ## Verification
 
 Format tested and works correctly:
 - ✅ YAML parsing
 - ✅ JSON validation in `load_env_variables.py`
+- ✅ Base64 encoding in `load_env_variables.py`
+- ✅ Base64 decoding in `creds_rotation_handler.py`
 - ✅ JSON parsing in `creds_rotation_handler.py`
 
 ## Alternative Formats
@@ -71,5 +76,5 @@ CRED_ROTATION_PAYLOAD: '{"rotation_items":[...]}'
 
 1. **Use simple string in single quotes** for JSON data
 2. **Avoid YAML block scalar** for JSON - they may lose quotes
-3. **Optimize JSON formatting** in `load_env_variables.py`
+3. **Use base64 encoding** to prevent quote loss in environment variables
 4. **Test the format** before using in production
