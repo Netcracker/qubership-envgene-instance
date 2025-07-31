@@ -24,44 +24,22 @@ from utils.yaml_utils import convert_json_to_yaml, write_yaml_to_file
 def load_payload(payload: str):
     if isinstance(payload, str):
         try:
-            # Add debug information
-            logger.info(f"Payload length: {len(payload)}")
-            logger.info(f"Payload first 50 chars: {repr(payload[:50])}")
-            logger.info(f"Payload type: {type(payload)}")
-
             # Check for hidden characters
             if payload.startswith("\ufeff"):
-                logger.warning("Found BOM at the beginning, removing...")
                 payload = payload.lstrip("\ufeff")
 
             # Remove extra whitespace and newlines around edges
-            original_payload = payload
             payload = payload.strip()
 
             # Check if YAML block scalar remains
             if payload.startswith("|"):
-                logger.warning("Found YAML block scalar indicator, cleaning up...")
                 payload = payload.lstrip("|\n ").strip()
 
             # Remove possible extra newlines inside JSON
             if "\n" in payload:
-                logger.info("Found newlines in payload, normalizing...")
-                # Keep newlines only inside string values
                 import re
 
-                # Simple cleanup - remove newlines not inside quotes
                 payload = re.sub(r"\n\s*", "", payload)
-
-            logger.info(f"Cleaned payload first 50 chars: {repr(payload[:50])}")
-
-            # Temporarily save payload to file for debugging
-            with open("/tmp/debug_payload.txt", "w", encoding="utf-8") as f:
-                f.write(f"Original: {repr(original_payload)}\n")
-                f.write(f"Cleaned: {repr(payload)}\n")
-                f.write(f"Payload bytes: {payload.encode('utf-8')}\n")
-                f.write(f"Payload hex: {payload.encode('utf-8').hex()}\n")
-
-            logger.info(f"About to parse JSON: {repr(payload)}")
 
             # Try to decode as base64 first
             try:
@@ -70,20 +48,13 @@ def load_payload(payload: str):
                 decoded_payload = base64.b64decode(payload.encode("utf-8")).decode(
                     "utf-8"
                 )
-                logger.info(f"Base64 decoded payload: {repr(decoded_payload)}")
                 config = json.loads(decoded_payload)
                 return config
-            except Exception as e:
-                logger.info(f"Base64 decoding failed: {e}, trying direct JSON parsing")
+            except Exception:
                 # Fallback to direct JSON parsing
                 config = json.loads(payload)
                 return config
         except json.JSONDecodeError as e:
-            logger.error(f"JSON parse error at position {e.pos}: {e.msg}")
-            logger.error(
-                f"Payload around error position: {repr(payload[max(0, e.pos-10):e.pos+10])}"
-            )
-            logger.error(f"Full payload for debugging: {repr(payload)}")
             raise ValidationError(
                 ErrorMessages.INVALID_JSON.format(e=str(e)),
                 error_code=ErrorCodes.INVALID_CONFIG_CODE,
@@ -102,25 +73,7 @@ def cred_rotation():
         envgene_age_public_key = getenv_with_error("ENVGENE_AGE_PUBLIC_KEY")
         creds_rotation_enabled = getenv_with_error("CRED_ROTATION_FORCE") == "true"
 
-        # Additional debugging for environment variable
         raw_payload = getenv_with_error("CRED_ROTATION_PAYLOAD")
-        logger.info(f"Raw CRED_ROTATION_PAYLOAD length: {len(raw_payload)}")
-        logger.info(f"Raw CRED_ROTATION_PAYLOAD type: {type(raw_payload)}")
-        logger.info(
-            f"Raw CRED_ROTATION_PAYLOAD first 100 chars: {repr(raw_payload[:100])}"
-        )
-        logger.info(f"Raw CRED_ROTATION_PAYLOAD full value: {repr(raw_payload)}")
-        logger.info(f"Raw CRED_ROTATION_PAYLOAD bytes: {raw_payload.encode('utf-8')}")
-
-        # Check for problematic characters
-        if raw_payload.startswith("|"):
-            logger.warning(
-                "Payload starts with |, removing YAML block scalar indicator"
-            )
-            # Remove YAML block scalar and extra newlines/spaces
-            raw_payload = raw_payload.lstrip("|\n ").strip()
-            logger.info(f"After cleanup: {repr(raw_payload[:100])}")
-
         cred_payload = load_payload(raw_payload)
         cluster_name = getenv_with_error("CLUSTER_NAME")
         work_dir = getenv_with_error("CI_PROJECT_DIR")

@@ -21,20 +21,10 @@ def sanitize_json(value):
 
 
 def convert_to_github_env(value):
-    print(f"=== DEBUG: convert_to_github_env ===")
-    print(f"Input value type: {type(value)}")
-    print(f"Input value: {repr(value)}")
-
     if isinstance(value, bool):
-        result = "true" if value else "false"
-        print(f"Boolean conversion result: {result}")
-        return result
+        return "true" if value else "false"
     if isinstance(value, str) and value.lower() in ["true", "false"]:
-        result = value.lower()
-        print(f"String boolean conversion result: {result}")
-        return result
-
-    print(f"Returning value as is: {repr(value)}")
+        return value.lower()
     return value
 
 
@@ -77,30 +67,17 @@ def validate_cred_rotation_payload(value, key):
       ]
     }
     """
-    print(f"=== DEBUG: validate_cred_rotation_payload for {key} ===")
-    print(f"Input value type: {type(value)}")
-    print(f"Input value: {repr(value)}")
-
     try:
         if isinstance(value, str):
-            original_value = value
             value = value.strip().replace("\n", " ")
-            print(f"After strip and replace: {repr(value)}")
-
             if not value:  # Empty string is valid (default empty payload)
-                print("Empty value, returning {}")
                 return "{}"
-
-            print(f"Attempting to parse JSON: {repr(value)}")
             parsed_json = json.loads(value)
-            print(f"JSON parsing successful: {parsed_json}")
         else:
             parsed_json = value
-            print(f"Non-string value, using as is: {parsed_json}")
 
         # If empty object, return as is
         if not parsed_json:
-            print("Empty parsed JSON, returning {}")
             return "{}"
 
         # Validate structure
@@ -153,12 +130,8 @@ def validate_cred_rotation_payload(value, key):
         import base64
 
         encoded_json = base64.b64encode(json_str.encode("utf-8")).decode("utf-8")
-        print(f"Original JSON: {repr(json_str)}")
-        print(f"Base64 encoded: {repr(encoded_json)}")
         return encoded_json
     except (json.JSONDecodeError, TypeError) as e:
-        print(f"JSON parsing failed: {e}")
-        print(f"Failed value: {repr(value)}")
         raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
 
 
@@ -270,11 +243,6 @@ def main():
             # Only write to files if the variable wasn't already set in environment
             if os.getenv(key) is None:
                 converted_value = convert_to_github_env(value)
-                print(f"=== DEBUG: Writing to files ===")
-                print(f"Key: {key}")
-                print(f"Original value: {repr(value)}")
-                print(f"Converted value: {repr(converted_value)}")
-                print(f"Writing line: {key}={converted_value}")
                 env_file.write(f"{key}={converted_value}\n")
                 output_file.write(f"{key}={converted_value}\n")
             else:
