@@ -1,16 +1,24 @@
+import json
 import os
 import time
-import  json
 from typing import List
-from models import PayloadEntry, RotationResult
-from utils.yaml_utils import convert_json_to_yaml, write_yaml_to_file
-from utils.file_utils import  scan_and_get_yaml_files, write_cred_file_path
-from utils.error_constants import  *
-from utils.cred_utils import decrypt_file, update_cred_content, write_updated_cred_into_file, read_shared_cred_files, read_env_cred_files, collect_shared_credentials
-from core_rotation import process_entry_in_payload
-from envgenehelper import getenv_with_error, crypt
-from envgenehelper.errors import ValidationError,  RuntimeError, ValueError
+
 import envgenehelper.logger as logger
+from core_rotation import process_entry_in_payload
+from envgenehelper import crypt, getenv_with_error
+from envgenehelper.errors import RuntimeError, ValidationError, ValueError
+from models import PayloadEntry, RotationResult
+from utils.cred_utils import (
+    collect_shared_credentials,
+    decrypt_file,
+    read_env_cred_files,
+    read_shared_cred_files,
+    update_cred_content,
+    write_updated_cred_into_file,
+)
+from utils.error_constants import *
+from utils.file_utils import scan_and_get_yaml_files, write_cred_file_path
+from utils.yaml_utils import convert_json_to_yaml, write_yaml_to_file
 
 
 def load_payload(payload: str):
@@ -20,110 +28,149 @@ def load_payload(payload: str):
             logger.info(f"Payload length: {len(payload)}")
             logger.info(f"Payload first 50 chars: {repr(payload[:50])}")
             logger.info(f"Payload type: {type(payload)}")
-            
+
             # Проверяем на скрытые символы
-            if payload.startswith('\ufeff'):
+            if payload.startswith("\ufeff"):
                 logger.warning("Found BOM at the beginning, removing...")
-                payload = payload.lstrip('\ufeff')
-            
+                payload = payload.lstrip("\ufeff")
+
             # Убираем лишние пробелы и переводы строк по краям
             original_payload = payload
             payload = payload.strip()
-            
+
             # Проверяем, не остался ли YAML блочный скаляр
-            if payload.startswith('|'):
+            if payload.startswith("|"):
                 logger.warning("Found YAML block scalar indicator, cleaning up...")
-                payload = payload.lstrip('|\n ').strip()
-            
+                payload = payload.lstrip("|\n ").strip()
+
             # Убираем возможные лишние переводы строк внутри JSON
-            if '\n' in payload:
+            if "\n" in payload:
                 logger.info("Found newlines in payload, normalizing...")
                 # Сохраняем переводы строк только внутри строковых значений
                 import re
+
                 # Простая очистка - убираем переводы строк не внутри кавычек
-                payload = re.sub(r'\n\s*', '', payload)
-            
+                payload = re.sub(r"\n\s*", "", payload)
+
             logger.info(f"Cleaned payload first 50 chars: {repr(payload[:50])}")
-            
+
             # Временно сохраняем payload в файл для отладки
-            with open('/tmp/debug_payload.txt', 'w', encoding='utf-8') as f:
+            with open("/tmp/debug_payload.txt", "w", encoding="utf-8") as f:
                 f.write(f"Original: {repr(original_payload)}\n")
                 f.write(f"Cleaned: {repr(payload)}\n")
-            
+
             config = json.loads(payload)
             return config
         except json.JSONDecodeError as e:
             logger.error(f"JSON parse error at position {e.pos}: {e.msg}")
-            logger.error(f"Payload around error position: {repr(payload[max(0, e.pos-10):e.pos+10])}")
+            logger.error(
+                f"Payload around error position: {repr(payload[max(0, e.pos-10):e.pos+10])}"
+            )
             logger.error(f"Full payload for debugging: {repr(payload)}")
-            raise ValidationError(ErrorMessages.INVALID_JSON.format(e=str(e)), error_code=ErrorCodes.INVALID_CONFIG_CODE)
+            raise ValidationError(
+                ErrorMessages.INVALID_JSON.format(e=str(e)),
+                error_code=ErrorCodes.INVALID_CONFIG_CODE,
+            )
     else:
-        raise  ValidationError(ErrorMessages.INCORRECT_TYPE, error_code=ErrorCodes.INVALID_CONFIG_CODE)
+        raise ValidationError(
+            ErrorMessages.INCORRECT_TYPE, error_code=ErrorCodes.INVALID_CONFIG_CODE
+        )
 
 
 def cred_rotation():
     start = time.time()
     logger.info(f"CPU cores available: {os.cpu_count()}")
     try:
-        env_name = getenv_with_error('ENV_NAME')
-        envgene_age_public_key = getenv_with_error('ENVGENE_AGE_PUBLIC_KEY')
-        creds_rotation_enabled = getenv_with_error('CRED_ROTATION_FORCE') == "true"
-        
+        env_name = getenv_with_error("ENV_NAME")
+        envgene_age_public_key = getenv_with_error("ENVGENE_AGE_PUBLIC_KEY")
+        creds_rotation_enabled = getenv_with_error("CRED_ROTATION_FORCE") == "true"
+
         # Дополнительная отладка для переменной окружения
-        raw_payload = getenv_with_error('CRED_ROTATION_PAYLOAD')
+        raw_payload = getenv_with_error("CRED_ROTATION_PAYLOAD")
         logger.info(f"Raw CRED_ROTATION_PAYLOAD length: {len(raw_payload)}")
         logger.info(f"Raw CRED_ROTATION_PAYLOAD type: {type(raw_payload)}")
-        logger.info(f"Raw CRED_ROTATION_PAYLOAD first 100 chars: {repr(raw_payload[:100])}")
-        
+        logger.info(
+            f"Raw CRED_ROTATION_PAYLOAD first 100 chars: {repr(raw_payload[:100])}"
+        )
+
         # Проверяем на проблемные символы
-        if raw_payload.startswith('|'):
-            logger.warning("Payload starts with |, removing YAML block scalar indicator")
+        if raw_payload.startswith("|"):
+            logger.warning(
+                "Payload starts with |, removing YAML block scalar indicator"
+            )
             # Убираем YAML block scalar и лишние переводы строк/пробелы
-            raw_payload = raw_payload.lstrip('|\n ').strip()
+            raw_payload = raw_payload.lstrip("|\n ").strip()
             logger.info(f"After cleanup: {repr(raw_payload[:100])}")
-        
+
         cred_payload = load_payload(raw_payload)
-        cluster_name = getenv_with_error('CLUSTER_NAME')
-        work_dir = getenv_with_error('CI_PROJECT_DIR')
+        cluster_name = getenv_with_error("CLUSTER_NAME")
+        work_dir = getenv_with_error("CI_PROJECT_DIR")
     except Exception as e:
-        raise ValueError(ErrorMessages.MISSING_ENV.format(e=str(e)), error_code=ErrorCodes.INVALID_INPUT_CODE)
+        raise ValueError(
+            ErrorMessages.MISSING_ENV.format(e=str(e)),
+            error_code=ErrorCodes.INVALID_INPUT_CODE,
+        )
 
     logger.info(f"Starting rotation for: CLUSTER={cluster_name}, WORKDIR={work_dir}")
 
     encrypt_type, is_encrypted = crypt.get_configured_encryption_type()
     logger.info(f"Detected encryption={is_encrypted}, type={encrypt_type}")
-    if is_encrypted and encrypt_type == 'Fernet':
-        raise ValidationError(ErrorMessages.INVALID_ENCRYPT_TYPE, error_code=ErrorCodes.INVALID_CONFIG_CODE)
-    
+    if is_encrypted and encrypt_type == "Fernet":
+        raise ValidationError(
+            ErrorMessages.INVALID_ENCRYPT_TYPE,
+            error_code=ErrorCodes.INVALID_CONFIG_CODE,
+        )
+
     base_env_path = f"{work_dir}/environments/{cluster_name}/{env_name}"
     cluster_path = f"{work_dir}/environments/{cluster_name}"
     output_path = f"{work_dir}/affected-sensitive-parameters.yaml"
-    
+
     creds_path = "/tmp/payload.yml"
     logger.info(f"base env path is {base_env_path}")
     convert_json_to_yaml(creds_path, cred_payload)
 
-    #Decrypt the Payload file if encrypted
-    payload_data = decrypt_file(envgene_age_public_key, creds_path, True, 'SOPS', ErrorMessages.PAYLOAD_DECRYPT_ERROR, ErrorCodes.INVALID_CONFIG_CODE) 
+    # Decrypt the Payload file if encrypted
+    payload_data = decrypt_file(
+        envgene_age_public_key,
+        creds_path,
+        True,
+        "SOPS",
+        ErrorMessages.PAYLOAD_DECRYPT_ERROR,
+        ErrorCodes.INVALID_CONFIG_CODE,
+    )
 
     fileread = time.time()
-    #Scan and read all required files
-    entity_files_map, env_files_map, env_creds_files = scan_and_get_yaml_files(cluster_path)
-    shared_creds =  collect_shared_credentials(env_files_map)
-    shared_content_map = read_shared_cred_files(shared_creds, cluster_path, work_dir, is_encrypted, envgene_age_public_key)
-    env_cred_map = read_env_cred_files(env_creds_files, is_encrypted, envgene_age_public_key)
+    # Scan and read all required files
+    entity_files_map, env_files_map, env_creds_files = scan_and_get_yaml_files(
+        cluster_path
+    )
+    shared_creds = collect_shared_credentials(env_files_map)
+    shared_content_map = read_shared_cred_files(
+        shared_creds, cluster_path, work_dir, is_encrypted, envgene_age_public_key
+    )
+    env_cred_map = read_env_cred_files(
+        env_creds_files, is_encrypted, envgene_age_public_key
+    )
     logger.info(f"✅ Fileread Completed in {round(time.time() - fileread, 2)} seconds.")
 
-    payload_raw =  payload_data.get("rotation_items", [])
-    payload_objects: List[PayloadEntry] = [PayloadEntry.from_dict(entry) for entry in payload_raw]
-    
+    payload_raw = payload_data.get("rotation_items", [])
+    payload_objects: List[PayloadEntry] = [
+        PayloadEntry.from_dict(entry) for entry in payload_raw
+    ]
+
     final_result: List[RotationResult] = []
     processed_cred_and_files = {}
-    #Collect affected parameters from ns and app files
+    # Collect affected parameters from ns and app files
     for entry in payload_objects:
         try:
             result = process_entry_in_payload(
-                entry, env_name, cluster_name, shared_content_map, env_cred_map, entity_files_map, processed_cred_and_files
+                entry,
+                env_name,
+                cluster_name,
+                shared_content_map,
+                env_cred_map,
+                entity_files_map,
+                processed_cred_and_files,
             )
             if result:
                 final_result.append(result)
@@ -132,21 +179,36 @@ def cred_rotation():
     if final_result:
         write_yaml_to_file(output_path, [r.to_dict() for r in final_result])
     else:
-        raise ValidationError(ErrorMessages.EMPTY_PARAM, error_code=ErrorCodes.INVALID_STATE_CODE)
+        raise ValidationError(
+            ErrorMessages.EMPTY_PARAM, error_code=ErrorCodes.INVALID_STATE_CODE
+        )
 
     if not creds_rotation_enabled:
-        logger.info(f"✅ Cred Rotation without file updation completed in {round(time.time() - start, 2)} seconds.")
-        raise ValidationError(ErrorMessages.CRED_UPDATION_FALSE.format(file=output_path), error_code=ErrorCodes.INVALID_STATE_CODE)
+        logger.info(
+            f"✅ Cred Rotation without file updation completed in {round(time.time() - start, 2)} seconds."
+        )
+        raise ValidationError(
+            ErrorMessages.CRED_UPDATION_FALSE.format(file=output_path),
+            error_code=ErrorCodes.INVALID_STATE_CODE,
+        )
     if processed_cred_and_files:
-        updated_content, original_content = update_cred_content(processed_cred_and_files)
-        write_updated_cred_into_file(updated_content, original_content, is_encrypted, envgene_age_public_key)
-        write_cred_file_path(list(processed_cred_and_files.keys()), f"{work_dir}/environments")
+        updated_content, original_content = update_cred_content(
+            processed_cred_and_files
+        )
+        write_updated_cred_into_file(
+            updated_content, original_content, is_encrypted, envgene_age_public_key
+        )
+        write_cred_file_path(
+            list(processed_cred_and_files.keys()), f"{work_dir}/environments"
+        )
     else:
-        logger.error("Credential IDs are not found in environment and shared credential files. Please check the files")
+        logger.error(
+            "Credential IDs are not found in environment and shared credential files. Please check the files"
+        )
 
-    
-    logger.info(f"✅ Cred Rotation completed in {round(time.time() - start, 2)} seconds.")
-
+    logger.info(
+        f"✅ Cred Rotation completed in {round(time.time() - start, 2)} seconds."
+    )
 
 
 if __name__ == "__main__":

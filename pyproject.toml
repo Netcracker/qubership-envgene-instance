@@ -1,0 +1,25 @@
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.0"
+version_files = [
+    "pyproject.toml:version"
+]
+
+[tool.commitizen.customize]
+message_template = "{{change_type}}{{scope}}: {{message}}"
+example = "feat: add new feature"
+schema = "<type>(<scope>): <subject>"
+schema_pattern = "(build|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(.+\\))?: .+"
+bump_pattern = "^(build|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(.+\\))?: .+"
+bump_map = """
+build = patch
+ci = patch
+docs = patch
+feat = minor
+fix = patch
+perf = minor
+refactor = patch
+revert = patch
+style = patch
+test = patch
+"""

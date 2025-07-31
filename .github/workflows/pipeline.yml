@@ -55,7 +55,7 @@ env:
   GITHUB_USER_NAME: 'envgene'
   GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
-  
+
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
   DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-cred-rotation'
@@ -112,7 +112,7 @@ jobs:
           echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
           echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
           echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
-          
+
           # Load additional variables from pipeline_vars.yaml (with fallbacks to defaults)
           python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
 
@@ -137,7 +137,7 @@ jobs:
           )
           echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_OUTPUT
           echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_ENV
-          
+
           # Set all variables in outputs for downstream jobs (same order as API workflow)
           echo "ENV_INVENTORY_INIT=$ENV_INVENTORY_INIT" >> $GITHUB_OUTPUT
           echo "GENERATE_EFFECTIVE_SET=$GENERATE_EFFECTIVE_SET" >> $GITHUB_OUTPUT
@@ -188,7 +188,7 @@ jobs:
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
           echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
           echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
-          
+
       - name: Prepare Parameters
         id: matrix-generator
         shell: bash
@@ -204,8 +204,8 @@ jobs:
             arr="$arr\"$name\""
           done
           arr="$arr]"
-          
-          echo "env_matrix=$arr" >> $GITHUB_OUTPUT    
+
+          echo "env_matrix=$arr" >> $GITHUB_OUTPUT
 
   parameters_validation:
     name: "${{ matrix.environment }} - Parameters Validation"
@@ -265,17 +265,17 @@ jobs:
         run: |
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
-          
+
           ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
           export ENVIRONMENT_NAME
-          
+
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
-          
+
           # Use ENV_GENERATION_PARAMS from show_environment_variables job
           ENV_GENERATION_PARAMS='${{ needs.show_environment_variables.outputs.ENV_GENERATION_PARAMS }}'
           export ENV_GENERATION_PARAMS
-          
+
           python3 /build_env/scripts/build_env/env_inventory_generation.py
 
       - name: Upload artifacts
@@ -319,20 +319,20 @@ jobs:
           fi
 
       - name: Credential Rotation
-        run: |          
+        run: |
           export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)              
-          
+          export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+
           CRED_ROTATION_FORCE="${{ needs.show_environment_variables.outputs.CRED_ROTATION_FORCE }}"
           export CRED_ROTATION_FORCE
-          
+
           CRED_ROTATION_PAYLOAD="${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
           export CRED_ROTATION_PAYLOAD
-          
+
           export ENVGENE_AGE_PRIVATE_KEY
           export ENVGENE_AGE_PUBLIC_KEY
           export PUBLIC_AGE_KEYS
-          
+
           python3 /module/creds_rotation_scripts/creds_rotation_handler.py
 
       - name: Upload artifacts
@@ -393,54 +393,54 @@ jobs:
         run: |
           ENV_NAMES="${{ matrix.environment }}"
           export ENV_NAMES
-          
+
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
-          
+
           ENV_TEMPLATE_TEST="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}"
           export ENV_TEMPLATE_TEST
-          
+
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
-          
+
           ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
           export ENVIRONMENT_NAME
-          
+
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
-          
+
           export CI_PROJECT_DIR
-          
+
           ENV_TEMPLATE_VERSION="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_VERSION }}"
           export ENV_TEMPLATE_VERSION
-          
+
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
-          
+
           module_ansible_dir="/module/ansible"
           export module_ansible_dir
-          
+
           module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
           export module_inventory
-          
+
           module_ansible_cfg="/module/ansible/ansible.cfg"
           export module_ansible_cfg
-          
+
           module_config_default="/module/templates/defaults.yaml"
           export module_config_default
-          
+
           envgen_args=" -vvv"
           export envgen_args
-          
+
           envgen_debug="true"
           export envgen_debug
-          
+
           GIT_STRATEGY="none"
           export GIT_STRATEGY
-          
+
           COMMIT_ENV="true"
           export COMMIT_ENV
-          
+
           export SECRET_KEY
           export GITHUB_ACTIONS
           export GITHUB_REPOSITORY
@@ -448,18 +448,18 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
-          
+
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
           for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
-    
+
           if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" == "false" ]; then
             /module/scripts/prepare.sh "set_template_version.yaml"
             /module/scripts/prepare.sh "build_env.yaml"
           else
             /module/scripts/prepare.sh "build_env.yaml"
           fi
-    
+
           if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
             env_name=$(cat set_variable.txt)
             sed -i "s|\\\"envgeneNullValue\\\"|\\\"test_value\\\"|g" "${CI_PROJECT_DIR}/environments/$env_name/Credentials/credentials.yml"
@@ -467,15 +467,15 @@ jobs:
             env_name=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
             export env_name
           fi
-    
+
           env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
           for path in $env_path; do
             if [ -d "$path/Credentials" ]; then
               chmod ugo+rw "$path/Credentials/"*
             fi
           done
-          
-      
+
+
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -505,7 +505,7 @@ jobs:
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
-          
+
       - name: Create the naming for artifact
         run: |
           if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
@@ -531,55 +531,55 @@ jobs:
 
       - name: Generate Effective Set
         run: |
-          
+
           ENV_NAMES="${{ matrix.environment }}"
           export ENV_NAMES
-          
+
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
-          
+
           export ENV_TEMPLATE_TEST
-          
+
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
-          
+
           ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
           export ENVIRONMENT_NAME
-          
+
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
-          
+
           export CI_PROJECT_DIR
-          
+
           export ENV_TEMPLATE_VERSION
-          
+
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
-          
+
           module_ansible_dir="/module/ansible"
           export module_ansible_dir
-          
+
           module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
           export module_inventory
-          
+
           module_ansible_cfg="/module/ansible/ansible.cfg"
           export module_ansible_cfg
-          
+
           module_config_default="/module/templates/defaults.yaml"
           export module_config_default
-          
+
           envgen_args=" -vvv"
           export envgen_args
-          
+
           envgen_debug="true"
           export envgen_debug
-          
+
           GIT_STRATEGY="none"
           export GIT_STRATEGY
-          
+
           COMMIT_ENV="true"
           export COMMIT_ENV
-          
+
           export SECRET_KEY
           export GITHUB_ACTIONS
           export GITHUB_REPOSITORY
@@ -587,9 +587,9 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
-          
+
           /module/scripts/prepare.sh "generate_effective_set.yaml"
-          
+
           env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
           for path in $env_path; do
             if [ -d "$path/Credentials" ]; then
@@ -625,7 +625,7 @@ jobs:
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
-          
+
       - name: Create the naming for artifact
         run: |
           if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
@@ -656,49 +656,49 @@ jobs:
         run: |
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
-          
+
           export ENV_TEMPLATE_TEST
-          
+
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
-          
+
           ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
           export ENVIRONMENT_NAME
-          
+
           ENV_NAME="$ENVIRONMENT_NAME"
           export ENV_NAME
-          
+
           export CI_PROJECT_DIR
-          
+
           export ENV_TEMPLATE_VERSION
-          
+
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
-          
+
           module_ansible_dir="/module/ansible"
           export module_ansible_dir
-          
+
           module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
           export module_inventory
-          
+
           module_ansible_cfg="/module/ansible/ansible.cfg"
           export module_ansible_cfg
-          
+
           module_config_default="/module/templates/defaults.yaml"
           export module_config_default
-          
+
           envgen_args=" -vvv"
           export envgen_args
-          
+
           envgen_debug="true"
           export envgen_debug
-          
+
           GIT_STRATEGY="none"
           export GIT_STRATEGY
-          
+
           COMMIT_ENV="true"
           export COMMIT_ENV
-          
+
           export SECRET_KEY
           export GITHUB_ACTIONS
           export GITHUB_REPOSITORY
@@ -706,27 +706,27 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
-                    
+
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
             env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs")
-            for path in $env_path; do 
+            for path in $env_path; do
               bash /module/scripts/update_ca_cert.sh "${CI_PROJECT_DIR}/configuration/certs/$path"
             done
           fi
-          
+
           git config --global --add safe.directory "${CI_PROJECT_DIR}"
-            
+
           /module/scripts/prepare.sh "git_commit.yaml"
-          
+
           env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
           for path in $env_path; do
             if [ -d "$path/Credentials" ]; then
               chmod ugo+rw "$path/Credentials/"*
             fi
           done
-      
+
           cp -rf ${CI_PROJECT_DIR}/environments ${CI_PROJECT_DIR}/git_envs
 
       - name: Upload artifacts

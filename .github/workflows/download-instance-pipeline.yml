@@ -17,7 +17,7 @@ on:
 jobs:
   update-pipelines:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,27 +48,27 @@ jobs:
             echo "No .github folder found in Docker image"
             exit 0
           fi
-          
+
           # Create a temporary file to track changes
           touch /tmp/changes_detected
-          
+
           # Function to compare and update files
           update_files() {
             local src_dir="$1"
             local dest_dir="$2"
-            
+
             # Create destination directory if it doesn't exist
             mkdir -p "$dest_dir"
-            
+
             # Find all files in source directory
             find "$src_dir" -type f | while read -r src_file; do
               # Calculate relative path
               rel_path=$(realpath --relative-to="$src_dir" "$src_file")
               dest_file="${dest_dir}/${rel_path}"
-              
+
               # Create destination directory if needed
               mkdir -p "$(dirname "${dest_file}")"
-              
+
               # Check if file exists and is different
               if [ ! -f "${dest_file}" ] || ! cmp -s "${src_file}" "${dest_file}"; then
                 echo "Updating: ${rel_path}"
@@ -77,10 +77,10 @@ jobs:
               fi
             done
           }
-          
+
           # Update files from Docker image
           update_files "./github" ".github"
-          
+
           # Check if any changes were made
           if [ -f /tmp/changes_detected ]; then
             echo "changes=true" >> $GITHUB_OUTPUT
@@ -90,7 +90,7 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
             echo "ℹ️ No changes detected in .github folder"
           fi
-          
+
           # Clean up extracted github folder after processing
           echo "🧹 Cleaning up extracted github folder..."
           rm -rf ./github
@@ -110,7 +110,7 @@ jobs:
             echo "ℹ️ No changes to commit - working tree is clean"
             exit 0
           fi
-          
+
           echo "📝 Committing changes..."
           git add .github/
           git commit -m "Update pipelines from Docker image ${{ github.event.inputs.image_name || 'ghcr.io/netcracker/qubership-instance-repo-pipeline' }}:${{ github.event.inputs.image_tag || 'latest' }}"
@@ -133,4 +133,4 @@ jobs:
       - name: No changes notification
         if: steps.check-changes.outputs.changes == 'false'
         run: |
-          echo "No changes detected in .github folder from Docker image" 
+          echo "No changes detected in .github folder from Docker image"

@@ -1,5 +1,6 @@
 class ErrorMessages:
     """Error message constants"""
+
     INVALID_JSON = "Error: Invalid configuration format.\n Failed to parse JSON content in CRED_ROTATION_PAYLOAD. Error:\n {e}"
     INCORRECT_TYPE = "Error: Invalid configuration format.\n Please provide CRED_ROTATION_PAYLOAD in json string format."
     MISSING_ENV = "Error: Missing required configuration field.\n {e} .Please set it your pipeline_vars.yml."
@@ -10,8 +11,10 @@ class ErrorMessages:
     FILE_DECRYPT_ERROR = "Error: Invalid configuration format.\n Failed to Decrypt the credential file {file} due to {e}"
     FILE_READ_ERROR = "Error: Invalid configuration format.\n Failed to read the credential file {file} due to {e}"
     EMPTY_PARAM = "Error: Termination condition encountered.\n No affected parameters found for the given CRED_ROTATION_PAYLOAD in the current environment instance. Hence Terminating the job."
-    CRED_UPDATION_FALSE = "Error: Termination condition encountered.\n Affected parameters have been identified. You can find the list of affected parameters in the artifact of this job, in the file {file}." \
-    " Credentials updates are skipped because CRED_ROTATION_FORCE is not enabled. Terminating the job."
+    CRED_UPDATION_FALSE = (
+        "Error: Termination condition encountered.\n Affected parameters have been identified. You can find the list of affected parameters in the artifact of this job, in the file {file}."
+        " Credentials updates are skipped because CRED_ROTATION_FORCE is not enabled. Terminating the job."
+    )
     INVALID_CONTEXT = "Error: Termination condition encountered.\n Unsupported context 'pipeline' for parameter '{param_key}'. This context is not valid for application-level parameters."
     ENTITY_FILE_NOT_FOUND = "Error: File not found: Target namespace/application file not found in environment instance for parameter key {param_key}."
     NS_FILE_NOT_FOUND = "Error: File not found.\n Failed to find namespace YAML file in the directory '{file}'. Please check if the namespace file is present."
@@ -25,8 +28,10 @@ class ErrorMessages:
     OUT_OF_RANGE = "Error: Out Of Range.\n Index {index} out of bounds for key: {key}. Incorrect value for the parameter found while lookig for affected parameters."
     INVALID_PATH = "Error: Invalid path hierarchy.\n {stop_dir} is not a parent of {source_path}. Something wrong with the folder structure in environment instance. Expected structure: project_dir/environments/cluster/env."
 
+
 class ErrorCodes:
     """Error code constants"""
+
     INVALID_CONFIG_CODE = "ENVGENE-4002"
     INVALID_INPUT_CODE = "ENVGENE-4003"
     INVALID_STATE_CODE = "ENVGENE-4004"
@@ -34,9 +39,3 @@ class ErrorCodes:
     OUT_OF_RANGE_CODE = "ENVGENE-3003"
     FILE_NOT_FOUND_CODE = "ENVGENE-8001"
     INVALID_PATH_CODE = "ENVGENE-8003"
-    
-
-
-
-    
-    

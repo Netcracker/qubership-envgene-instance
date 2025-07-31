@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import sys
-import yaml
 import json
 import os
+import sys
+
+import yaml
 
 
 def getenv_and_log(key, default=""):
@@ -28,7 +29,9 @@ def convert_to_github_env(value):
 
 
 def validate_boolean(value, key):
-    if isinstance(value, bool) or (isinstance(value, str) and value.lower() in ["true", "false"]):
+    if isinstance(value, bool) or (
+        isinstance(value, str) and value.lower() in ["true", "false"]
+    ):
         return convert_to_github_env(value)
     raise ValueError(f"{key} should be a boolean (true/false). Got: {value}")
 
@@ -36,7 +39,7 @@ def validate_boolean(value, key):
 def validate_json(value, key):
     try:
         if isinstance(value, str):
-            value = value.strip().replace('\n', ' ')
+            value = value.strip().replace("\n", " ")
         parsed_json = json.loads(value)
         return json.dumps(parsed_json)
     except (json.JSONDecodeError, TypeError):
@@ -66,7 +69,7 @@ def validate_cred_rotation_payload(value, key):
     """
     try:
         if isinstance(value, str):
-            value = value.strip().replace('\n', ' ')
+            value = value.strip().replace("\n", " ")
             if not value:  # Empty string is valid (default empty payload)
                 return "{}"
             parsed_json = json.loads(value)
@@ -94,20 +97,33 @@ def validate_cred_rotation_payload(value, key):
                 raise ValueError(f"{key}.rotation_items[{i}] must be an object")
 
             # Required fields
-            required_fields = ["namespace", "context", "parameter_key", "parameter_value"]
+            required_fields = [
+                "namespace",
+                "context",
+                "parameter_key",
+                "parameter_value",
+            ]
             for field in required_fields:
                 if field not in item:
-                    raise ValueError(f"{key}.rotation_items[{i}] must contain '{field}' field")
+                    raise ValueError(
+                        f"{key}.rotation_items[{i}] must contain '{field}' field"
+                    )
                 if not isinstance(item[field], str):
-                    raise ValueError(f"{key}.rotation_items[{i}].{field} must be a string")
+                    raise ValueError(
+                        f"{key}.rotation_items[{i}].{field} must be a string"
+                    )
 
             # Optional field - application
             if "application" in item and not isinstance(item["application"], str):
-                raise ValueError(f"{key}.rotation_items[{i}].application must be a string if provided")
+                raise ValueError(
+                    f"{key}.rotation_items[{i}].application must be a string if provided"
+                )
 
             # Validate context enum
             if item["context"] not in valid_contexts:
-                raise ValueError(f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}")
+                raise ValueError(
+                    f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}"
+                )
 
         return json.dumps(parsed_json)
     except (json.JSONDecodeError, TypeError) as e:
@@ -121,11 +137,11 @@ def main():
 
     config_file = sys.argv[1]
 
-    with open(config_file, 'r', encoding='utf-8') as f:
+    with open(config_file, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
 
-    github_env_file = os.getenv('GITHUB_ENV')
-    github_output_file = os.getenv('GITHUB_OUTPUT')
+    github_env_file = os.getenv("GITHUB_ENV")
+    github_output_file = os.getenv("GITHUB_OUTPUT")
 
     if not github_env_file or not github_output_file:
         print("Error: GITHUB_ENV or GITHUB_OUTPUT variable is not set!")
@@ -183,16 +199,23 @@ def main():
             print(f"Using environment value for {key}: {raw_value}")
         else:
             raw_value = data.get(key, default_values[key])
-            print(f"Using {'file' if key in data else 'default'} value for {key}: {raw_value}")
+            print(
+                f"Using {'file' if key in data else 'default'} value for {key}: {raw_value}"
+            )
 
         try:
             if validator == validate_boolean:
                 if isinstance(raw_value, bool):
                     validated_data[key] = convert_to_github_env(raw_value)
-                elif isinstance(raw_value, str) and raw_value.lower() in ["true", "false"]:
+                elif isinstance(raw_value, str) and raw_value.lower() in [
+                    "true",
+                    "false",
+                ]:
                     validated_data[key] = raw_value.lower()
                 else:
-                    print(f"Warning: {key} has invalid value '{raw_value}', using default '{default_values[key]}'")
+                    print(
+                        f"Warning: {key} has invalid value '{raw_value}', using default '{default_values[key]}'"
+                    )
                     validated_data[key] = default_values[key]
             elif validator == validate_json:
                 if not raw_value:
@@ -207,8 +230,9 @@ def main():
             print(f"Warning: {e}, using default value '{default_values[key]}'")
             validated_data[key] = default_values[key]
 
-    with open(github_env_file, 'a', encoding='utf-8') as env_file, \
-            open(github_output_file, 'a', encoding='utf-8') as output_file:
+    with open(github_env_file, "a", encoding="utf-8") as env_file, open(
+        github_output_file, "a", encoding="utf-8"
+    ) as output_file:
 
         for key, value in validated_data.items():
             # Only write to files if the variable wasn't already set in environment
