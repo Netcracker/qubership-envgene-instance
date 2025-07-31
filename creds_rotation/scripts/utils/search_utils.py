@@ -96,22 +96,43 @@ def get_ns_content(
 def get_app_content(
     yaml_content_map: Dict[str, Dict[str, Any]], namespace: str, app: str, env_name: str
 ) -> Optional[Tuple[str, Dict[str, Any]]]:
+    print(f"=== DEBUG: get_app_content ===")
+    print(f"Looking for namespace: {namespace}, app: {app}, env: {env_name}")
+    print(f"Total files to check: {len(yaml_content_map)}")
+
     for file_path, content in yaml_content_map.items():
+        print(f"Checking file: {file_path}")
+        print(
+            f"  - ends with namespace: {file_path.endswith(('namespace.yml', 'namespace.yaml'))}"
+        )
+        print(f"  - content is None: {content is None}")
+        print(
+            f"  - contains /{env_name}/Namespaces: {'/{env_name}/Namespaces' in file_path.replace('\\', '/')}"
+        )
+
         if (
             file_path.endswith(("namespace.yml", "namespace.yaml"))
             or content is None
             or f"/{env_name}/Namespaces" not in file_path.replace("\\", "/")
         ):
+            print(f"  -> Skipping file")
             continue
 
-        if app != content.get("name"):
+        app_name = content.get("name")
+        print(f"  - app name in file: {app_name}")
+        print(f"  - looking for app: {app}")
+
+        if app != app_name:
+            print(f"  -> App name mismatch, skipping")
             continue
 
         parent_dir = Path(file_path).parent.parent
         ns_files = [parent_dir / "namespace.yaml", parent_dir / "namespace.yml"]
+        print(f"  - checking namespace files: {ns_files}")
         ns_content = find_namespace(yaml_content_map, ns_files)
 
         if ns_content is None:
+            print(f"  -> Namespace file not found")
             raise ReferenceError(
                 ErrorMessages.NS_FILE_NOT_FOUND.format(
                     file=str(ns_files[0]).removesuffix("namespace.yaml")
@@ -119,9 +140,17 @@ def get_app_content(
                 error_code=ErrorCodes.FILE_NOT_FOUND_CODE,
             )
 
-        if ns_content and ns_content.get("name") == namespace:
-            return file_path, content
+        ns_name = ns_content.get("name")
+        print(f"  - namespace name in file: {ns_name}")
+        print(f"  - looking for namespace: {namespace}")
 
+        if ns_content and ns_name == namespace:
+            print(f"  -> Found matching file!")
+            return file_path, content
+        else:
+            print(f"  -> Namespace mismatch")
+
+    print(f"  -> No matching file found")
     return None
 
 

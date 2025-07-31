@@ -116,6 +116,12 @@ def cred_rotation():
     entity_files_map, env_files_map, env_creds_files = scan_and_get_yaml_files(
         cluster_path
     )
+
+    # Debug: Print found files
+    logger.info(f"Found {len(entity_files_map)} entity files:")
+    for file_path in entity_files_map.keys():
+        logger.info(f"  - {file_path}")
+
     shared_creds = collect_shared_credentials(env_files_map)
     shared_content_map = read_shared_cred_files(
         shared_creds, cluster_path, work_dir, is_encrypted, envgene_age_public_key
