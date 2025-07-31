@@ -20,7 +20,18 @@ CRED_ROTATION_PAYLOAD: |
 
 ### Правильный формат (после исправления):
 ```yaml
-CRED_ROTATION_PAYLOAD: '{"rotation_items":[...]}'
+CRED_ROTATION_PAYLOAD: |
+  {
+    "rotation_items": [
+      {
+        "namespace": "e02-bss",
+        "application": "postgres",
+        "context": "deployment",
+        "parameter_key": "POSTGRES_DBA_USER",
+        "parameter_value": "new_postgres_user"
+      }
+    ]
+  }
 ```
 
 ## Объяснение
@@ -31,15 +42,26 @@ CRED_ROTATION_PAYLOAD: '{"rotation_items":[...]}'
 
 ## Решение
 
-Изменили формат с YAML block scalar на простую строку в одинарных кавычках:
+Изменили формат на читаемый YAML block scalar с правильным отступом:
 
 ```yaml
-# Было:
+# Было (неправильно):
 CRED_ROTATION_PAYLOAD: |
   {"rotation_items":[{"namespace":"e02-bss",...}]}
 
-# Стало:
-CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss",...}]}'
+# Стало (правильно):
+CRED_ROTATION_PAYLOAD: |
+  {
+    "rotation_items": [
+      {
+        "namespace": "e02-bss",
+        "application": "postgres",
+        "context": "deployment",
+        "parameter_key": "POSTGRES_DBA_USER",
+        "parameter_value": "new_postgres_user"
+      }
+    ]
+  }
 ```
 
 ## Проверка
@@ -57,17 +79,19 @@ CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss",...}]}'
 # Вариант 1: Двойные кавычки с экранированием
 CRED_ROTATION_PAYLOAD: "{\"rotation_items\":[...]}"
 
-# Вариант 2: YAML block scalar с правильным отступом
+# Вариант 2: YAML block scalar с правильным отступом (рекомендуемый)
 CRED_ROTATION_PAYLOAD: |
-  {"rotation_items":[...]}
+  {
+    "rotation_items": [...]
+  }
 
-# Вариант 3: Простая строка (рекомендуемый)
+# Вариант 3: Простая строка в одинарных кавычках
 CRED_ROTATION_PAYLOAD: '{"rotation_items":[...]}'
 ```
 
 ## Рекомендации
 
-1. **Всегда используйте одинарные кавычки** для JSON строк в YAML
-2. **Избегайте YAML block scalar** для JSON данных
+1. **Используйте читаемый YAML block scalar** для JSON данных с правильным отступом
+2. **Избегайте сжатых JSON строк** в YAML - они могут терять кавычки
 3. **Тестируйте формат** перед использованием в production
 4. **Добавляйте валидацию** в CI/CD pipeline
