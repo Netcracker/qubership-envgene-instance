@@ -125,7 +125,8 @@ def validate_cred_rotation_payload(value, key):
                     f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}"
                 )
 
-        return json.dumps(parsed_json)
+        # Возвращаем JSON в простом формате без лишних пробелов
+        return json.dumps(parsed_json, separators=(",", ":"))
     except (json.JSONDecodeError, TypeError) as e:
         raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
 
