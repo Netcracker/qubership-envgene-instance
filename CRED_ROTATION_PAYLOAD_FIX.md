@@ -1,75 +1,75 @@
-# Исправление проблемы с CRED_ROTATION_PAYLOAD
+# CRED_ROTATION_PAYLOAD Error Fix
 
-## Проблема
+## Problem
 
-Ошибка при парсинге JSON в `creds_rotation_handler.py`:
+JSON parsing error in `creds_rotation_handler.py`:
 
 ```
 json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
 ```
 
-## Причина
+## Root Cause
 
-Проблема возникала из-за неправильного формата `CRED_ROTATION_PAYLOAD` в файле `.github/pipeline_vars.yaml`.
+The issue was caused by incorrect `CRED_ROTATION_PAYLOAD` format in `.github/pipeline_vars.yaml`.
 
-### Неправильный формат (до исправления):
+### Incorrect format (before fix):
 ```yaml
 CRED_ROTATION_PAYLOAD: |
   {"rotation_items":[...]}
 ```
 
-### Правильный формат (после исправления):
+### Correct format (after fix):
 ```yaml
 CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss","application":"postgres","context":"deployment","parameter_key":"POSTGRES_DBA_USER","parameter_value":"new_postgres_user"}]}'
 ```
 
-## Объяснение
+## Explanation
 
-1. **YAML Block Scalar (|)** - YAML интерпретировал JSON как многострочную строку, что приводило к проблемам при передаче в Python
-2. **Потеря кавычек** - В процессе обработки JSON терял кавычки вокруг ключей
-3. **Переменные окружения** - При передаче через GitHub Actions формат мог искажаться
+1. **YAML Block Scalar (|)** - YAML interpreted JSON as a multi-line string, causing issues when passed to Python
+2. **Quote loss** - During processing, JSON lost quotes around keys
+3. **Environment variables** - Format could be corrupted when passed through GitHub Actions
 
-## Решение
+## Solution
 
-Изменили формат на простую строку в одинарных кавычках и оптимизировали JSON форматирование:
+Changed format to simple string in single quotes and optimized JSON formatting:
 
 ```yaml
-# Было (неправильно):
+# Before (incorrect):
 CRED_ROTATION_PAYLOAD: |
   {"rotation_items":[{"namespace":"e02-bss",...}]}
 
-# Стало (правильно):
+# After (correct):
 CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss","application":"postgres","context":"deployment","parameter_key":"POSTGRES_DBA_USER","parameter_value":"new_postgres_user"}]}'
 ```
 
-## Проверка
+## Verification
 
-Формат протестирован и работает корректно:
-- ✅ YAML парсинг
-- ✅ JSON валидация в `load_env_variables.py`
-- ✅ JSON парсинг в `creds_rotation_handler.py`
+Format tested and works correctly:
+- ✅ YAML parsing
+- ✅ JSON validation in `load_env_variables.py`
+- ✅ JSON parsing in `creds_rotation_handler.py`
 
-## Альтернативные форматы
+## Alternative Formats
 
-Если возникнут проблемы, можно использовать:
+If issues arise, you can use:
 
 ```yaml
-# Вариант 1: Двойные кавычки с экранированием
+# Option 1: Double quotes with escaping
 CRED_ROTATION_PAYLOAD: "{\"rotation_items\":[...]}"
 
-# Вариант 2: YAML block scalar с правильным отступом
+# Option 2: YAML block scalar with proper indentation
 CRED_ROTATION_PAYLOAD: |
   {
     "rotation_items": [...]
   }
 
-# Вариант 3: Простая строка в одинарных кавычках (рекомендуемый)
+# Option 3: Simple string in single quotes (recommended)
 CRED_ROTATION_PAYLOAD: '{"rotation_items":[...]}'
 ```
 
-## Рекомендации
+## Recommendations
 
-1. **Используйте простую строку в одинарных кавычках** для JSON данных
-2. **Избегайте YAML block scalar** для JSON - они могут терять кавычки
-3. **Оптимизируйте JSON форматирование** в `load_env_variables.py`
-4. **Тестируйте формат** перед использованием в production
+1. **Use simple string in single quotes** for JSON data
+2. **Avoid YAML block scalar** for JSON - they may lose quotes
+3. **Optimize JSON formatting** in `load_env_variables.py`
+4. **Test the format** before using in production

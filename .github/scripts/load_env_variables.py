@@ -148,7 +148,7 @@ def validate_cred_rotation_payload(value, key):
                     f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}"
                 )
 
-        # Возвращаем JSON в простом формате без лишних пробелов
+        # Return JSON in simple format without extra spaces
         result = json.dumps(parsed_json, separators=(",", ":"))
         print(f"Final result: {repr(result)}")
         return result

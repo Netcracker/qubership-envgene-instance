@@ -24,37 +24,37 @@ from utils.yaml_utils import convert_json_to_yaml, write_yaml_to_file
 def load_payload(payload: str):
     if isinstance(payload, str):
         try:
-            # Добавляем отладочную информацию
+            # Add debug information
             logger.info(f"Payload length: {len(payload)}")
             logger.info(f"Payload first 50 chars: {repr(payload[:50])}")
             logger.info(f"Payload type: {type(payload)}")
 
-            # Проверяем на скрытые символы
+            # Check for hidden characters
             if payload.startswith("\ufeff"):
                 logger.warning("Found BOM at the beginning, removing...")
                 payload = payload.lstrip("\ufeff")
 
-            # Убираем лишние пробелы и переводы строк по краям
+            # Remove extra whitespace and newlines around edges
             original_payload = payload
             payload = payload.strip()
 
-            # Проверяем, не остался ли YAML блочный скаляр
+            # Check if YAML block scalar remains
             if payload.startswith("|"):
                 logger.warning("Found YAML block scalar indicator, cleaning up...")
                 payload = payload.lstrip("|\n ").strip()
 
-            # Убираем возможные лишние переводы строк внутри JSON
+            # Remove possible extra newlines inside JSON
             if "\n" in payload:
                 logger.info("Found newlines in payload, normalizing...")
-                # Сохраняем переводы строк только внутри строковых значений
+                # Keep newlines only inside string values
                 import re
 
-                # Простая очистка - убираем переводы строк не внутри кавычек
+                # Simple cleanup - remove newlines not inside quotes
                 payload = re.sub(r"\n\s*", "", payload)
 
             logger.info(f"Cleaned payload first 50 chars: {repr(payload[:50])}")
 
-            # Временно сохраняем payload в файл для отладки
+            # Temporarily save payload to file for debugging
             with open("/tmp/debug_payload.txt", "w", encoding="utf-8") as f:
                 f.write(f"Original: {repr(original_payload)}\n")
                 f.write(f"Cleaned: {repr(payload)}\n")
@@ -88,7 +88,7 @@ def cred_rotation():
         envgene_age_public_key = getenv_with_error("ENVGENE_AGE_PUBLIC_KEY")
         creds_rotation_enabled = getenv_with_error("CRED_ROTATION_FORCE") == "true"
 
-        # Дополнительная отладка для переменной окружения
+        # Additional debugging for environment variable
         raw_payload = getenv_with_error("CRED_ROTATION_PAYLOAD")
         logger.info(f"Raw CRED_ROTATION_PAYLOAD length: {len(raw_payload)}")
         logger.info(f"Raw CRED_ROTATION_PAYLOAD type: {type(raw_payload)}")
@@ -98,12 +98,12 @@ def cred_rotation():
         logger.info(f"Raw CRED_ROTATION_PAYLOAD full value: {repr(raw_payload)}")
         logger.info(f"Raw CRED_ROTATION_PAYLOAD bytes: {raw_payload.encode('utf-8')}")
 
-        # Проверяем на проблемные символы
+        # Check for problematic characters
         if raw_payload.startswith("|"):
             logger.warning(
                 "Payload starts with |, removing YAML block scalar indicator"
             )
-            # Убираем YAML block scalar и лишние переводы строк/пробелы
+            # Remove YAML block scalar and extra newlines/spaces
             raw_payload = raw_payload.lstrip("|\n ").strip()
             logger.info(f"After cleanup: {repr(raw_payload[:100])}")
 
