@@ -54,6 +54,7 @@ env:
   GITHUB_USER_EMAIL: 'fake@fake.com'
   GITHUB_USER_NAME: 'envgene'
   GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
   
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
