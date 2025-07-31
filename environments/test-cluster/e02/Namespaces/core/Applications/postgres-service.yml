@@ -3,6 +3,6 @@
 # Please modify this contents only for development purposes or as workaround.
 name: "postgres-service"
 deployParameters:
-  POSTGRES_DBA_USER: "test"
-  POSTGRES_DBA_PASSWORD: "test"
+  POSTGRES_DBA_USER: "${creds.get('postgres_service_creds').username}"
+  POSTGRES_DBA_PASSWORD: "${creds.get('postgres_service_creds').password}"
 technicalConfigurationParameters: {}
