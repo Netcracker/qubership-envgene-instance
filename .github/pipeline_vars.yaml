@@ -42,4 +42,4 @@ CRED_ROTATION_PAYLOAD: |
       }
     ]
   }
-#CRED_ROTATION_FORCE: false
+CRED_ROTATION_FORCE: true
