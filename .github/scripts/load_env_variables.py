@@ -199,6 +199,9 @@ def main():
     for key, validator in validators.items():
         # Priority: 1. Environment variable (from API input), 2. File value, 3. Default
         env_value = os.getenv(key)
+        print(
+            f"DEBUG: Checking {key}, env_value={env_value}, env_value is None={env_value is None}"
+        )
         if env_value is not None:
             raw_value = env_value
             print(f"Using environment value for {key}: {raw_value}")
