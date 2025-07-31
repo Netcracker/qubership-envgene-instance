@@ -248,27 +248,13 @@ def search_yaml_files(
 ) -> List[AffectedParameter]:
     affected: List[AffectedParameter] = []
 
-    print(f"=== DEBUG: search_yaml_files ===")
-    print(f"Search string: {search_string}")
-    print(f"Cred ID: {cred_id}")
-    print(f"Target file: {target_file}")
-    print(f"Target key: {target_key}")
-    print(f"Target context: {target_context}")
-    print(f"Total files to search: {len(entity_files_map)}")
-
     for filename, content in entity_files_map.items():
-        print(f"Checking file: {filename}")
 
         is_target = filename == target_file
-        print(f"  - is_target: {is_target}")
-
         matches = find_in_yaml(
             content, search_string, is_target, target_key, target_context
         )
-        print(f"  - matches: {matches}")
-
         if matches:
-            print(f"  -> Found matches!")
             affected.extend(
                 get_affected_param_map(
                     cred_id,
@@ -281,8 +267,4 @@ def search_yaml_files(
                     entity_files_map,
                 )
             )
-        else:
-            print(f"  -> No matches")
-
-    print(f"Total affected parameters: {len(affected)}")
     return affected
