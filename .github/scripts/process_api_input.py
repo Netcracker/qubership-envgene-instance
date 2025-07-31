@@ -71,7 +71,7 @@ def validate_variable(key, value):
     """Validate variable based on known variable types"""
     boolean_vars = [
         "ENV_INVENTORY_INIT", "GENERATE_EFFECTIVE_SET", "ENV_TEMPLATE_TEST", 
-        "SD_DELTA", "ENV_BUILDER", "GET_PASSPORT", "CMDB_IMPORT", "CRED_ROTATION_FORCE"
+        "SD_DELTA", "ENV_BUILDER", "GET_PASSPORT", "CMDB_IMPORT"
     ]
     
     json_vars = ["SD_DATA", "ENV_SPECIFIC_PARAMETERS"]

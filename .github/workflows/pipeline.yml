@@ -54,9 +54,6 @@ env:
   GITHUB_USER_EMAIL: 'fake@fake.com'
   GITHUB_USER_NAME: 'envgene'
   GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-  ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
-  ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
-  PUBLIC_AGE_KEYS: ${{ secrets.PUBLIC_AGE_KEYS }}
   
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
@@ -64,53 +61,9 @@ env:
   DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: 'ghcr.io/netcracker/qubership-effective-set-generator:latest'
 
 jobs:
-  cache_docker_images:
-    name: "Cache Docker Images"
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Cache Docker Images
-        uses: actions/cache@v4
-        with:
-          path: /tmp/docker-images
-          key: docker-images-${{ hashFiles('.github/workflows/*.yml') }}
-          restore-keys: |
-            docker-images-
-
-      - name: Load cached images or pull new ones
-        run: |
-          mkdir -p /tmp/docker-images
-          
-          # Define images
-          GCIP_IMAGE="ghcr.io/netcracker/qubership-gcip:latest"
-          ENVGENE_IMAGE="ghcr.io/netcracker/qubership-envgene:feature-cred-rotation"
-          EFFECTIVE_SET_IMAGE="ghcr.io/netcracker/qubership-effective-set-generator:latest"
-          
-          # Function to load or pull image
-          load_or_pull_image() {
-            local image=$1
-            local filename=$(echo $image | tr '/:' '_').tar
-            
-            if [ -f "/tmp/docker-images/$filename" ]; then
-              echo "Loading cached image: $image"
-              docker load -i "/tmp/docker-images/$filename"
-            else
-              echo "Pulling and caching image: $image"
-              docker pull $image
-              docker save $image -o "/tmp/docker-images/$filename"
-            fi
-          }
-          
-          # Load or pull all images
-          load_or_pull_image $GCIP_IMAGE
-          load_or_pull_image $ENVGENE_IMAGE
-          load_or_pull_image $EFFECTIVE_SET_IMAGE
-          
-          echo "✅ All Docker images are ready"
-
   show_environment_variables:
     name: "UI Input Parameters Processing"
     runs-on: ubuntu-22.04
-    needs: cache_docker_images
     container:
       image: ghcr.io/netcracker/qubership-gcip:latest
       options: --user root
@@ -131,8 +84,8 @@ jobs:
       SD_SOURCE_TYPE: ${{ env.SD_SOURCE_TYPE }}
       SD_DELTA: ${{ env.SD_DELTA }}
       ENV_SPECIFIC_PARAMETERS: ${{ env.ENV_SPECIFIC_PARAMETERS }}
-      CRED_ROTATION_FORCE: ${{ env.CRED_ROTATION_FORCE }}
       CRED_ROTATION_PAYLOAD: ${{ env.CRED_ROTATION_PAYLOAD }}
+      CRED_ROTATION_FORCE: ${{ env.CRED_ROTATION_FORCE }}
       ENV_GENERATION_PARAMS: ${{ steps.env-generation-params.outputs.ENV_GENERATION_PARAMS }}
       DOCKER_IMAGE_GCIP: ${{ steps.docker-images.outputs.DOCKER_IMAGE_GCIP }}
       DOCKER_IMAGE_ENVGENE: ${{ steps.docker-images.outputs.DOCKER_IMAGE_ENVGENE }}
@@ -194,9 +147,8 @@ jobs:
           echo "SD_SOURCE_TYPE=$SD_SOURCE_TYPE" >> $GITHUB_OUTPUT
           echo "SD_DELTA=$SD_DELTA" >> $GITHUB_OUTPUT
           echo "ENV_SPECIFIC_PARAMETERS=$ENV_SPECIFIC_PARAMETERS" >> $GITHUB_OUTPUT
-          echo "CRED_ROTATION_FORCE=$CRED_ROTATION_FORCE" >> $GITHUB_OUTPUT
-          
           echo "CRED_ROTATION_PAYLOAD=$CRED_ROTATION_PAYLOAD" >> $GITHUB_OUTPUT
+          echo "CRED_ROTATION_FORCE=$CRED_ROTATION_FORCE" >> $GITHUB_OUTPUT
           echo "ENV_TEMPLATE_VERSION=$ENV_TEMPLATE_VERSION" >> $GITHUB_OUTPUT
           echo "ENV_BUILDER=$ENV_BUILDER" >> $GITHUB_OUTPUT
           echo "GET_PASSPORT=$GET_PASSPORT" >> $GITHUB_OUTPUT
@@ -233,18 +185,8 @@ jobs:
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
-          echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
           echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
-          
-          echo ""
-          echo "=== Debug: ENV_BUILDER Analysis ==="
-          echo "ENV_BUILDER value: '$ENV_BUILDER'"
-          echo "ENV_BUILDER length: ${#ENV_BUILDER}"
-          echo "ENV_BUILDER == 'true': $([ "$ENV_BUILDER" = "true" ] && echo "YES" || echo "NO")"
-          echo "ENV_BUILDER == true: $([ "$ENV_BUILDER" = true ] && echo "YES" || echo "NO")"
-          echo "ENV_BUILDER == 'false': $([ "$ENV_BUILDER" = "false" ] && echo "YES" || echo "NO")"
-          echo "ENV_BUILDER == false: $([ "$ENV_BUILDER" = false ] && echo "YES" || echo "NO")"
-          echo "ENV_BUILDER is empty: $([ -z "$ENV_BUILDER" ] && echo "YES" || echo "NO")"
+          echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
           
       - name: Prepare Parameters
         id: matrix-generator
@@ -267,9 +209,7 @@ jobs:
   parameters_validation:
     name: "${{ matrix.environment }} - Parameters Validation"
     runs-on: ubuntu-22.04
-    needs: 
-      - cache_docker_images
-      - show_environment_variables
+    needs: show_environment_variables
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_GCIP }}
       options: --user root
@@ -292,7 +232,6 @@ jobs:
     runs-on: ubuntu-22.04
     if: always() && needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
     needs:
-      - cache_docker_images
       - parameters_validation
       - show_environment_variables
     container:
@@ -349,7 +288,6 @@ jobs:
     runs-on: ubuntu-22.04
     if: always() && needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
     needs:
-      - cache_docker_images
       - parameters_validation
       - show_environment_variables
       - generate_inventory
@@ -362,11 +300,8 @@ jobs:
         environment: ${{ fromJson(needs.show_environment_variables.outputs.env_matrix) }}
     env:
       FULL_ENV: ${{ matrix.environment }}
-      CRED_ROTATION_FORCE: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_FORCE }}
       CRED_ROTATION_PAYLOAD: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}
-      ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
-      ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
-      PUBLIC_AGE_KEYS: ${{ secrets.PUBLIC_AGE_KEYS }}      
+      CRED_ROTATION_FORCE: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_FORCE }}
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
@@ -381,6 +316,7 @@ jobs:
           if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
             echo "artifact_name=credential_rotation_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
+
       - name: Credential Rotation
         run: |          
           export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
@@ -411,7 +347,6 @@ jobs:
     if: always() && needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
     runs-on: ubuntu-22.04
     needs:
-      - cache_docker_images
       - parameters_validation
       - show_environment_variables
       - generate_inventory
@@ -427,18 +362,6 @@ jobs:
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
-
-      - name: Debug ENV_BUILDER condition
-        run: |
-          echo "=== Debug: ENV_BUILDER Condition Analysis ==="
-          echo "ENV_BUILDER from outputs: '${{ needs.show_environment_variables.outputs.ENV_BUILDER }}'"
-          echo "ENV_BUILDER == 'true': ${{ needs.show_environment_variables.outputs.ENV_BUILDER == 'true' }}"
-          echo "ENV_BUILDER == true: ${{ needs.show_environment_variables.outputs.ENV_BUILDER == true }}"
-          echo "ENV_BUILDER == 'false': ${{ needs.show_environment_variables.outputs.ENV_BUILDER == 'false' }}"
-          echo "ENV_BUILDER == false: ${{ needs.show_environment_variables.outputs.ENV_BUILDER == false }}"
-          echo "ENV_BUILDER is empty: ${{ needs.show_environment_variables.outputs.ENV_BUILDER == '' }}"
-          echo "Condition evaluation: always() && needs.show_environment_variables.outputs.ENV_BUILDER == 'true'"
-          echo "This job should run if ENV_BUILDER is exactly 'true'"
 
       - name: Prepare variables to download the artifacts
         run: |
@@ -469,89 +392,87 @@ jobs:
         run: |
           ENV_NAMES="${{ matrix.environment }}"
           export ENV_NAMES
-           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
-           export ENV_NAME_SHORT
-           
-           ENV_TEMPLATE_TEST="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}"
-           export ENV_TEMPLATE_TEST
-           
-           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-           export CLUSTER_NAME
-           
-           ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-           export ENVIRONMENT_NAME
-           
-           ENV_NAME="$ENVIRONMENT_NAME"
-           export ENV_NAME
-           
-           export CI_PROJECT_DIR
-           
-           ENV_TEMPLATE_VERSION="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_VERSION }}"
-           export ENV_TEMPLATE_VERSION
-           
-           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
-           export INSTANCES_DIR
-           
-           module_ansible_dir="/module/ansible"
-           export module_ansible_dir
-           
-           module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
-           export module_inventory
-           
-           module_ansible_cfg="/module/ansible/ansible.cfg"
-           export module_ansible_cfg
-           
-           module_config_default="/module/templates/defaults.yaml"
-           export module_config_default
-           
-           envgen_args=" -vvv"
-           export envgen_args
-           
-           envgen_debug="true"
-           export envgen_debug
-           
-           GIT_STRATEGY="none"
-           export GIT_STRATEGY
-           
-           COMMIT_ENV="true"
-           export COMMIT_ENV
-           
-           export SECRET_KEY
-           export GITHUB_ACTIONS
-           export GITHUB_REPOSITORY
-           export GITHUB_REF_NAME
-           export GITHUB_USER_EMAIL
-           export GITHUB_USER_NAME
-           export GITHUB_TOKEN
-           export ENVGENE_AGE_PRIVATE_KEY
-           export ENVGENE_AGE_PUBLIC_KEY
-           export PUBLIC_AGE_KEYS
-           
-           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
-            env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
-            for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
-      
-            if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" == "false" ]; then
-              /module/scripts/prepare.sh "set_template_version.yaml"
-              /module/scripts/prepare.sh "build_env.yaml"
-            else
-              /module/scripts/prepare.sh "build_env.yaml"
+          
+          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+          export ENV_NAME_SHORT
+          
+          ENV_TEMPLATE_TEST="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}"
+          export ENV_TEMPLATE_TEST
+          
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+          
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+          
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+          
+          export CI_PROJECT_DIR
+          
+          ENV_TEMPLATE_VERSION="${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_VERSION }}"
+          export ENV_TEMPLATE_VERSION
+          
+          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
+          export INSTANCES_DIR
+          
+          module_ansible_dir="/module/ansible"
+          export module_ansible_dir
+          
+          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
+          export module_inventory
+          
+          module_ansible_cfg="/module/ansible/ansible.cfg"
+          export module_ansible_cfg
+          
+          module_config_default="/module/templates/defaults.yaml"
+          export module_config_default
+          
+          envgen_args=" -vvv"
+          export envgen_args
+          
+          envgen_debug="true"
+          export envgen_debug
+          
+          GIT_STRATEGY="none"
+          export GIT_STRATEGY
+          
+          COMMIT_ENV="true"
+          export COMMIT_ENV
+          
+          export SECRET_KEY
+          export GITHUB_ACTIONS
+          export GITHUB_REPOSITORY
+          export GITHUB_REF_NAME
+          export GITHUB_USER_EMAIL
+          export GITHUB_USER_NAME
+          export GITHUB_TOKEN
+          
+          if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
+          env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
+          for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
+    
+          if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" == "false" ]; then
+            /module/scripts/prepare.sh "set_template_version.yaml"
+            /module/scripts/prepare.sh "build_env.yaml"
+          else
+            /module/scripts/prepare.sh "build_env.yaml"
+          fi
+    
+          if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
+            env_name=$(cat set_variable.txt)
+            sed -i "s|\\\"envgeneNullValue\\\"|\\\"test_value\\\"|g" "${CI_PROJECT_DIR}/environments/$env_name/Credentials/credentials.yml"
+          else
+            env_name=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+            export env_name
+          fi
+    
+          env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
+          for path in $env_path; do
+            if [ -d "$path/Credentials" ]; then
+              chmod ugo+rw "$path/Credentials/"*
             fi
-      
-            if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
-              env_name=$(cat set_variable.txt)
-              sed -i "s|\\\"envgeneNullValue\\\"|\\\"test_value\\\"|g" "${CI_PROJECT_DIR}/environments/$env_name/Credentials/credentials.yml"
-            else
-              env_name=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
-              export env_name
-            fi
-      
-            env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
-            for path in $env_path; do
-              if [ -d "$path/Credentials" ]; then
-                chmod ugo+rw "$path/Credentials/"*
-              fi
-           done
+          done
           
       
 
@@ -565,7 +486,7 @@ jobs:
     name: "${{ matrix.environment }} - Generate Effective Set"
     if: always() && needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
     runs-on: ubuntu-22.04
-    needs: [cache_docker_images,parameters_validation,show_environment_variables,generate_inventory,env_build]
+    needs: [parameters_validation,show_environment_variables,generate_inventory,env_build]
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
       options: --user root
@@ -665,9 +586,6 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
-          export ENVGENE_AGE_PRIVATE_KEY
-          export ENVGENE_AGE_PUBLIC_KEY
-          export PUBLIC_AGE_KEYS
           
           /module/scripts/prepare.sh "generate_effective_set.yaml"
           
@@ -687,7 +605,7 @@ jobs:
   git_commit:
     name: "${{ matrix.environment }} - Git Commit"
     runs-on: ubuntu-22.04
-    needs: [cache_docker_images,parameters_validation,show_environment_variables,generate_inventory,env_build,generate_effective_set]
+    needs: [parameters_validation,show_environment_variables,generate_inventory,env_build,generate_effective_set]
     if: always() && (needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true')
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
@@ -787,9 +705,6 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
-          export ENVGENE_AGE_PRIVATE_KEY
-          export ENVGENE_AGE_PUBLIC_KEY
-          export PUBLIC_AGE_KEYS
                     
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 

@@ -14,7 +14,7 @@ def getenv_and_log(key, default=""):
 def sanitize_json(value):
     try:
         json_object = json.loads(value)
-        return json.dumps(json_object, separators=(',', ':'))
+        return json.dumps(json_object)
     except (json.JSONDecodeError, TypeError):
         raise ValueError(f"Invalid JSON provided: {value}")
 
@@ -38,7 +38,7 @@ def validate_json(value, key):
         if isinstance(value, str):
             value = value.strip().replace('\n', ' ')
         parsed_json = json.loads(value)
-        return json.dumps(parsed_json, separators=(',', ':'))
+        return json.dumps(parsed_json)
     except (json.JSONDecodeError, TypeError):
         raise ValueError(f"{key} must be a valid JSON object")
 
@@ -109,7 +109,7 @@ def validate_cred_rotation_payload(value, key):
             if item["context"] not in valid_contexts:
                 raise ValueError(f"{key}.rotation_items[{i}].context must be one of: {valid_contexts}")
 
-        return json.dumps(parsed_json, separators=(',', ':'))
+        return json.dumps(parsed_json)
     except (json.JSONDecodeError, TypeError) as e:
         raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
 
@@ -147,11 +147,8 @@ def main():
         "CMDB_IMPORT": "false",
         "DEPLOYMENT_TICKET_ID": "",
         "ENV_TEMPLATE_VERSION": "",
-        "CRED_ROTATION_FORCE": "false",
         "CRED_ROTATION_PAYLOAD": "{}",
-        "ENVGENE_AGE_PRIVATE_KEY": "",
-        "ENVGENE_AGE_PUBLIC_KEY": "",
-        "PUBLIC_AGE_KEYS": "",
+        "CRED_ROTATION_FORCE": "false",
     }
 
     validators = {
@@ -172,12 +169,8 @@ def main():
         "DEPLOYMENT_TICKET_ID": validate_string,
         "ENV_TEMPLATE_VERSION": validate_string,
         # New credential rotation variables
-        "CRED_ROTATION_FORCE": validate_boolean,
         "CRED_ROTATION_PAYLOAD": validate_cred_rotation_payload,
-        # Age encryption keys
-        "ENVGENE_AGE_PRIVATE_KEY": validate_string,
-        "ENVGENE_AGE_PUBLIC_KEY": validate_string,
-        "PUBLIC_AGE_KEYS": validate_string,
+        "CRED_ROTATION_FORCE": validate_boolean,
     }
 
     validated_data = {}
@@ -191,8 +184,6 @@ def main():
         else:
             raw_value = data.get(key, default_values[key])
             print(f"Using {'file' if key in data else 'default'} value for {key}: {raw_value}")
-            
-
 
         try:
             if validator == validate_boolean:
