@@ -58,7 +58,10 @@ def load_payload(payload: str):
             with open("/tmp/debug_payload.txt", "w", encoding="utf-8") as f:
                 f.write(f"Original: {repr(original_payload)}\n")
                 f.write(f"Cleaned: {repr(payload)}\n")
+                f.write(f"Payload bytes: {payload.encode('utf-8')}\n")
+                f.write(f"Payload hex: {payload.encode('utf-8').hex()}\n")
 
+            logger.info(f"About to parse JSON: {repr(payload)}")
             config = json.loads(payload)
             return config
         except json.JSONDecodeError as e:
@@ -92,6 +95,8 @@ def cred_rotation():
         logger.info(
             f"Raw CRED_ROTATION_PAYLOAD first 100 chars: {repr(raw_payload[:100])}"
         )
+        logger.info(f"Raw CRED_ROTATION_PAYLOAD full value: {repr(raw_payload)}")
+        logger.info(f"Raw CRED_ROTATION_PAYLOAD bytes: {raw_payload.encode('utf-8')}")
 
         # Проверяем на проблемные символы
         if raw_payload.startswith("|"):
