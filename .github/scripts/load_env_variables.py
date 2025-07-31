@@ -152,6 +152,16 @@ def main():
         print("Error: GITHUB_ENV or GITHUB_OUTPUT variable is not set!")
         sys.exit(1)
 
+    # Load existing environment variables from GITHUB_ENV file
+    if os.path.exists(github_env_file):
+        with open(github_env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key] = value
+                    print(f"Loaded environment variable: {key}={value}")
+
     # Default values for all variables
     default_values = {
         "ENV_INVENTORY_INIT": "false",
