@@ -20,18 +20,7 @@ CRED_ROTATION_PAYLOAD: |
 
 ### Правильный формат (после исправления):
 ```yaml
-CRED_ROTATION_PAYLOAD: |
-  {
-    "rotation_items": [
-      {
-        "namespace": "e02-bss",
-        "application": "postgres",
-        "context": "deployment",
-        "parameter_key": "POSTGRES_DBA_USER",
-        "parameter_value": "new_postgres_user"
-      }
-    ]
-  }
+CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss","application":"postgres","context":"deployment","parameter_key":"POSTGRES_DBA_USER","parameter_value":"new_postgres_user"}]}'
 ```
 
 ## Объяснение
@@ -42,7 +31,7 @@ CRED_ROTATION_PAYLOAD: |
 
 ## Решение
 
-Изменили формат на читаемый YAML block scalar с правильным отступом:
+Изменили формат на простую строку в одинарных кавычках и оптимизировали JSON форматирование:
 
 ```yaml
 # Было (неправильно):
@@ -50,18 +39,7 @@ CRED_ROTATION_PAYLOAD: |
   {"rotation_items":[{"namespace":"e02-bss",...}]}
 
 # Стало (правильно):
-CRED_ROTATION_PAYLOAD: |
-  {
-    "rotation_items": [
-      {
-        "namespace": "e02-bss",
-        "application": "postgres",
-        "context": "deployment",
-        "parameter_key": "POSTGRES_DBA_USER",
-        "parameter_value": "new_postgres_user"
-      }
-    ]
-  }
+CRED_ROTATION_PAYLOAD: '{"rotation_items":[{"namespace":"e02-bss","application":"postgres","context":"deployment","parameter_key":"POSTGRES_DBA_USER","parameter_value":"new_postgres_user"}]}'
 ```
 
 ## Проверка
@@ -79,19 +57,19 @@ CRED_ROTATION_PAYLOAD: |
 # Вариант 1: Двойные кавычки с экранированием
 CRED_ROTATION_PAYLOAD: "{\"rotation_items\":[...]}"
 
-# Вариант 2: YAML block scalar с правильным отступом (рекомендуемый)
+# Вариант 2: YAML block scalar с правильным отступом
 CRED_ROTATION_PAYLOAD: |
   {
     "rotation_items": [...]
   }
 
-# Вариант 3: Простая строка в одинарных кавычках
+# Вариант 3: Простая строка в одинарных кавычках (рекомендуемый)
 CRED_ROTATION_PAYLOAD: '{"rotation_items":[...]}'
 ```
 
 ## Рекомендации
 
-1. **Используйте читаемый YAML block scalar** для JSON данных с правильным отступом
-2. **Избегайте сжатых JSON строк** в YAML - они могут терять кавычки
-3. **Тестируйте формат** перед использованием в production
-4. **Добавляйте валидацию** в CI/CD pipeline
+1. **Используйте простую строку в одинарных кавычках** для JSON данных
+2. **Избегайте YAML block scalar** для JSON - они могут терять кавычки
+3. **Оптимизируйте JSON форматирование** в `load_env_variables.py`
+4. **Тестируйте формат** перед использованием в production
