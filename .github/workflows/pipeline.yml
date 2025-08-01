@@ -213,7 +213,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: show_environment_variables
     container:
-      image: ${{ vars.DOCKER_IMAGE_GCIP }}
+      image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_GCIP }}
       options: --user root
     strategy:
       fail-fast: false
@@ -237,7 +237,7 @@ jobs:
       - parameters_validation
       - show_environment_variables
     container:
-      image: ${{ vars.DOCKER_IMAGE_ENVGENE }}
+      image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
       options: --user root
     strategy:
       fail-fast: false
@@ -294,7 +294,7 @@ jobs:
       - show_environment_variables
       - generate_inventory
     container:
-      image: ${{ vars.DOCKER_IMAGE_ENVGENE }}
+      image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
       options: --user root
     strategy:
       fail-fast: false
@@ -354,7 +354,7 @@ jobs:
       - generate_inventory
       - credential_rotation
     container:
-      image: ${{ vars.DOCKER_IMAGE_ENVGENE }}
+      image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
     strategy:
       fail-fast: false
       matrix:
@@ -493,7 +493,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [parameters_validation,show_environment_variables,generate_inventory,credential_rotation,env_build]
     container:
-      image: ${{ vars.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
+      image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
       options: --user root
     strategy:
       fail-fast: false
@@ -616,7 +616,7 @@ jobs:
     needs: [parameters_validation,show_environment_variables,generate_inventory,credential_rotation,env_build,generate_effective_set]
     if: always() && (needs.show_environment_variables.outputs.ENV_INVENTORY_INIT == 'true' || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}')
     container:
-      image: ${{ vars.DOCKER_IMAGE_ENVGENE }}
+      image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_ENVGENE }}
       options: --user root
     strategy:
       fail-fast: false
