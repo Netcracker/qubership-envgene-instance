@@ -37,7 +37,7 @@ jobs:
     name: "API Input Parameters Processing"
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/netcracker/qubership-gcip:latest
+      image: ${{ vars.DOCKER_IMAGE_GCIP }}
       options: --user root
     outputs:
       env_matrix: ${{ steps.matrix-generator.outputs.env_matrix }}
