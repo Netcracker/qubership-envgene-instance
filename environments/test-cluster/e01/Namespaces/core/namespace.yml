@@ -16,7 +16,7 @@ deployParameters:
   BSS_NAMESPACE: "e01-bss"
 
   CORE_NAMESPACE: "e01-core"
-  ENVGENE_CONFIG_REF_NAME: "main"
+  ENVGENE_CONFIG_REF_NAME: "feature/test-creds"
   ENVGENE_CONFIG_TAG: ""
   test_parameter_2: "bla bla bla"
 
@@ -32,3 +32,4 @@ deployParameterSets: []
 e2eParameterSets: []
 technicalConfigurationParameterSets: []
 tenantName: "dev"
+
