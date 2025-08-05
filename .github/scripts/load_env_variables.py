@@ -42,8 +42,24 @@ def validate_json(value, key):
             value = value.strip().replace("\n", " ")
         parsed_json = json.loads(value)
         return json.dumps(parsed_json)
-    except (json.JSONDecodeError, TypeError):
-        raise ValueError(f"{key} must be a valid JSON object")
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"🔍 JSON validation failed for {key}: {e}")
+        print(f"🔍 Attempting to fix malformed JSON for {key}...")
+        
+        # Try to fix common JSON formatting issues
+        try:
+            import re
+            # Pattern to match unquoted keys: key:value
+            pattern = r'(\w+):([^,}]+)'
+            fixed_value = re.sub(pattern, r'"\1":"\2"', value)
+            print(f"🔍 Fixed {key}: {fixed_value}")
+            
+            # Validate the fixed JSON
+            json.loads(fixed_value)
+            return json.dumps(json.loads(fixed_value))
+        except Exception as fix_error:
+            print(f"❌ Could not fix {key}: {fix_error}")
+            raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
 
 
 def validate_string(value, key):
@@ -317,6 +333,24 @@ def main():
                         print("🔍 CRED_ROTATION_PAYLOAD is valid JSON")
                 except Exception as e:
                     print(f"⚠️  WARNING: CRED_ROTATION_PAYLOAD validation failed: {e}")
+                    print("🔍 Attempting to fix malformed CRED_ROTATION_PAYLOAD...")
+                    
+                    # Try to fix common JSON formatting issues
+                    try:
+                        import re
+                        # Pattern to match unquoted keys: key:value
+                        pattern = r'(\w+):([^,}]+)'
+                        fixed_payload = re.sub(pattern, r'"\1":"\2"', cred_payload)
+                        print(f"🔍 Fixed CRED_ROTATION_PAYLOAD: {fixed_payload}")
+                        
+                        # Validate the fixed JSON
+                        json.loads(fixed_payload)
+                        validated_data["CRED_ROTATION_PAYLOAD"] = fixed_payload
+                        print("✅ Successfully fixed and validated CRED_ROTATION_PAYLOAD")
+                    except Exception as fix_error:
+                        print(f"❌ ERROR: Could not fix CRED_ROTATION_PAYLOAD: {fix_error}")
+                        print("🔍 Original payload: " + cred_payload)
+                        print("🔍 This will cause validation to fail later")
         
         print("✅ API-specific validations completed")
 

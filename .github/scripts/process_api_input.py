@@ -68,10 +68,37 @@ def parse_api_input(api_input_string):
                             if yaml_data.get(key) is None:
                                 del yaml_data[key]
             
+            # Special handling for CRED_ROTATION_PAYLOAD
+            if 'CRED_ROTATION_PAYLOAD' in yaml_data:
+                cred_payload = yaml_data['CRED_ROTATION_PAYLOAD']
+                print(f"🔍 Found CRED_ROTATION_PAYLOAD: {cred_payload}")
+                
+                # Check if it's a malformed JSON (missing quotes)
+                if isinstance(cred_payload, str) and cred_payload.startswith('{') and 'rotation_items:' in cred_payload:
+                    print("🔍 Detected malformed CRED_ROTATION_PAYLOAD, attempting to fix...")
+                    # Try to fix the JSON format by adding quotes
+                    try:
+                        # Replace unquoted keys with quoted keys
+                        import re
+                        # Pattern to match unquoted keys: key:value
+                        pattern = r'(\w+):([^,}]+)'
+                        fixed_payload = re.sub(pattern, r'"\1":"\2"', cred_payload)
+                        print(f"🔍 Fixed CRED_ROTATION_PAYLOAD: {fixed_payload}")
+                        
+                        # Validate the fixed JSON
+                        json.loads(fixed_payload)
+                        yaml_data['CRED_ROTATION_PAYLOAD'] = fixed_payload
+                        print("✅ Successfully fixed CRED_ROTATION_PAYLOAD")
+                    except Exception as e:
+                        print(f"⚠️  Warning: Could not fix CRED_ROTATION_PAYLOAD: {e}")
+                        # Keep original value, will be handled by validation later
+            
             for key, value in yaml_data.items():
                 variables[key] = sanitize_value(value)
                 if key == "ENV_NAMES":
                     print(f"🔍 ENV_NAMES from YAML: '{value}' -> '{variables[key]}'")
+                elif key == "CRED_ROTATION_PAYLOAD":
+                    print(f"🔍 CRED_ROTATION_PAYLOAD from YAML: '{value}' -> '{variables[key]}'")
             return variables
     except yaml.YAMLError as e:
         print(f"🔍 YAML parsing failed: {e}")
@@ -117,14 +144,30 @@ def parse_api_input(api_input_string):
             key, value = line.split("=", 1)
             key = key.strip()
             value = value.strip()
-            # Remove quotes if present
-            if (value.startswith('"') and value.endswith('"')) or (
-                value.startswith("'") and value.endswith("'")
-            ):
-                value = value[1:-1]
-            variables[key] = sanitize_value(value)
+            
+            # Special handling for JSON variables
+            if key in ["CRED_ROTATION_PAYLOAD", "SD_DATA", "ENV_SPECIFIC_PARAMETERS"]:
+                print(f"🔍 Processing JSON variable: {key}")
+                # Try to parse as JSON first
+                try:
+                    json.loads(value)
+                    print(f"🔍 {key} is valid JSON")
+                    variables[key] = value
+                except json.JSONDecodeError:
+                    print(f"🔍 {key} is not valid JSON, keeping as string")
+                    variables[key] = value
+            else:
+                # Remove quotes if present for non-JSON variables
+                if (value.startswith('"') and value.endswith('"')) or (
+                    value.startswith("'") and value.endswith("'")
+                ):
+                    value = value[1:-1]
+                variables[key] = sanitize_value(value)
+            
             if key == "ENV_NAMES":
                 print(f"🔍 ENV_NAMES from key=value: '{value}' -> '{variables[key]}'")
+            elif key == "CRED_ROTATION_PAYLOAD":
+                print(f"🔍 CRED_ROTATION_PAYLOAD from key=value: '{value}' -> '{variables[key]}'")
 
     return variables
 
