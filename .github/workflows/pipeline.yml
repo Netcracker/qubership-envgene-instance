@@ -59,12 +59,12 @@ env:
 
   # Docker Images
   DOCKER_IMAGE_GCIP: 'ghcr.io/netcracker/qubership-gcip:latest'
-  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:feature-cred-rotation'
+  DOCKER_IMAGE_ENVGENE: 'ghcr.io/netcracker/qubership-envgene:latest'
   DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: 'ghcr.io/netcracker/qubership-effective-set-generator:latest'
 
 jobs:
   show_environment_variables:
-    name: "UI Input Parameters Processing"
+    name: "Input Parameters Processing"
     runs-on: ubuntu-22.04
     container:
       image: ${{ vars.DOCKER_IMAGE_GCIP }}
@@ -157,7 +157,7 @@ jobs:
           echo "CMDB_IMPORT=$CMDB_IMPORT" >> $GITHUB_OUTPUT
           echo "DEPLOYMENT_TICKET_ID=$DEPLOYMENT_TICKET_ID" >> $GITHUB_OUTPUT
 
-      - name: UI Input Parameters
+      - name: Input Parameters
         run: |
           echo "🚀 === Pipeline Execution Information (UI Mode) ==="
           echo "Event Type: ${{ github.event_name }}"
