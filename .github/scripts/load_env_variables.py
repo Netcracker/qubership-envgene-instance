@@ -88,7 +88,27 @@ def validate_cred_rotation_payload(value, key):
             value = value.strip().replace("\n", " ")
             if not value:  # Empty string is valid (default empty payload)
                 return "{}"
-            parsed_json = json.loads(value)
+            
+            # Check if it's malformed JSON (missing quotes)
+            if value.startswith('{') and 'rotation_items:' in value and '"' not in value:
+                print(f"🔍 Detected malformed CRED_ROTATION_PAYLOAD, attempting to fix...")
+                try:
+                    import re
+                    # Pattern to match unquoted keys: key:value
+                    pattern = r'(\w+):([^,}]+)'
+                    fixed_value = re.sub(pattern, r'"\1":"\2"', value)
+                    print(f"🔍 Fixed CRED_ROTATION_PAYLOAD: {fixed_value}")
+                    
+                    # Validate the fixed JSON
+                    parsed_json = json.loads(fixed_value)
+                    print("✅ Successfully fixed CRED_ROTATION_PAYLOAD")
+                except Exception as fix_error:
+                    print(f"❌ Could not fix CRED_ROTATION_PAYLOAD: {fix_error}")
+                    print(f"🔍 Original value: {value}")
+                    # Continue with original value for further validation
+                    parsed_json = json.loads(value)
+            else:
+                parsed_json = json.loads(value)
         else:
             parsed_json = value
 
@@ -148,7 +168,25 @@ def validate_cred_rotation_payload(value, key):
         encoded_json = base64.b64encode(json_str.encode("utf-8")).decode("utf-8")
         return encoded_json
     except (json.JSONDecodeError, TypeError) as e:
-        raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
+        print(f"🔍 CRED_ROTATION_PAYLOAD validation failed: {e}")
+        print(f"🔍 Attempting to fix malformed JSON...")
+        
+        # Try to fix common JSON formatting issues
+        try:
+            import re
+            # Pattern to match unquoted keys: key:value
+            pattern = r'(\w+):([^,}]+)'
+            fixed_value = re.sub(pattern, r'"\1":"\2"', value)
+            print(f"🔍 Fixed CRED_ROTATION_PAYLOAD: {fixed_value}")
+            
+            # Validate the fixed JSON
+            json.loads(fixed_value)
+            print("✅ Successfully fixed CRED_ROTATION_PAYLOAD")
+            return validate_cred_rotation_payload(fixed_value, key)
+        except Exception as fix_error:
+            print(f"❌ ERROR: Could not fix CRED_ROTATION_PAYLOAD: {fix_error}")
+            print(f"🔍 Original value: {value}")
+            raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
 
 
 def main():
