@@ -162,6 +162,10 @@ def main():
                     os.environ[key] = value
                     print(f"Loaded environment variable: {key}={value}")
 
+    # Check if we're in API mode
+    api_mode = os.getenv("GITHUB_PIPELINE_API_INPUT") is not None
+    print(f"🔍 API Mode detected: {api_mode}")
+
     # Default values for all variables
     default_values = {
         "ENV_NAMES": "",
@@ -182,6 +186,10 @@ def main():
         "CRED_ROTATION_PAYLOAD": "{}",
         "CRED_ROTATION_FORCE": "false",
     }
+
+    # API-specific validations
+    api_required_vars = ["ENV_NAMES"]
+    api_recommended_vars = ["DEPLOYMENT_TICKET_ID", "ENV_TEMPLATE_VERSION"]
 
     validators = {
         # Variables from pipeline_vars.yaml
@@ -255,6 +263,62 @@ def main():
         except ValueError as e:
             print(f"Warning: {e}, using default value '{default_values[key]}'")
             validated_data[key] = default_values[key]
+
+    # API-specific validations
+    if api_mode:
+        print("🔍 Performing API-specific validations...")
+        
+        # Check required variables for API mode
+        for var in api_required_vars:
+            if not validated_data.get(var) or validated_data[var].strip() == "":
+                print(f"❌ ERROR: {var} is required for API mode but is empty or missing!")
+                print(f"Available variables: {list(validated_data.keys())}")
+                sys.exit(1)
+        
+        # Check recommended variables for API mode
+        for var in api_recommended_vars:
+            if not validated_data.get(var) or validated_data[var].strip() == "":
+                print(f"⚠️  WARNING: {var} is recommended for API mode but is empty or missing")
+        
+        # Special validation for ENV_NAMES in API mode
+        if "ENV_NAMES" in validated_data:
+            env_names = validated_data["ENV_NAMES"]
+            if env_names:
+                # Split and validate individual environment names
+                envs = [env.strip() for env in env_names.split(",") if env.strip()]
+                print(f"🔍 Validated environments: {envs}")
+                
+                # Check for common environment name patterns
+                for env in envs:
+                    if not env or env == "":
+                        print(f"❌ ERROR: Empty environment name found in ENV_NAMES: '{env_names}'")
+                        sys.exit(1)
+                    if "/" not in env:
+                        print(f"⚠️  WARNING: Environment name '{env}' doesn't contain '/' - may be invalid")
+                
+                if not envs:
+                    print(f"❌ ERROR: No valid environments found in ENV_NAMES: '{env_names}'")
+                    sys.exit(1)
+        
+        # Special validation for CRED_ROTATION_PAYLOAD in API mode
+        if "CRED_ROTATION_PAYLOAD" in validated_data:
+            cred_payload = validated_data["CRED_ROTATION_PAYLOAD"]
+            if cred_payload and cred_payload != "{}":
+                try:
+                    # Try to decode base64 if it's encoded
+                    import base64
+                    try:
+                        decoded = base64.b64decode(cred_payload).decode('utf-8')
+                        json.loads(decoded)  # Validate JSON structure
+                        print("🔍 CRED_ROTATION_PAYLOAD is valid base64-encoded JSON")
+                    except:
+                        # If not base64, try direct JSON
+                        json.loads(cred_payload)
+                        print("🔍 CRED_ROTATION_PAYLOAD is valid JSON")
+                except Exception as e:
+                    print(f"⚠️  WARNING: CRED_ROTATION_PAYLOAD validation failed: {e}")
+        
+        print("✅ API-specific validations completed")
 
     with open(github_env_file, "a", encoding="utf-8") as env_file, open(
         github_output_file, "a", encoding="utf-8"

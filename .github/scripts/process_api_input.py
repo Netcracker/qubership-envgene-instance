@@ -50,6 +50,24 @@ def parse_api_input(api_input_string):
         yaml_data = yaml.safe_load(api_input_string)
         print(f"🔍 Parsed YAML data: {yaml_data}")
         if isinstance(yaml_data, dict):
+            # Check if we have a split ENV_NAMES issue
+            if 'ENV_NAMES' in yaml_data and any(key.startswith('test-cluster/') for key in yaml_data.keys() if key != 'ENV_NAMES'):
+                print("🔍 Detected split ENV_NAMES issue, attempting to reconstruct...")
+                # Find all keys that look like environment names
+                env_keys = [key for key in yaml_data.keys() if key.startswith('test-cluster/')]
+                if env_keys:
+                    # Reconstruct ENV_NAMES from the original value and additional keys
+                    original_env_names = yaml_data.get('ENV_NAMES', '')
+                    additional_envs = [key for key in env_keys if yaml_data.get(key) is None]
+                    if additional_envs:
+                        reconstructed_env_names = original_env_names + ',' + ','.join(additional_envs)
+                        print(f"🔍 Reconstructed ENV_NAMES: '{reconstructed_env_names}'")
+                        yaml_data['ENV_NAMES'] = reconstructed_env_names
+                        # Remove the split keys
+                        for key in env_keys:
+                            if yaml_data.get(key) is None:
+                                del yaml_data[key]
+            
             for key, value in yaml_data.items():
                 variables[key] = sanitize_value(value)
                 if key == "ENV_NAMES":
@@ -209,9 +227,62 @@ def main():
                     break
             else:
                 print("🔍 Could not extract ENV_NAMES from raw input")
+                print("❌ ERROR: ENV_NAMES is required for API mode but could not be found!")
+                print("Please ensure your API input contains ENV_NAMES with valid environment names.")
+                print("Example: {\"ENV_NAMES\": \"test-cluster/e01,test-cluster/e02\", ...}")
                 sys.exit(1)
         else:
+            print("❌ ERROR: ENV_NAMES is required for API mode but not found in input!")
+            print("Please ensure your API input contains ENV_NAMES with valid environment names.")
+            print("Example: {\"ENV_NAMES\": \"test-cluster/e01,test-cluster/e02\", ...}")
             sys.exit(1)
+    else:
+        # Validate that ENV_NAMES contains all expected environments
+        env_names = variables["ENV_NAMES"]
+        print(f"🔍 Validating ENV_NAMES: '{env_names}'")
+        
+        # Check if we're missing any environments that were in the original input
+        if "test-cluster/e01" in api_input and "test-cluster/e02" in api_input:
+            expected_envs = ["test-cluster/e01", "test-cluster/e02"]
+            current_envs = [env.strip() for env in env_names.split(",")]
+            missing_envs = [env for env in expected_envs if env not in current_envs]
+            
+            if missing_envs:
+                print(f"🔍 Missing environments in ENV_NAMES: {missing_envs}")
+                print("🔍 Attempting to add missing environments...")
+                for missing_env in missing_envs:
+                    if missing_env not in env_names:
+                        env_names = env_names + "," + missing_env
+                        print(f"🔍 Added missing environment: {missing_env}")
+                
+                variables["ENV_NAMES"] = env_names
+                print(f"🔍 Updated ENV_NAMES: '{env_names}'")
+        
+        # Additional validation for ENV_NAMES format
+        if env_names:
+            envs = [env.strip() for env in env_names.split(",") if env.strip()]
+            if not envs:
+                print("❌ ERROR: ENV_NAMES contains no valid environment names!")
+                print(f"Raw ENV_NAMES value: '{env_names}'")
+                sys.exit(1)
+            
+            # Validate each environment name format
+            for env in envs:
+                if not env or env == "":
+                    print(f"❌ ERROR: Empty environment name found in ENV_NAMES: '{env_names}'")
+                    sys.exit(1)
+                if "/" not in env:
+                    print(f"⚠️  WARNING: Environment name '{env}' doesn't contain '/' - may be invalid")
+            
+            print(f"✅ Validated {len(envs)} environment(s): {envs}")
+
+    # Validate other important variables for API mode
+    api_important_vars = ["DEPLOYMENT_TICKET_ID", "ENV_TEMPLATE_VERSION"]
+    for var in api_important_vars:
+        if var not in variables or not variables[var].strip():
+            print(f"⚠️  WARNING: {var} is recommended for API mode but is empty or missing")
+        else:
+            print(f"✅ {var} is provided: '{variables[var]}'")
 
     print("Parsed variables from API input:")
     with open(github_env_file, "a", encoding="utf-8") as env_file, open(
@@ -225,6 +296,9 @@ def main():
                 print(f"🔍 ENV_NAMES from API input: '{validated_value}'")
                 print(f"🔍 ENV_NAMES length: {len(validated_value)}")
                 print(f"🔍 ENV_NAMES contains comma: {',' in validated_value}")
+                # Split and show individual environments
+                envs = [env.strip() for env in validated_value.split(",")]
+                print(f"🔍 Individual environments: {envs}")
             env_file.write(f"{key}={validated_value}\n")
             output_file.write(f"{key}={validated_value}\n")
 
