@@ -181,6 +181,7 @@ jobs:
           echo "GET_PASSPORT=$GET_PASSPORT" >> $GITHUB_OUTPUT
           echo "CMDB_IMPORT=$CMDB_IMPORT" >> $GITHUB_OUTPUT
           echo "DEPLOYMENT_TICKET_ID=$DEPLOYMENT_TICKET_ID" >> $GITHUB_OUTPUT
+          echo "ENV_NAMES=$ENV_NAMES" >> $GITHUB_OUTPUT
 
       - name: Input Parameters
         run: |
@@ -222,8 +223,9 @@ jobs:
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
-          echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
-          echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
+                     echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
+           echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
+           echo "ENV_NAMES = $ENV_NAMES"
 
       - name: Prepare Parameters
         id: matrix-generator

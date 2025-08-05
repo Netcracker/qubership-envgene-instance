@@ -164,6 +164,7 @@ def main():
 
     # Default values for all variables
     default_values = {
+        "ENV_NAMES": "",
         "ENV_INVENTORY_INIT": "false",
         "GENERATE_EFFECTIVE_SET": "false",
         "ENV_TEMPLATE_TEST": "false",
@@ -184,6 +185,7 @@ def main():
 
     validators = {
         # Variables from pipeline_vars.yaml
+        "ENV_NAMES": validate_string,
         "ENV_INVENTORY_INIT": validate_boolean,
         "GENERATE_EFFECTIVE_SET": validate_boolean,
         "ENV_TEMPLATE_TEST": validate_boolean,
