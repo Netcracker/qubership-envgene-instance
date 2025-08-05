@@ -41,20 +41,57 @@ def parse_api_input(api_input_string):
                 if key == "ENV_NAMES":
                     print(f"🔍 ENV_NAMES from JSON: '{value}' -> '{variables[key]}'")
             return variables
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(f"🔍 JSON parsing failed: {e}")
         pass
 
-    # Try to parse as YAML
+    # Try to parse as YAML with better error handling
     try:
         yaml_data = yaml.safe_load(api_input_string)
+        print(f"🔍 Parsed YAML data: {yaml_data}")
         if isinstance(yaml_data, dict):
             for key, value in yaml_data.items():
                 variables[key] = sanitize_value(value)
+                if key == "ENV_NAMES":
+                    print(f"🔍 ENV_NAMES from YAML: '{value}' -> '{variables[key]}'")
             return variables
-    except yaml.YAMLError:
+    except yaml.YAMLError as e:
+        print(f"🔍 YAML parsing failed: {e}")
         pass
 
+    # If both JSON and YAML failed, try to fix common issues and retry
+    print("🔍 Both JSON and YAML parsing failed, attempting to fix common issues...")
+    
+    # Try to fix unquoted strings with commas in YAML-like format
+    fixed_input = api_input_string
+    if "ENV_NAMES:" in fixed_input and "," in fixed_input:
+        # Look for ENV_NAMES: value, pattern and quote the value
+        import re
+        pattern = r'ENV_NAMES:\s*([^,\s]+(?:,[^,\s]+)*)'
+        match = re.search(pattern, fixed_input)
+        if match:
+            env_names_value = match.group(1)
+            print(f"🔍 Found ENV_NAMES value: '{env_names_value}'")
+            # Replace the unquoted value with quoted value
+            fixed_input = re.sub(pattern, f'ENV_NAMES: "{env_names_value}"', fixed_input)
+            print(f"🔍 Fixed input: {fixed_input}")
+            
+            # Try parsing the fixed input as YAML
+            try:
+                yaml_data = yaml.safe_load(fixed_input)
+                print(f"🔍 Parsed fixed YAML data: {yaml_data}")
+                if isinstance(yaml_data, dict):
+                    for key, value in yaml_data.items():
+                        variables[key] = sanitize_value(value)
+                        if key == "ENV_NAMES":
+                            print(f"🔍 ENV_NAMES from fixed YAML: '{value}' -> '{variables[key]}'")
+                    return variables
+            except yaml.YAMLError as e:
+                print(f"🔍 Fixed YAML parsing also failed: {e}")
+                pass
+
     # Parse as key=value pairs (fallback)
+    print("🔍 Falling back to key=value parsing...")
     lines = api_input_string.split("\n")
     for line in lines:
         line = line.strip()
@@ -68,6 +105,8 @@ def parse_api_input(api_input_string):
             ):
                 value = value[1:-1]
             variables[key] = sanitize_value(value)
+            if key == "ENV_NAMES":
+                print(f"🔍 ENV_NAMES from key=value: '{value}' -> '{variables[key]}'")
 
     return variables
 
@@ -151,7 +190,28 @@ def main():
     if "ENV_NAMES" not in variables or not variables["ENV_NAMES"].strip():
         print("Error: ENV_NAMES is required but not provided in API input")
         print("Available variables:", list(variables.keys()))
-        sys.exit(1)
+        
+        # Try to extract ENV_NAMES from the raw input string as a last resort
+        print("🔍 Attempting to extract ENV_NAMES from raw input...")
+        if "ENV_NAMES" in api_input:
+            # Look for ENV_NAMES in the raw string
+            import re
+            patterns = [
+                r'ENV_NAMES["\s]*:\s*["\']?([^"\',\s]+(?:,[^"\',\s]+)*)["\']?',
+                r'ENV_NAMES["\s]*:\s*([^,\s]+(?:,[^,\s]+)*)',
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, api_input)
+                if match:
+                    env_names_value = match.group(1)
+                    print(f"🔍 Extracted ENV_NAMES from raw input: '{env_names_value}'")
+                    variables["ENV_NAMES"] = env_names_value
+                    break
+            else:
+                print("🔍 Could not extract ENV_NAMES from raw input")
+                sys.exit(1)
+        else:
+            sys.exit(1)
 
     print("Parsed variables from API input:")
     with open(github_env_file, "a", encoding="utf-8") as env_file, open(
@@ -163,6 +223,8 @@ def main():
             print(f"  {key}={validated_value}")
             if key == "ENV_NAMES":
                 print(f"🔍 ENV_NAMES from API input: '{validated_value}'")
+                print(f"🔍 ENV_NAMES length: {len(validated_value)}")
+                print(f"🔍 ENV_NAMES contains comma: {',' in validated_value}")
             env_file.write(f"{key}={validated_value}\n")
             output_file.write(f"{key}={validated_value}\n")
 
