@@ -3,7 +3,7 @@
 
 name: "EnvGene Execution"
 
-run-name: "EnvGene Execution - ${{ github.event.inputs.ENV_NAMES || 'Manual' }}"
+run-name: "EnvGene Execution - ${{ github.event.inputs.ENV_NAMES || github.event.inputs.GITHUB_PIPELINE_API_INPUT || 'Manual' }}"
 
 permissions:
   actions: read
@@ -15,8 +15,9 @@ on:
   workflow_dispatch:
     inputs:
       ENV_NAMES:
-        required: true
+        required: false
         type: string
+        description: "Environment names (comma-separated) - for UI mode"
       DEPLOYMENT_TICKET_ID:
         required: false
         default: ""
@@ -26,26 +27,30 @@ on:
         default: ""
         type: string
       ENV_BUILDER:
-        required: true
+        required: false
         default: "true"
         type: choice
         options:
           - "true"
           - "false"
       GET_PASSPORT:
-        required: true
+        required: false
         default: "false"
         type: choice
         options:
           - "true"
           - "false"
       CMDB_IMPORT:
-        required: true
+        required: false
         default: "false"
         type: choice
         options:
           - "true"
           - "false"
+      GITHUB_PIPELINE_API_INPUT:
+        required: false
+        type: string
+        description: "API input string containing all variables in JSON/YAML/key=value format - for API mode"
 
 env:
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
@@ -104,15 +109,32 @@ jobs:
           echo "DOCKER_IMAGE_ENVGENE=${{ env.DOCKER_IMAGE_ENVGENE }}" >> $GITHUB_OUTPUT
           echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR=${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}" >> $GITHUB_OUTPUT
 
-      - name: Set variables from inputs and pipeline_vars.yaml
+      - name: Process Input Parameters
         run: |
-          # Set variables from workflow inputs
-          echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
-          echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
-          echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
-          echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
-          echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
-          echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
+          # Check if API input is provided
+          if [ -n "${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" ]; then
+            echo "🔍 API Mode: Processing GITHUB_PIPELINE_API_INPUT"
+            echo "GITHUB_PIPELINE_API_INPUT=${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" >> $GITHUB_ENV
+            
+            # Process API input variables
+            python .github/scripts/process_api_input.py
+            
+            # Set defaults for optional variables if not provided
+            echo "ENV_BUILDER=${ENV_BUILDER:-true}" >> $GITHUB_ENV
+            echo "GET_PASSPORT=${GET_PASSPORT:-false}" >> $GITHUB_ENV
+            echo "CMDB_IMPORT=${CMDB_IMPORT:-false}" >> $GITHUB_ENV
+            echo "DEPLOYMENT_TICKET_ID=${DEPLOYMENT_TICKET_ID:-}" >> $GITHUB_ENV
+            echo "ENV_TEMPLATE_VERSION=${ENV_TEMPLATE_VERSION:-}" >> $GITHUB_ENV
+          else
+            echo "🔍 UI Mode: Processing manual inputs"
+            # Set variables from workflow inputs
+            echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
+            echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
+            echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
+            echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
+            echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
+            echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
+          fi
 
           # Load additional variables from pipeline_vars.yaml (with fallbacks to defaults)
           python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
@@ -159,12 +181,22 @@ jobs:
 
       - name: Input Parameters
         run: |
-          echo "🚀 === Pipeline Execution Information (UI Mode) ==="
-          echo "Event Type: ${{ github.event_name }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Commit: ${{ github.sha }}"
-          echo "Trigger: Manual workflow dispatch (UI)"
-          echo "Parameters source: Manual inputs + pipeline_vars.yaml"
+          # Determine execution mode
+          if [ -n "${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" ]; then
+            echo "🚀 === Pipeline Execution Information (API Mode) ==="
+            echo "Event Type: ${{ github.event_name }}"
+            echo "Branch: ${{ github.ref_name }}"
+            echo "Commit: ${{ github.sha }}"
+            echo "Trigger: API workflow dispatch"
+            echo "Parameters source: GITHUB_PIPELINE_API_INPUT + pipeline_vars.yaml fallbacks"
+          else
+            echo "🚀 === Pipeline Execution Information (UI Mode) ==="
+            echo "Event Type: ${{ github.event_name }}"
+            echo "Branch: ${{ github.ref_name }}"
+            echo "Commit: ${{ github.sha }}"
+            echo "Trigger: Manual workflow dispatch (UI)"
+            echo "Parameters source: Manual inputs + pipeline_vars.yaml"
+          fi
           echo ""
           echo "=== Docker Images ==="
           echo "DOCKER_IMAGE_GCIP = $DOCKER_IMAGE_GCIP"
@@ -194,18 +226,51 @@ jobs:
         id: matrix-generator
         shell: bash
         run: |
+          echo "🔧 Generating environment matrix from ENV_NAMES..."
+          echo "ENV_NAMES value: '$ENV_NAMES'"
+          
+          if [ -z "$ENV_NAMES" ]; then
+            echo "❌ ERROR: ENV_NAMES is empty or not set!"
+            echo "This likely means the input processing failed."
+            echo "Creating empty matrix to skip downstream jobs..."
+            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Validate ENV_NAMES is not just whitespace
+          if [ -z "$(echo "$ENV_NAMES" | tr -d '[:space:]')" ]; then
+            echo "❌ ERROR: ENV_NAMES contains only whitespace!"
+            echo "Creating empty matrix to skip downstream jobs..."
+            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           arr="["
           first=1
+          count=0
           for name in $(echo "$ENV_NAMES" | tr ',' ' '); do
-            if [ "$first" = 1 ]; then
-              first=0
-            else
-              arr="$arr,"
+            # Skip empty names
+            if [ -n "$(echo "$name" | tr -d '[:space:]')" ]; then
+              echo "Processing environment: '$name'"
+              if [ "$first" = 1 ]; then
+                first=0
+              else
+                arr="$arr,"
+              fi
+              arr="$arr\"$name\""
+              count=$((count + 1))
             fi
-            arr="$arr\"$name\""
           done
           arr="$arr]"
 
+          if [ "$count" -eq 0 ]; then
+            echo "❌ ERROR: No valid environments found in ENV_NAMES!"
+            echo "Creating empty matrix to skip downstream jobs..."
+            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Generated matrix with $count environment(s): $arr"
           echo "env_matrix=$arr" >> $GITHUB_OUTPUT
 
   parameters_validation:
@@ -316,8 +381,22 @@ jobs:
       - name: Create the naming for artifact
         run: |
           if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
-            echo "artifact_name=credential_rotation_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
+            echo "artifact_name=generate_inventory_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
+
+      - name: Download artifact
+        if: needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.artifact_name }}
+          path: ./downloaded_artifact
+
+      - name: Extract artifact to environment directory
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != ''))
+        run: |
+          mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
+          rm -rf ./downloaded_artifact    
 
       - name: Credential Rotation
         run: |
@@ -380,14 +459,14 @@ jobs:
           fi
 
       - name: Download artifact
-        if: needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
@@ -523,14 +602,14 @@ jobs:
           fi
 
       - name: Download artifact
-        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
@@ -649,14 +728,14 @@ jobs:
           fi
 
       - name: Download artifact
-        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
