@@ -17,7 +17,7 @@ on:
       ENV_NAMES:
         required: false
         type: string
-        description: "Environment names (comma-separated) - for UI mode"
+        description: ""
       DEPLOYMENT_TICKET_ID:
         required: false
         default: ""
