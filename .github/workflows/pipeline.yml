@@ -223,60 +223,62 @@ jobs:
           echo "SD_SOURCE_TYPE = $SD_SOURCE_TYPE"
           echo "SD_DELTA = $SD_DELTA"
           echo "ENV_SPECIFIC_PARAMETERS = $ENV_SPECIFIC_PARAMETERS"
-                     echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
-           echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
-           echo "ENV_NAMES = $ENV_NAMES"
+          echo "CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
+          echo "CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
+          echo "ENV_NAMES = $ENV_NAMES"
 
       - name: Prepare Parameters
         id: matrix-generator
         shell: bash
         run: |
-          echo "🔧 Generating environment matrix from ENV_NAMES..."
-          echo "ENV_NAMES value: '$ENV_NAMES'"
-          
-          if [ -z "$ENV_NAMES" ]; then
-            echo "❌ ERROR: ENV_NAMES is empty or not set!"
-            echo "This likely means the input processing failed."
-            echo "Creating empty matrix to skip downstream jobs..."
-            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
-            exit 0
-          fi
+           echo "🔧 Generating environment matrix from ENV_NAMES..."
+           echo "ENV_NAMES value: '$ENV_NAMES'"
+           echo "🔍 ENV_NAMES length: ${#ENV_NAMES}"
+           echo "🔍 ENV_NAMES contains comma: $(echo "$ENV_NAMES" | grep -c ',' || echo '0')"
+           
+           if [ -z "$ENV_NAMES" ]; then
+             echo "❌ ERROR: ENV_NAMES is empty or not set!"
+             echo "This likely means the input processing failed."
+             echo "Creating empty matrix to skip downstream jobs..."
+             echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+             exit 0
+           fi
 
-          # Validate ENV_NAMES is not just whitespace
-          if [ -z "$(echo "$ENV_NAMES" | tr -d '[:space:]')" ]; then
-            echo "❌ ERROR: ENV_NAMES contains only whitespace!"
-            echo "Creating empty matrix to skip downstream jobs..."
-            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
-            exit 0
-          fi
+           # Validate ENV_NAMES is not just whitespace
+           if [ -z "$(echo "$ENV_NAMES" | tr -d '[:space:]')" ]; then
+             echo "❌ ERROR: ENV_NAMES contains only whitespace!"
+             echo "Creating empty matrix to skip downstream jobs..."
+             echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+             exit 0
+           fi
 
-          arr="["
-          first=1
-          count=0
-          for name in $(echo "$ENV_NAMES" | tr ',' ' '); do
-            # Skip empty names
-            if [ -n "$(echo "$name" | tr -d '[:space:]')" ]; then
-              echo "Processing environment: '$name'"
-              if [ "$first" = 1 ]; then
-                first=0
-              else
-                arr="$arr,"
-              fi
-              arr="$arr\"$name\""
-              count=$((count + 1))
-            fi
-          done
-          arr="$arr]"
+           arr="["
+           first=1
+           count=0
+           for name in $(echo "$ENV_NAMES" | tr ',' ' '); do
+             # Skip empty names
+             if [ -n "$(echo "$name" | tr -d '[:space:]')" ]; then
+               echo "Processing environment: '$name'"
+               if [ "$first" = 1 ]; then
+                 first=0
+               else
+                 arr="$arr,"
+               fi
+               arr="$arr\"$name\""
+               count=$((count + 1))
+             fi
+           done
+           arr="$arr]"
 
-          if [ "$count" -eq 0 ]; then
-            echo "❌ ERROR: No valid environments found in ENV_NAMES!"
-            echo "Creating empty matrix to skip downstream jobs..."
-            echo 'env_matrix=[]' >> $GITHUB_OUTPUT
-            exit 0
-          fi
+           if [ "$count" -eq 0 ]; then
+             echo "❌ ERROR: No valid environments found in ENV_NAMES!"
+             echo "Creating empty matrix to skip downstream jobs..."
+             echo 'env_matrix=[]' >> $GITHUB_OUTPUT
+             exit 0
+           fi
 
-          echo "Generated matrix with $count environment(s): $arr"
-          echo "env_matrix=$arr" >> $GITHUB_OUTPUT
+           echo "Generated matrix with $count environment(s): $arr"
+           echo "env_matrix=$arr" >> $GITHUB_OUTPUT
 
   parameters_validation:
     name: "${{ matrix.environment }} - Parameters Validation"

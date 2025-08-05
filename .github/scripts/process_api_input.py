@@ -34,9 +34,12 @@ def parse_api_input(api_input_string):
     # Try to parse as JSON first
     try:
         json_data = json.loads(api_input_string)
+        print(f"🔍 Parsed JSON data: {json_data}")
         if isinstance(json_data, dict):
             for key, value in json_data.items():
                 variables[key] = sanitize_value(value)
+                if key == "ENV_NAMES":
+                    print(f"🔍 ENV_NAMES from JSON: '{value}' -> '{variables[key]}'")
             return variables
     except json.JSONDecodeError:
         pass
@@ -158,6 +161,8 @@ def main():
         for key, value in variables.items():
             validated_value = validate_variable(key, value)
             print(f"  {key}={validated_value}")
+            if key == "ENV_NAMES":
+                print(f"🔍 ENV_NAMES from API input: '{validated_value}'")
             env_file.write(f"{key}={validated_value}\n")
             output_file.write(f"{key}={validated_value}\n")
 

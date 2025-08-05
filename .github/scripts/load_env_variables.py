@@ -212,18 +212,22 @@ def main():
         # Priority: 1. Environment variable (from API input), 2. File value, 3. Default
         env_value = os.getenv(key)
         # Debug only for specific variables
-        if key in ["ENV_BUILDER", "GET_PASSPORT", "CMDB_IMPORT"]:
+        if key in ["ENV_BUILDER", "GET_PASSPORT", "CMDB_IMPORT", "ENV_NAMES"]:
             print(
                 f"DEBUG: Checking {key}, env_value={env_value}, env_value is None={env_value is None}"
             )
         if env_value is not None:
             raw_value = env_value
             print(f"Using environment value for {key}: {raw_value}")
+            if key == "ENV_NAMES":
+                print(f"🔍 ENV_NAMES from environment: '{raw_value}'")
         else:
             raw_value = data.get(key, default_values[key])
             print(
                 f"Using {'file' if key in data else 'default'} value for {key}: {raw_value}"
             )
+            if key == "ENV_NAMES":
+                print(f"🔍 ENV_NAMES from {'file' if key in data else 'default'}: '{raw_value}'")
 
         try:
             if validator == validate_boolean:
@@ -265,8 +269,12 @@ def main():
                 print(
                     f"Overwriting {key} from environment with validated value: {converted_value}"
                 )
+                if key == "ENV_NAMES":
+                    print(f"🔍 Final ENV_NAMES value: '{converted_value}'")
             else:
                 print(f"Setting {key} to: {converted_value}")
+                if key == "ENV_NAMES":
+                    print(f"🔍 Final ENV_NAMES value: '{converted_value}'")
 
 
 if __name__ == "__main__":
