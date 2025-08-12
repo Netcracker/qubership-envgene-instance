@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ${{ vars.DOCKER_IMAGE_GCIP }}
-      options: --user 1001:121
+      options: --user ci:ci --group-add 121
     outputs:
       env_matrix: ${{ steps.matrix-generator.outputs.env_matrix }}
       DEPLOYMENT_TICKET_ID: ${{ env.DEPLOYMENT_TICKET_ID }}
@@ -287,7 +287,7 @@ jobs:
     needs: show_environment_variables
     container:
       image: ${{ needs.show_environment_variables.outputs.DOCKER_IMAGE_GCIP }}
-      options: --user 1001:121
+      options: --user ci:ci --group-add 121
     strategy:
       fail-fast: false
       matrix:
