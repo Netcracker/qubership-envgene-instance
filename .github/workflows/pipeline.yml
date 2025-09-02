@@ -58,7 +58,7 @@ env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   GITHUB_USER_EMAIL: 'fake@fake.com'
   GITHUB_USER_NAME: 'envgene'
-  GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
   ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
 
@@ -538,7 +538,7 @@ jobs:
           export GITHUB_REF_NAME
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
-          export GITHUB_TOKEN
+          #export GITHUB_TOKEN
 
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
@@ -680,7 +680,7 @@ jobs:
           export GITHUB_REF_NAME
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
-          export GITHUB_TOKEN
+          #export GITHUB_TOKEN
 
           /module/scripts/prepare.sh "generate_effective_set.yaml"
 
@@ -802,7 +802,7 @@ jobs:
           export GITHUB_REF_NAME
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
-          export GITHUB_TOKEN
+          #export GITHUB_TOKEN
 
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
