@@ -8,3 +8,14 @@ maven-central:
   releaseTemplateRepository: "https://repo.maven.apache.org/maven2"
   snapshotTemplateRepository: "https://oss.sonatype.org/content/repositories/snapshots"
   stagingTemplateRepository: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+github-packages:
+  username: envgen.creds.get('github-packages').username
+  password: envgen.creds.get('github-packages').password
+  releaseRepository: "https://maven.pkg.github.com"
+  snapshotRepository: "https://maven.pkg.github.com"
+  stagingRepository: "https://maven.pkg.github.com"
+  proxyRepository: "https://maven.pkg.github.com"
+  releaseTemplateRepository: "https://maven.pkg.github.com"
+  snapshotTemplateRepository: "https://maven.pkg.github.com"
+  stagingTemplateRepository: "https://maven.pkg.github.com"
