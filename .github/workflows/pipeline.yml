@@ -141,6 +141,17 @@ jobs:
            # Load additional variables from pipeline_vars.yaml (with fallbacks to defaults)
            python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
 
+      - name: Update workflow run name with parsed ENV_NAMES
+        if: github.event.inputs.GITHUB_PIPELINE_API_INPUT != ''
+        run: |
+          RUN_NAME="EnvGene Execution - $ENV_NAMES"
+          
+          curl -X PATCH \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -d "{\"name\": \"$RUN_NAME\"}"
+      
       - name: Create ENV_GENERATION_PARAMS
         id: env-generation-params
         run: |
