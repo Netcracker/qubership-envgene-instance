@@ -128,7 +128,7 @@ jobs:
              echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
            fi
 
-           python .github/scripts/load_pipeline_vars.py .github/pipeline_vars.yaml
+           python .github/scripts/load_pipeline_vars.py
 
       - name: Create ENV_GENERATION_PARAMS
         id: env-generation-params
