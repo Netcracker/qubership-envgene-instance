@@ -9,39 +9,43 @@ import sys
 
 def get_pipeline_variables():
     """
-    Read all variables from GITHUB_ENV file and filter pipeline-related ones.
+    Read all variables from GITHUB_ENV file or environment variables.
     Returns a dictionary of non-empty pipeline variables.
     """
-    github_env_file = os.getenv("GITHUB_ENV")
-    if not github_env_file:
-        print("❌ GITHUB_ENV not set")
-        return {}
-    
     variables = {}
     
-    # Read all variables from GITHUB_ENV file
-    try:
-        with open(github_env_file, "r", encoding="utf-8") as f:
-            for line_num, line in enumerate(f, 1):
-                line = line.strip()
-                if line and "=" in line and not line.startswith("#"):
-                    try:
-                        key, value = line.split("=", 1)
-                        key = key.strip()
-                        value = value.strip()
-                        
-                        # Only include non-empty values
-                        if value:
-                            variables[key] = value
-                    except ValueError:
-                        print(f"⚠️  Warning: Skipping malformed line {line_num}: {line}")
-                        continue
-    except FileNotFoundError:
-        print(f"❌ GITHUB_ENV file not found: {github_env_file}")
-        return {}
-    except Exception as e:
-        print(f"❌ Error reading GITHUB_ENV file: {e}")
-        return {}
+    # First, try to read from GITHUB_ENV file
+    github_env_file = os.getenv("GITHUB_ENV")
+    if github_env_file:
+        try:
+            with open(github_env_file, "r", encoding="utf-8") as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if line and "=" in line and not line.startswith("#"):
+                        try:
+                            key, value = line.split("=", 1)
+                            key = key.strip()
+                            value = value.strip()
+                            
+                            # Only include non-empty values
+                            if value:
+                                variables[key] = value
+                        except ValueError:
+                            print(f"⚠️  Warning: Skipping malformed line {line_num}: {line}")
+                            continue
+        except FileNotFoundError:
+            print(f"⚠️  GITHUB_ENV file not found: {github_env_file}")
+        except Exception as e:
+            print(f"⚠️  Error reading GITHUB_ENV file: {e}")
+    
+    # If no variables from file, fall back to environment variables
+    if not variables:
+        print("📝 Reading from environment variables (GITHUB_ENV file not available)")
+        
+        # Get all environment variables
+        for key, value in os.environ.items():
+            if value and is_pipeline_variable(key):
+                variables[key] = value
     
     return variables
 
@@ -148,7 +152,22 @@ def display_variables(show_docker=True, show_pipeline=True):
         print("")
     
     total_count = len(docker_vars) + len(pipeline_vars) + len(other_vars)
-    print(f"📊 Total variables displayed: {total_count}")
+    
+    if total_count == 0:
+        print("ℹ️  No pipeline variables found to display")
+        print("   This could mean:")
+        print("   - Variables are not set yet")
+        print("   - GITHUB_ENV file is empty or doesn't exist")
+        print("   - All variables have empty values")
+    else:
+        print(f"📊 Total variables displayed: {total_count}")
+        
+        # Show source information
+        github_env_file = os.getenv("GITHUB_ENV")
+        if github_env_file and os.path.exists(github_env_file):
+            print(f"📁 Source: GITHUB_ENV file ({github_env_file})")
+        else:
+            print("📁 Source: Environment variables")
 
 
 def main():
