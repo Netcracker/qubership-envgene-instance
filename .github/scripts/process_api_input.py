@@ -256,12 +256,18 @@ def main():
         sys.exit(1)
 
     # Validate other important variables for API mode
+    # Check if they're provided either in API input or as workflow dispatch inputs
     api_important_vars = ["DEPLOYMENT_TICKET_ID", "ENV_TEMPLATE_VERSION"]
     for var in api_important_vars:
-        if var not in variables or not variables[var].strip():
+        api_value = variables.get(var, "").strip()
+        env_value = os.getenv(var, "").strip()
+        
+        if not api_value and not env_value:
             print(f"⚠️  WARNING: {var} is recommended for API mode but is empty or missing")
-        else:
-            print(f"✅ {var} is provided: '{variables[var]}'")
+        elif api_value:
+            print(f"✅ {var} is provided via API input: '{api_value}'")
+        elif env_value:
+            print(f"✅ {var} is provided via workflow dispatch: '{env_value}'")
 
     print("Parsed variables from API input:")
     with open(github_env_file, "a", encoding="utf-8") as env_file, open(

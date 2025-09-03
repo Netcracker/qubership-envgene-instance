@@ -151,15 +151,29 @@ def main():
             variables = get_pipeline_vars()
             print("Available pipeline variables:")
             
-            # Write to github_output if available
+            # Write to github_output and github_env if available
             github_output = os.getenv("GITHUB_OUTPUT")
+            github_env = os.getenv("GITHUB_ENV")
+            
             if github_output:
                 with open(github_output, "a", encoding="utf-8") as f:
                     for key, value in variables.items():
                         print(f"  {key}: {value}")
-                        # Write to github_output for use in other jobs
+                        # Only write to github_output for use in other jobs
                         f.write(f"{key}={value}\n")
                 print(f"\n✅ Written {len(variables)} variables to github_output")
+                
+            if github_env:
+                with open(github_env, "a", encoding="utf-8") as f:
+                    for key, value in variables.items():
+                        # Only set variable if it's not already set (don't override existing values)
+                        existing_value = os.getenv(key)
+                        if existing_value is None or existing_value == "":
+                            print(f"  Setting {key} from pipeline_vars: {value}")
+                            f.write(f"{key}={value}\n")
+                        else:
+                            print(f"  Keeping existing {key}: {existing_value}")
+                print(f"\n✅ Set default values from pipeline_vars.yaml (only for unset variables)")
             else:
                 # Fallback: just print variables
                 for key, value in variables.items():
