@@ -28,15 +28,15 @@ on:
         type: string
       ENV_BUILDER:
         required: false
-        default: "false"
+        default: ""
         type: string
       GET_PASSPORT:
         required: false
-        default: "false"
+        default: ""
         type: string
       CMDB_IMPORT:
         required: false
-        default: "false"
+        default: ""
         type: string
       GITHUB_PIPELINE_API_INPUT:
         required: false
