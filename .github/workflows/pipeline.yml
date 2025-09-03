@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       ENV_NAMES:
-        required: false
+        required: true
         type: string
         description: ""
       DEPLOYMENT_TICKET_ID:
