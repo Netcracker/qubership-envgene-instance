@@ -135,13 +135,15 @@ jobs:
           # Load variables from github_output into environment
           if [ -f "$GITHUB_OUTPUT" ]; then
             echo "Loading pipeline variables from github_output..."
+            loaded_count=0
             while IFS='=' read -r key value; do
               if [ -n "$key" ] && [ -n "$value" ]; then
                 echo "Setting $key=$value"
                 echo "$key=$value" >> $GITHUB_ENV
+                loaded_count=$((loaded_count + 1))
               fi
             done < "$GITHUB_OUTPUT"
-            echo "✅ Pipeline variables loaded successfully"
+            echo "✅ Pipeline variables loaded successfully ($loaded_count variables)"
           else
             echo "⚠️  No github_output file found"
           fi
