@@ -34,21 +34,16 @@ def parse_api_input(api_input_string):
     # Try to parse as JSON first
     try:
         json_data = json.loads(api_input_string)
-        print(f"🔍 Parsed JSON data: {json_data}")
         if isinstance(json_data, dict):
             for key, value in json_data.items():
                 variables[key] = sanitize_value(value)
-                if key == "ENV_NAMES":
-                    print(f"🔍 ENV_NAMES from JSON: '{value}' -> '{variables[key]}'")
             return variables
-    except json.JSONDecodeError as e:
-        print(f"🔍 JSON parsing failed: {e}")
+    except json.JSONDecodeError:
         pass
 
     # Try to parse as YAML with better error handling
     try:
         yaml_data = yaml.safe_load(api_input_string)
-        print(f"🔍 Parsed YAML data: {yaml_data}")
         if isinstance(yaml_data, dict):
             # Check if we have a split ENV_NAMES issue
             if 'ENV_NAMES' in yaml_data and any(key.startswith('test-cluster/') for key in yaml_data.keys() if key != 'ENV_NAMES'):
@@ -95,58 +90,18 @@ def parse_api_input(api_input_string):
             
             for key, value in yaml_data.items():
                 variables[key] = sanitize_value(value)
-                if key == "ENV_NAMES":
-                    print(f"🔍 ENV_NAMES from YAML: '{value}' -> '{variables[key]}'")
-                elif key == "CRED_ROTATION_PAYLOAD":
-                    print(f"🔍 CRED_ROTATION_PAYLOAD from YAML: '{value}' -> '{variables[key]}'")
             return variables
-    except yaml.YAMLError as e:
-        print(f"🔍 YAML parsing failed: {e}")
+    except yaml.YAMLError:
         pass
 
-    # If both JSON and YAML failed, try to fix common issues and retry
-    print("🔍 Both JSON and YAML parsing failed, attempting to fix common issues...")
-    
-    # Try to fix unquoted strings with commas in YAML-like format
-    fixed_input = api_input_string
-    if "ENV_NAMES:" in fixed_input and "," in fixed_input:
-        # Look for ENV_NAMES: value, pattern and quote the value
-        import re
-        pattern = r'ENV_NAMES:\s*([^,\s]+(?:,[^,\s]+)*)'
-        match = re.search(pattern, fixed_input)
-        if match:
-            env_names_value = match.group(1)
-            print(f"🔍 Found ENV_NAMES value: '{env_names_value}'")
-            # Replace the unquoted value with quoted value
-            fixed_input = re.sub(pattern, f'ENV_NAMES: "{env_names_value}"', fixed_input)
-            print(f"🔍 Fixed input: {fixed_input}")
-            
-            # Try parsing the fixed input as YAML
-            try:
-                yaml_data = yaml.safe_load(fixed_input)
-                print(f"🔍 Parsed fixed YAML data: {yaml_data}")
-                if isinstance(yaml_data, dict):
-                    for key, value in yaml_data.items():
-                        variables[key] = sanitize_value(value)
-                        if key == "ENV_NAMES":
-                            print(f"🔍 ENV_NAMES from fixed YAML: '{value}' -> '{variables[key]}'")
-                    return variables
-            except yaml.YAMLError as e:
-                print(f"🔍 Fixed YAML parsing also failed: {e}")
-                pass
-
     # Parse as key=value pairs (fallback)
-    print("🔍 Falling back to key=value parsing...")
     lines = api_input_string.split("\n")
     for line in lines:
         line = line.strip()
         if "=" in line and not line.startswith("#"):
             # Pre-process line to handle spaces around = sign
-            # Replace " = " with "=" to fix bash interpretation issues
             if " = " in line:
-                print(f"🔍 Found spaces around = sign, normalizing: {line}")
                 line = line.replace(" = ", "=")
-                print(f"🔍 Normalized to: {line}")
             # Handle cases where there might be spaces around =
             # Find the first = that's not inside quotes
             eq_pos = -1
@@ -185,12 +140,6 @@ def parse_api_input(api_input_string):
                 value = value[1:-1]
             
             variables[key] = sanitize_value(value)
-            print(f"🔍 {key} processed as string: '{variables[key]}'")
-            
-            if key == "ENV_NAMES":
-                print(f"🔍 ENV_NAMES from key=value: '{value}' -> '{variables[key]}'")
-            elif key == "CRED_ROTATION_PAYLOAD":
-                print(f"🔍 CRED_ROTATION_PAYLOAD from key=value: '{value}' -> '{variables[key]}'")
 
     return variables
 
@@ -222,24 +171,13 @@ def validate_variable(key, value):
 
 
 def main():
-    print("🐍 Python script started")
-    print("Environment variables:")
-    for key, value in os.environ.items():
-        if key.startswith("GITHUB_PIPELINE"):
-            print(f"  {key}={value}")
-
     api_input = os.getenv("GITHUB_PIPELINE_API_INPUT", "")
-    print(f"Retrieved GITHUB_PIPELINE_API_INPUT: '{api_input}'")
-    print(f"Value type: {type(api_input)}")
-    print(f"Is empty: {not api_input}")
-    print(f"Is None: {api_input is None}")
 
     if not api_input:
         print("❌ No GITHUB_PIPELINE_API_INPUT provided, skipping API input processing")
         return
 
-    print(f"✅ Processing GITHUB_PIPELINE_API_INPUT: {api_input}")
-    print(f"Input length: {len(api_input)} characters")
+    print(f"✅ Processing GITHUB_PIPELINE_API_INPUT ({len(api_input)} chars)")
 
     # Parse the API input string
     variables = parse_api_input(api_input)
@@ -256,40 +194,16 @@ def main():
         print("Error: GITHUB_ENV or GITHUB_OUTPUT variable is not set!")
         sys.exit(1)
 
-    # Validate other important variables for API mode
-    # Check if they're provided either in API input or as workflow dispatch inputs
-    api_important_vars = ["DEPLOYMENT_TICKET_ID", "ENV_TEMPLATE_VERSION"]
-    for var in api_important_vars:
-        api_value = variables.get(var, "").strip()
-        env_value = os.getenv(var, "").strip()
-        
-        if not api_value and not env_value:
-            print(f"⚠️  WARNING: {var} is recommended for API mode but is empty or missing")
-        elif api_value:
-            print(f"✅ {var} is provided via API input: '{api_value}'")
-        elif env_value:
-            print(f"✅ {var} is provided via workflow dispatch: '{env_value}'")
-
-    print("Parsed variables from API input:")
-    
     with open(github_env_file, "a", encoding="utf-8") as env_file, open(
         github_output_file, "a", encoding="utf-8"
     ) as output_file:
 
         for key, value in variables.items():
             validated_value = validate_variable(key, value)
-            print(f"  {key}={validated_value}")
-            if key == "ENV_NAMES":
-                print(f"🔍 ENV_NAMES from API input: '{validated_value}'")
-                print(f"🔍 ENV_NAMES length: {len(validated_value)}")
-                print(f"🔍 ENV_NAMES contains comma: {',' in validated_value}")
-                # Split and show individual environments
-                envs = [env.strip() for env in validated_value.split(",")]
-                print(f"🔍 Individual environments: {envs}")
             env_file.write(f"{key}={validated_value}\n")
             output_file.write(f"{key}={validated_value}\n")
 
-    print(f"Successfully processed {len(variables)} variables from API input")
+    print(f"✅ Processed {len(variables)} variables from API input")
 
 
 if __name__ == "__main__":

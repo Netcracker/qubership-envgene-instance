@@ -149,7 +149,6 @@ def main():
         else:
             # Print all variables and write to github_output
             variables = get_pipeline_vars()
-            print("Available pipeline variables:")
             
             # Write to github_output and github_env if available
             github_output = os.getenv("GITHUB_OUTPUT")
@@ -158,10 +157,8 @@ def main():
             if github_output:
                 with open(github_output, "a", encoding="utf-8") as f:
                     for key, value in variables.items():
-                        print(f"  {key}: {value}")
                         # Only write to github_output for use in other jobs
                         f.write(f"{key}={value}\n")
-                print(f"\n✅ Written {len(variables)} variables to github_output")
                 
             if github_env:
                 # Read existing variables from GITHUB_ENV file to avoid overriding
@@ -173,30 +170,22 @@ def main():
                             if "=" in line:
                                 key_existing, value_existing = line.split("=", 1)
                                 existing_env_vars[key_existing] = value_existing
-                    print(f"🔍 Found {len(existing_env_vars)} existing variables in GITHUB_ENV")
                 except FileNotFoundError:
-                    print("🔍 GITHUB_ENV file not found, creating new one")
+                    pass
                 
+                defaults_set = 0
                 with open(github_env, "a", encoding="utf-8") as f:
                     for key, value in variables.items():
                         # Check both os.getenv and GITHUB_ENV file
                         existing_os_value = os.getenv(key)
                         existing_file_value = existing_env_vars.get(key)
                         
-                        print(f"🔍 Checking {key}: os_env='{existing_os_value}', file_env='{existing_file_value}', pipeline_default='{value}'")
-                        
                         if (existing_os_value is None or existing_os_value == "") and (existing_file_value is None or existing_file_value == ""):
-                            print(f"  Setting {key} from pipeline_vars: {value}")
                             f.write(f"{key}={value}\n")
-                        else:
-                            existing_value = existing_file_value or existing_os_value
-                            print(f"  Keeping existing {key}: {existing_value}")
-                print(f"\n✅ Set default values from pipeline_vars.yaml (only for unset variables)")
-            else:
-                # Fallback: just print variables
-                for key, value in variables.items():
-                    print(f"  {key}: {value}")
-                print("\n⚠️  GITHUB_OUTPUT not available - variables not written to output")
+                            defaults_set += 1
+                
+                if defaults_set > 0:
+                    print(f"✅ Set {defaults_set} default values from pipeline_vars.yaml")
                 
     except ValueError as e:
         print(f"❌ Error: {e}", file=sys.stderr)
