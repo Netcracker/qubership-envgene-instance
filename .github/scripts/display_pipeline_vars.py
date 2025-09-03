@@ -85,7 +85,44 @@ def is_pipeline_variable(key):
         
         # Common system environment variables
         'DEBIAN_FRONTEND', 'ACCEPT_EULA', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE',
-        'POWERSHELL_DISTRIBUTION_CHANNEL', 'TZ', 'LANG', 'LC_ALL'
+        'POWERSHELL_DISTRIBUTION_CHANNEL', 'TZ', 'LANG', 'LC_ALL',
+        
+        # Android development
+        'ANDROID_HOME', 'ANDROID_NDK', 'ANDROID_NDK_HOME', 'ANDROID_NDK_LATEST_HOME',
+        'ANDROID_NDK_ROOT', 'ANDROID_SDK_ROOT',
+        
+        # Build tools and development environments
+        'ANT_HOME', 'GRADLE_HOME', 'MAVEN_HOME', 'SBT_HOME', 'LEIN_HOME', 'LEIN_JAR',
+        'SWIFT_PATH', 'VCPKG_INSTALLATION_ROOT', 'NVM_DIR',
+        
+        # Java environments
+        'JAVA_HOME', 'JAVA_HOME_8_X64', 'JAVA_HOME_11_X64', 'JAVA_HOME_17_X64', 'JAVA_HOME_21_X64',
+        
+        # Go environments
+        'GOROOT_1_22_X64', 'GOROOT_1_23_X64', 'GOROOT_1_24_X64',
+        
+        # Web drivers and browsers
+        'CHROMEWEBDRIVER', 'CHROME_BIN', 'EDGEWEBDRIVER', 'GECKOWEBDRIVER',
+        'SELENIUM_JAR_PATH',
+        
+        # Cloud and Azure
+        'AZURE_EXTENSION_DIR',
+        
+        # System and runtime
+        'CI', 'CONDA', 'LOGNAME', 'SHLVL', 'SGX_AESM_ADDR', 'SYSTEMD_EXEC_PID',
+        'XDG_CONFIG_HOME', 'XDG_RUNTIME_DIR', 'JOURNAL_STREAM', 'INVOCATION_ID',
+        
+        # .NET and other development
+        'DOTNET_MULTILEVEL_LOOKUP', 'DOTNET_NOLOGO', 'ENABLE_RUNNER_TRACING',
+        
+        # Package managers
+        'PIPX_BIN_DIR', 'PIPX_HOME',
+        
+        # Homebrew
+        'HOMEBREW_CLEANUP_PERIODIC_FULL_DAYS', 'HOMEBREW_NO_AUTO_UPDATE',
+        
+        # Haskell
+        'BOOTSTRAP_HASKELL_NONINTERACTIVE', 'GHCUP_INSTALL_BASE_PREFIX'
     }
     
     # Exclude system/secret variables
@@ -99,7 +136,13 @@ def is_pipeline_variable(key):
         return False
     
     # Exclude other common system prefixes
-    if key.startswith(('ACTIONS_', 'INPUT_', 'ImageOS', 'ImageVersion', 'AGENT_')):
+    system_prefixes = (
+        'ACTIONS_', 'INPUT_', 'ImageOS', 'ImageVersion', 'AGENT_',
+        'ANDROID_', 'JAVA_HOME_', 'GOROOT_', 'HOMEBREW_', 'XDG_',
+        'DOTNET_', 'PIPX_', 'GHCUP_'
+    )
+    
+    if key.startswith(system_prefixes):
         return False
     
     # Include everything else - this is the dynamic approach!
