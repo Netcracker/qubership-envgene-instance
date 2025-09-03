@@ -450,7 +450,7 @@ jobs:
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
@@ -697,10 +697,10 @@ jobs:
 
       - name: Create the naming for artifact
         run: |
-          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
+          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
             echo "artifact_name=generate_inventory_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
-          if [ "${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}" != "{}" ]; then
+          if [ "${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}" != "" ]; then
             echo "artifact_name=credential_rotation_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
           if [ "${{ needs.show_environment_variables.outputs.ENV_BUILDER }}" = "true" ]; then
@@ -711,14 +711,14 @@ jobs:
           fi
 
       - name: Download artifact
-        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: ./downloaded_artifact
 
       - name: Extract artifact to environment directory
-        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '{}' && needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
+        if: (needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME != '')) || needs.show_environment_variables.outputs.ENV_BUILDER == 'true' || needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true' || needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
         run: |
           mkdir -p "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
