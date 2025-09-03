@@ -133,7 +133,12 @@ jobs:
       - name: Load pipeline variables from output
         run: |
           # Load variables from github_output into environment
+          echo "🔍 Debug: GITHUB_OUTPUT = $GITHUB_OUTPUT"
+          echo "🔍 Debug: Checking if github_output file exists..."
           if [ -f "$GITHUB_OUTPUT" ]; then
+            echo "📄 github_output file found, contents:"
+            cat "$GITHUB_OUTPUT"
+            echo ""
             echo "Loading pipeline variables from github_output..."
             loaded_count=0
             while IFS='=' read -r key value; do
@@ -145,7 +150,9 @@ jobs:
             done < "$GITHUB_OUTPUT"
             echo "✅ Pipeline variables loaded successfully ($loaded_count variables)"
           else
-            echo "⚠️  No github_output file found"
+            echo "⚠️  No github_output file found at $GITHUB_OUTPUT"
+            echo "🔍 Debug: Listing files in current directory:"
+            ls -la
           fi
 
       - name: Create ENV_GENERATION_PARAMS

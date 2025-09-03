@@ -153,6 +153,9 @@ def main():
             
             # Write to github_output if available
             github_output = os.getenv("GITHUB_OUTPUT")
+            print(f"🔍 Debug: GITHUB_OUTPUT = {github_output}")
+            print(f"🔍 Debug: Found {len(variables)} variables")
+            
             if github_output:
                 with open(github_output, "a", encoding="utf-8") as f:
                     for key, value in variables.items():
