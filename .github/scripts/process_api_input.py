@@ -146,17 +146,39 @@ def parse_api_input(api_input_string):
             value = value.strip()
             
             # Special handling for JSON variables
-            if key in ["CRED_ROTATION_PAYLOAD", "SD_DATA", "ENV_SPECIFIC_PARAMETERS"]:
+            if key in ["CRED_ROTATION_PAYLOAD", "SD_DATA", "ENV_SPECIFIC_PARAMETERS", "BG_STATE"]:
                 print(f"🔍 Processing JSON variable: {key}")
-                # Unescape double-escaped quotes
-                unescaped_value = value.replace('\\\"', '"')
-                # Try to parse as JSON first
+                
+                # Handle different escaping patterns
+                processed_value = value
+                
+                # First, try to unescape double-escaped quotes
+                if '\\\"' in processed_value:
+                    processed_value = processed_value.replace('\\\"', '"')
+                    print(f"🔍 Unescaped double quotes: {processed_value}")
+                
+                # Handle mixed quotes - if we have both \" and " in the string
+                # This might be a case where some quotes are escaped and others aren't
+                if '\"' in processed_value and '"' in processed_value:
+                    print(f"🔍 Detected mixed quote escaping, attempting to normalize...")
+                    # Try to fix inconsistent escaping
+                    # Replace \" with " except when it's already inside a quoted string
+                    import re
+                    # This regex tries to handle the complex case of mixed escaping
+                    # It's a heuristic approach
+                    if processed_value.count('\"') > processed_value.count('"'):
+                        # More escaped quotes than regular ones, probably over-escaped
+                        processed_value = processed_value.replace('\"', '"')
+                        print(f"🔍 Normalized escaping: {processed_value}")
+                
+                # Try to parse as JSON
                 try:
-                    json.loads(unescaped_value)
-                    print(f"🔍 {key} is valid JSON after unescaping")
-                    variables[key] = unescaped_value
-                except json.JSONDecodeError:
-                    print(f"🔍 {key} is not valid JSON after unescaping, trying original")
+                    json.loads(processed_value)
+                    print(f"🔍 {key} is valid JSON after processing")
+                    variables[key] = processed_value
+                except json.JSONDecodeError as e:
+                    print(f"🔍 {key} is not valid JSON after processing: {e}")
+                    # Try original value
                     try:
                         json.loads(value)
                         print(f"🔍 {key} is valid JSON (original)")
@@ -192,7 +214,7 @@ def validate_variable(key, value):
         "CMDB_IMPORT",
     ]
 
-    json_vars = ["SD_DATA", "ENV_SPECIFIC_PARAMETERS"]
+    json_vars = ["SD_DATA", "ENV_SPECIFIC_PARAMETERS", "CRED_ROTATION_PAYLOAD", "BG_STATE"]
 
     if key in boolean_vars:
         if isinstance(value, str) and value.lower() in ["true", "false"]:
