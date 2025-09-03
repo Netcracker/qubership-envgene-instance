@@ -52,47 +52,26 @@ def get_pipeline_variables():
 
 def is_pipeline_variable(key):
     """
-    Determine if a variable is pipeline-related based on its name.
+    Determine if a variable should be displayed.
+    Exclude only system/CI variables, include everything else.
     """
-    # System variables to exclude
+    # System variables to exclude (secrets, CI internals, etc.)
     system_vars = {
-        'CI_COMMIT_REF_NAME', 'CI_PROJECT_DIR', 'SECRET_KEY', 
-        'GITHUB_USER_EMAIL', 'GITHUB_USER_NAME', 'GITHUB_TOKEN',
-        'ENVGENE_AGE_PUBLIC_KEY', 'ENVGENE_AGE_PRIVATE_KEY',
-        'GITHUB_ENV', 'GITHUB_OUTPUT', 'GITHUB_WORKSPACE',
-        'GITHUB_REPOSITORY', 'GITHUB_SHA', 'GITHUB_REF',
-        'GITHUB_ACTIONS', 'RUNNER_OS', 'RUNNER_ARCH'
+        'SECRET_KEY', 'GITHUB_TOKEN', 'ENVGENE_AGE_PUBLIC_KEY', 'ENVGENE_AGE_PRIVATE_KEY',
+        'GITHUB_ENV', 'GITHUB_OUTPUT', 'GITHUB_WORKSPACE', 'GITHUB_REPOSITORY', 
+        'GITHUB_SHA', 'GITHUB_REF', 'GITHUB_ACTIONS', 'RUNNER_OS', 'RUNNER_ARCH',
+        'GITHUB_USER_EMAIL', 'GITHUB_USER_NAME'
     }
     
-    # Docker image variables
-    docker_vars = {
-        'DOCKER_IMAGE_PIPEGENE', 'DOCKER_IMAGE_ENVGENE', 
-        'DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR'
-    }
-    
-    # Pipeline configuration variables (these we definitely want to show)
-    pipeline_vars = {
-        'DEPLOYMENT_TICKET_ID', 'ENV_NAMES', 'ENV_INVENTORY_INIT',
-        'ENV_BUILDER', 'GENERATE_EFFECTIVE_SET', 'CMDB_IMPORT',
-        'GET_PASSPORT', 'ENV_TEMPLATE_VERSION', 'ENV_TEMPLATE_TEST',
-        'ENV_TEMPLATE_NAME', 'SD_DATA', 'SD_VERSION', 'SD_SOURCE_TYPE',
-        'SD_DELTA', 'ENV_SPECIFIC_PARAMETERS', 'CRED_ROTATION_PAYLOAD',
-        'CRED_ROTATION_FORCE', 'BG_STATE', 'BG_MANAGE', 'ENV_GENERATION_PARAMS',
-        'GITHUB_PIPELINE_API_INPUT'
-    }
-    
-    # Include pipeline vars, docker vars, exclude system vars
+    # Exclude system/secret variables
     if key in system_vars:
         return False
     
-    if key in pipeline_vars or key in docker_vars:
-        return True
-    
-    # Include any other variables that might be custom pipeline variables
-    # but exclude obvious system/CI variables
-    if key.startswith(('GITHUB_', 'RUNNER_', 'CI_')) and key not in pipeline_vars:
+    # Exclude GitHub/Runner internal variables (but allow our pipeline ones)
+    if key.startswith(('RUNNER_', 'GITHUB_')) and key not in {'GITHUB_PIPELINE_API_INPUT'}:
         return False
     
+    # Include everything else - this is the dynamic approach!
     return True
 
 
@@ -106,10 +85,9 @@ def display_variables(show_docker=True, show_pipeline=True):
         print("No variables found in GITHUB_ENV")
         return
     
-    # Separate variables into categories
+    # Separate variables into categories dynamically
     docker_vars = {}
     pipeline_vars = {}
-    other_vars = {}
     
     for key, value in variables.items():
         if not is_pipeline_variable(key):
@@ -117,18 +95,9 @@ def display_variables(show_docker=True, show_pipeline=True):
             
         if key.startswith('DOCKER_IMAGE_'):
             docker_vars[key] = value
-        elif key in {
-            'DEPLOYMENT_TICKET_ID', 'ENV_NAMES', 'ENV_INVENTORY_INIT',
-            'ENV_BUILDER', 'GENERATE_EFFECTIVE_SET', 'CMDB_IMPORT',
-            'GET_PASSPORT', 'ENV_TEMPLATE_VERSION', 'ENV_TEMPLATE_TEST',
-            'ENV_TEMPLATE_NAME', 'SD_DATA', 'SD_VERSION', 'SD_SOURCE_TYPE',
-            'SD_DELTA', 'ENV_SPECIFIC_PARAMETERS', 'CRED_ROTATION_PAYLOAD',
-            'CRED_ROTATION_FORCE', 'BG_STATE', 'BG_MANAGE', 'ENV_GENERATION_PARAMS',
-            'GITHUB_PIPELINE_API_INPUT'
-        }:
-            pipeline_vars[key] = value
         else:
-            other_vars[key] = value
+            # Everything else goes to pipeline vars - fully dynamic!
+            pipeline_vars[key] = value
     
     # Display Docker Images section
     if show_docker and docker_vars:
@@ -139,19 +108,12 @@ def display_variables(show_docker=True, show_pipeline=True):
     
     # Display Pipeline Configuration section
     if show_pipeline and pipeline_vars:
-        print("=== Pipeline Configuration (Non-empty values only) ===")
+        print("=== Pipeline Configuration (All non-empty variables) ===")
         for key in sorted(pipeline_vars.keys()):
             print(f"{key} = {pipeline_vars[key]}")
         print("")
     
-    # Display other variables if any
-    if other_vars:
-        print("=== Other Variables ===")
-        for key in sorted(other_vars.keys()):
-            print(f"{key} = {other_vars[key]}")
-        print("")
-    
-    total_count = len(docker_vars) + len(pipeline_vars) + len(other_vars)
+    total_count = len(docker_vars) + len(pipeline_vars)
     
     if total_count == 0:
         print("ℹ️  No pipeline variables found to display")

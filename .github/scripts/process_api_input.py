@@ -51,11 +51,6 @@ def main():
         return
 
     print(f"✅ Processing GITHUB_PIPELINE_API_INPUT ({len(api_input)} chars)")
-    print(f"🔍 Debug - Raw input: {repr(api_input)}")
-    print(f"🔍 Debug - Input lines:")
-    lines = api_input.split("\n")
-    for i, line in enumerate(lines):
-        print(f"  Line {i}: {repr(line)}")
 
     # Parse the API input string
     variables = parse_api_input(api_input)
@@ -75,7 +70,6 @@ def main():
         for key, value in variables.items():
             validated_value = validate_variable(key, value)
             env_file.write(f"{key}={validated_value}\n")
-            print(f"🔍 Debug - Set {key} = {validated_value}")
 
     print(f"✅ Processed {len(variables)} variables from API input")
 
