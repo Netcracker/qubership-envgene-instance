@@ -130,6 +130,22 @@ jobs:
 
            python .github/scripts/load_pipeline_vars.py
 
+      - name: Load pipeline variables from output
+        run: |
+          # Load variables from github_output into environment
+          if [ -f "$GITHUB_OUTPUT" ]; then
+            echo "Loading pipeline variables from github_output..."
+            while IFS='=' read -r key value; do
+              if [ -n "$key" ] && [ -n "$value" ]; then
+                echo "Setting $key=$value"
+                echo "$key=$value" >> $GITHUB_ENV
+              fi
+            done < "$GITHUB_OUTPUT"
+            echo "✅ Pipeline variables loaded successfully"
+          else
+            echo "⚠️  No github_output file found"
+          fi
+
       - name: Create ENV_GENERATION_PARAMS
         id: env-generation-params
         run: |
