@@ -435,10 +435,10 @@ jobs:
 
       - name: Create the naming for artifact
         run: |
-          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "{}" ] && [ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
+          if [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}" = "false" ] && ([ "${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}" != "" ] || [ "${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}" != "" ]); then
             echo "artifact_name=generate_inventory_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
-          if [ "${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}" != "{}" ]; then
+          if [ "${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}" != "" ]; then
             echo "artifact_name=credential_rotation_${{ env.SANITIZED_NAME }}" >> $GITHUB_ENV
           fi
 
