@@ -57,18 +57,49 @@ def is_pipeline_variable(key):
     """
     # System variables to exclude (secrets, CI internals, etc.)
     system_vars = {
+        # Secrets and credentials
         'SECRET_KEY', 'GITHUB_TOKEN', 'ENVGENE_AGE_PUBLIC_KEY', 'ENVGENE_AGE_PRIVATE_KEY',
+        'GH_ACCESS_TOKEN', 'PUBLIC_AGE_KEYS',
+        
+        # GitHub Actions internal variables
         'GITHUB_ENV', 'GITHUB_OUTPUT', 'GITHUB_WORKSPACE', 'GITHUB_REPOSITORY', 
-        'GITHUB_SHA', 'GITHUB_REF', 'GITHUB_ACTIONS', 'RUNNER_OS', 'RUNNER_ARCH',
-        'GITHUB_USER_EMAIL', 'GITHUB_USER_NAME'
+        'GITHUB_SHA', 'GITHUB_REF', 'GITHUB_ACTIONS', 'GITHUB_REF_NAME',
+        'GITHUB_EVENT_NAME', 'GITHUB_EVENT_PATH', 'GITHUB_HEAD_REF', 'GITHUB_BASE_REF',
+        'GITHUB_SERVER_URL', 'GITHUB_API_URL', 'GITHUB_GRAPHQL_URL',
+        'GITHUB_USER_EMAIL', 'GITHUB_USER_NAME',
+        
+        # Runner system variables
+        'RUNNER_OS', 'RUNNER_ARCH', 'RUNNER_NAME', 'RUNNER_ENVIRONMENT', 'RUNNER_TOOL_CACHE',
+        'RUNNER_TEMP', 'RUNNER_WORKSPACE', 'RUNNER_PERFLOG', 'RUNNER_TRACKING_ID',
+        
+        # CI system variables
+        'CI_COMMIT_REF_NAME', 'CI_PROJECT_DIR',
+        
+        # Container and system paths
+        'HOME', 'PATH', 'SHELL', 'USER', 'LANG', 'PWD', 'OLDPWD',
+        'TERM', 'HOSTNAME', 'HOSTTYPE', 'MACHTYPE', 'OSTYPE',
+        
+        # Python/Node environment
+        'PYTHONPATH', 'PYTHON_VERSION', 'NODE_VERSION', 'NPM_VERSION',
+        'PIP_CACHE_DIR', 'PIPENV_CACHE_DIR',
+        
+        # Common system environment variables
+        'DEBIAN_FRONTEND', 'ACCEPT_EULA', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE',
+        'POWERSHELL_DISTRIBUTION_CHANNEL', 'TZ', 'LANG', 'LC_ALL'
     }
     
     # Exclude system/secret variables
     if key in system_vars:
         return False
     
-    # Exclude GitHub/Runner internal variables (but allow our pipeline ones)
-    if key.startswith(('RUNNER_', 'GITHUB_')) and key not in {'GITHUB_PIPELINE_API_INPUT'}:
+    # Exclude system variable prefixes (but allow specific pipeline ones)
+    pipeline_exceptions = {'GITHUB_PIPELINE_API_INPUT'}
+    
+    if key.startswith(('RUNNER_', 'GITHUB_')) and key not in pipeline_exceptions:
+        return False
+    
+    # Exclude other common system prefixes
+    if key.startswith(('ACTIONS_', 'INPUT_', 'ImageOS', 'ImageVersion', 'AGENT_')):
         return False
     
     # Include everything else - this is the dynamic approach!
