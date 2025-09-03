@@ -141,6 +141,12 @@ def parse_api_input(api_input_string):
     for line in lines:
         line = line.strip()
         if "=" in line and not line.startswith("#"):
+            # Pre-process line to handle spaces around = sign
+            # Replace " = " with "=" to fix bash interpretation issues
+            if " = " in line:
+                print(f"🔍 Found spaces around = sign, normalizing: {line}")
+                line = line.replace(" = ", "=")
+                print(f"🔍 Normalized to: {line}")
             # Handle cases where there might be spaces around =
             # Find the first = that's not inside quotes
             eq_pos = -1
@@ -172,72 +178,14 @@ def parse_api_input(api_input_string):
             key = key.strip()
             value = value.strip()
             
-            # Remove outer quotes if the entire value is quoted
-            if ((value.startswith('"') and value.endswith('"')) or 
-                (value.startswith("'") and value.endswith("'"))):
-                # Check if it's a JSON value that shouldn't have outer quotes removed
-                inner_value = value[1:-1]
-                if key in ["CRED_ROTATION_PAYLOAD", "SD_DATA", "ENV_SPECIFIC_PARAMETERS", "BG_STATE"]:
-                    # For JSON variables, try to parse the inner value first
-                    try:
-                        json.loads(inner_value)
-                        value = inner_value  # Remove outer quotes for JSON
-                        print(f"🔍 Removed outer quotes from {key}: {value}")
-                    except json.JSONDecodeError:
-                        # Keep outer quotes if inner value is not valid JSON
-                        pass
-                else:
-                    # For non-JSON variables, always remove outer quotes
-                    value = inner_value
+            # Remove outer quotes if present - all variables are treated as strings
+            if (value.startswith('"') and value.endswith('"')) or (
+                value.startswith("'") and value.endswith("'")
+            ):
+                value = value[1:-1]
             
-            # Special handling for JSON variables
-            if key in ["CRED_ROTATION_PAYLOAD", "SD_DATA", "ENV_SPECIFIC_PARAMETERS", "BG_STATE"]:
-                print(f"🔍 Processing JSON variable: {key}")
-                
-                # Handle different escaping patterns
-                processed_value = value
-                
-                # First, try to unescape double-escaped quotes
-                if '\\\"' in processed_value:
-                    processed_value = processed_value.replace('\\\"', '"')
-                    print(f"🔍 Unescaped double quotes: {processed_value}")
-                
-                # Handle mixed quotes - if we have both \" and " in the string
-                # This might be a case where some quotes are escaped and others aren't
-                if '\"' in processed_value and '"' in processed_value:
-                    print(f"🔍 Detected mixed quote escaping, attempting to normalize...")
-                    # Try to fix inconsistent escaping
-                    # Replace \" with " except when it's already inside a quoted string
-                    import re
-                    # This regex tries to handle the complex case of mixed escaping
-                    # It's a heuristic approach
-                    if processed_value.count('\"') > processed_value.count('"'):
-                        # More escaped quotes than regular ones, probably over-escaped
-                        processed_value = processed_value.replace('\"', '"')
-                        print(f"🔍 Normalized escaping: {processed_value}")
-                
-                # Try to parse as JSON
-                try:
-                    json.loads(processed_value)
-                    print(f"🔍 {key} is valid JSON after processing")
-                    variables[key] = processed_value
-                except json.JSONDecodeError as e:
-                    print(f"🔍 {key} is not valid JSON after processing: {e}")
-                    # Try original value
-                    try:
-                        json.loads(value)
-                        print(f"🔍 {key} is valid JSON (original)")
-                        variables[key] = value
-                    except json.JSONDecodeError:
-                        print(f"🔍 {key} is not valid JSON, keeping as string")
-                        variables[key] = value
-            else:
-                # Remove quotes if present for non-JSON variables
-                if (value.startswith('"') and value.endswith('"')) or (
-                    value.startswith("'") and value.endswith("'")
-                ):
-                    value = value[1:-1]
-                variables[key] = sanitize_value(value)
+            variables[key] = sanitize_value(value)
+            print(f"🔍 {key} processed as string: '{variables[key]}'")
             
             if key == "ENV_NAMES":
                 print(f"🔍 ENV_NAMES from key=value: '{value}' -> '{variables[key]}'")
@@ -259,8 +207,6 @@ def validate_variable(key, value):
         "CMDB_IMPORT",
     ]
 
-    json_vars = ["SD_DATA", "ENV_SPECIFIC_PARAMETERS", "CRED_ROTATION_PAYLOAD", "BG_STATE"]
-
     if key in boolean_vars:
         if isinstance(value, str) and value.lower() in ["true", "false"]:
             return value.lower()
@@ -270,20 +216,8 @@ def validate_variable(key, value):
             print(f"Warning: {key} should be boolean, got '{value}', keeping as string")
             return str(value)
 
-    elif key in json_vars:
-        if isinstance(value, str):
-            try:
-                json.loads(value)
-                return value
-            except json.JSONDecodeError:
-                print(
-                    f"Warning: {key} should be valid JSON, got '{value}', wrapping in quotes"
-                )
-                return json.dumps(value)
-        else:
-            return json.dumps(value)
-
-    # For all other variables, return as string
+    # For all other variables (including JSON strings), return as string
+    # No need to validate JSON format - they are stored as strings
     return str(value)
 
 
@@ -337,6 +271,7 @@ def main():
             print(f"✅ {var} is provided via workflow dispatch: '{env_value}'")
 
     print("Parsed variables from API input:")
+    
     with open(github_env_file, "a", encoding="utf-8") as env_file, open(
         github_output_file, "a", encoding="utf-8"
     ) as output_file:
