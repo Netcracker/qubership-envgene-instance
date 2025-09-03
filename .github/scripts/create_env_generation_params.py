@@ -9,28 +9,35 @@ import sys
 
 
 def create_env_generation_params():
-    """Create ENV_GENERATION_PARAMS JSON from environment variables."""
+    """Create ENV_GENERATION_PARAMS JSON from non-empty environment variables."""
     
-    # Get environment variables with defaults
-    params = {
-        "SD_SOURCE_TYPE": os.getenv("SD_SOURCE_TYPE", ""),
-        "SD_VERSION": os.getenv("SD_VERSION", ""),
-        "SD_DATA": os.getenv("SD_DATA", "{}"),
-        "SD_DELTA": os.getenv("SD_DELTA", ""),
-        "ENV_SPECIFIC_PARAMETERS": os.getenv("ENV_SPECIFIC_PARAMETERS", ""),
-        "ENV_TEMPLATE_NAME": os.getenv("ENV_TEMPLATE_NAME", "")
-    }
+    # List of possible environment variables
+    possible_vars = [
+        "SD_SOURCE_TYPE",
+        "SD_VERSION", 
+        "SD_DATA",
+        "SD_DELTA",
+        "ENV_SPECIFIC_PARAMETERS",
+        "ENV_TEMPLATE_NAME"
+    ]
     
-    print("Creating ENV_GENERATION_PARAMS:")
-    for key, value in params.items():
-        if value:
-            print(f"  {key}: {value}")
-        else:
-            print(f"  {key}: (empty)")
+    # Get only non-empty environment variables
+    params = {}
+    for var in possible_vars:
+        value = os.getenv(var, "").strip()
+        if value:  # Only add non-empty variables
+            params[var] = value
+            print(f"  {var}: {value}")
     
-    # Create JSON
-    env_generation_params = json.dumps(params, separators=(',', ':'))
-    print(f"Generated JSON: {env_generation_params}")
+    print(f"Creating ENV_GENERATION_PARAMS with {len(params)} variables:")
+    
+    # Create JSON or empty string if no variables
+    if params:
+        env_generation_params = json.dumps(params, separators=(',', ':'))
+        print(f"Generated JSON: {env_generation_params}")
+    else:
+        env_generation_params = ""
+        print("No variables found, setting empty string")
     
     # Write to GITHUB_ENV
     github_env_file = os.getenv("GITHUB_ENV")
