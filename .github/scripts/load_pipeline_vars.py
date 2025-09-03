@@ -60,12 +60,12 @@ def parse_pipeline_vars_yaml(file_path: str = ".github/pipeline_vars.yaml") -> D
         
         for line_num, line in enumerate(lines, 1):
             line = line.strip()
-            # Skip empty lines and non-commented lines
-            if not line or not line.startswith("# "):
+            # Skip empty lines and commented lines
+            if not line or line.startswith("#"):
                 continue
             
-            # Remove the comment prefix
-            content = line[2:].strip()
+            # Use the line content directly (no comment prefix to remove)
+            content = line
             
             # Check if it's a variable assignment
             if ":" in content:
