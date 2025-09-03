@@ -189,15 +189,70 @@ def validate_cred_rotation_payload(value, key):
             raise ValueError(f"{key} must be a valid JSON object: {str(e)}")
 
 
+def parse_pipeline_vars_yaml(file_path):
+    """
+    Parse pipeline_vars.yaml file and extract commented variables.
+    Returns a dictionary with variable names and their values.
+    """
+    variables = {}
+    
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        
+        for line in lines:
+            line = line.strip()
+            # Skip empty lines and non-commented lines
+            if not line or not line.startswith("# "):
+                continue
+            
+            # Remove the comment prefix
+            content = line[2:].strip()
+            
+            # Check if it's a variable assignment
+            if ":" in content:
+                key, value = content.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+                
+                # Remove quotes if present
+                if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+                    value = value[1:-1]
+                
+                variables[key] = value
+                print(f"Parsed variable from pipeline_vars.yaml: {key} = {value}")
+    
+    except FileNotFoundError:
+        print(f"Warning: pipeline_vars.yaml file not found at {file_path}")
+    except Exception as e:
+        print(f"Error parsing pipeline_vars.yaml: {e}")
+    
+    return variables
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: load_env_params.py <yaml_config_file>")
-        sys.exit(1)
-
-    config_file = sys.argv[1]
-
-    with open(config_file, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
+    # Default to pipeline_vars.yaml if no argument provided
+    if len(sys.argv) >= 2:
+        config_file = sys.argv[1]
+    else:
+        config_file = ".github/pipeline_vars.yaml"
+    
+    print(f"Loading variables from: {config_file}")
+    
+    # Parse pipeline_vars.yaml for commented variables
+    pipeline_vars = parse_pipeline_vars_yaml(config_file)
+    
+    # Also try to load as regular YAML (in case there are uncommented variables)
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            yaml_data = yaml.safe_load(f) or {}
+    except Exception as e:
+        print(f"Warning: Could not load YAML data from {config_file}: {e}")
+        yaml_data = {}
+    
+    # Merge pipeline_vars (from comments) with yaml_data (from YAML structure)
+    # pipeline_vars take precedence
+    data = {**yaml_data, **pipeline_vars}
 
     github_env_file = os.getenv("GITHUB_ENV")
     github_output_file = os.getenv("GITHUB_OUTPUT")
@@ -392,25 +447,35 @@ def main():
         
         print("✅ API-specific validations completed")
 
-    with open(github_env_file, "a", encoding="utf-8") as env_file, open(
-        github_output_file, "a", encoding="utf-8"
-    ) as output_file:
-
+    # Write all validated variables to github_output
+    print(f"\n📝 Writing {len(validated_data)} variables to github_output...")
+    
+    with open(github_output_file, "a", encoding="utf-8") as output_file:
         for key, value in validated_data.items():
-            # Always write to files to ensure consistency
+            # Convert value to appropriate format for GitHub Actions
             converted_value = convert_to_github_env(value)
-            env_file.write(f"{key}={converted_value}\n")
+            
+            # Write to github_output
             output_file.write(f"{key}={converted_value}\n")
-            if os.getenv(key) is not None:
-                print(
-                    f"Overwriting {key} from environment with validated value: {converted_value}"
-                )
-                if key == "ENV_NAMES":
-                    print(f"🔍 Final ENV_NAMES value: '{converted_value}'")
-            else:
-                print(f"Setting {key} to: {converted_value}")
-                if key == "ENV_NAMES":
-                    print(f"🔍 Final ENV_NAMES value: '{converted_value}'")
+            
+            # Log the action
+            source = "environment" if os.getenv(key) is not None else ("pipeline_vars.yaml" if key in pipeline_vars else "default")
+            print(f"✅ {key} = {converted_value} (from {source})")
+            
+            # Special logging for important variables
+            if key == "ENV_NAMES":
+                print(f"🔍 Final ENV_NAMES value: '{converted_value}'")
+            elif key == "CRED_ROTATION_PAYLOAD" and converted_value != "{}":
+                print(f"🔍 CRED_ROTATION_PAYLOAD contains rotation data")
+    
+    # Also write to github_env for environment variables (if needed)
+    if github_env_file:
+        with open(github_env_file, "a", encoding="utf-8") as env_file:
+            for key, value in validated_data.items():
+                converted_value = convert_to_github_env(value)
+                env_file.write(f"{key}={converted_value}\n")
+    
+    print(f"\n🎉 Successfully processed {len(validated_data)} variables from pipeline_vars.yaml")
 
 
 if __name__ == "__main__":

@@ -105,9 +105,8 @@ jobs:
         run: |
            # Check if API input is provided
            if [ -n "${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" ]; then
-             echo "🔍 API Mode: Processing GITHUB_PIPELINE_API_INPUT"
+             echo "API Mode: Processing GITHUB_PIPELINE_API_INPUT"
 
-             # Set the API input variable for the script to use
              export GITHUB_PIPELINE_API_INPUT="${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}"
              echo "GITHUB_PIPELINE_API_INPUT=${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" >> $GITHUB_ENV
 
@@ -120,8 +119,7 @@ jobs:
              echo "DEPLOYMENT_TICKET_ID=${DEPLOYMENT_TICKET_ID:-}" >> $GITHUB_ENV
              echo "ENV_TEMPLATE_VERSION=${ENV_TEMPLATE_VERSION:-}" >> $GITHUB_ENV
            else
-             echo "🔍 UI Mode: Processing manual inputs"
-             # Set variables from workflow inputs
+             echo "UI Mode: Processing manual inputs"
              echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
              echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
              echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
@@ -130,8 +128,7 @@ jobs:
              echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
            fi
 
-           # Load additional variables from pipeline_vars.yaml (with fallbacks to defaults)
-           python .github/scripts/load_env_variables.py .github/pipeline_vars.yaml
+           python .github/scripts/load_pipeline_vars.py .github/pipeline_vars.yaml
 
       - name: Create ENV_GENERATION_PARAMS
         id: env-generation-params
