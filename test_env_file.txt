@@ -1,0 +1,12 @@
+DEPLOYMENT_TICKET_ID=TICKET-123
+ENV_NAMES=test-cluster/e01,test-cluster/e02
+ENV_BUILDER=true
+GENERATE_EFFECTIVE_SET=false
+DOCKER_IMAGE_ENVGENE=ghcr.io/netcracker/qubership-envgene:latest
+DOCKER_IMAGE_PIPEGENE=ghcr.io/netcracker/qubership-pipegene:latest
+ENV_TEMPLATE_NAME=my-template
+CRED_ROTATION_PAYLOAD={"test": "value"}
+BG_STATE={"state": "active"}
+GITHUB_TOKEN=secret-token
+CI_PROJECT_DIR=/workspace
+EMPTY_VAR=
