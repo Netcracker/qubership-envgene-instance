@@ -150,16 +150,9 @@ def main():
             # Print all variables and write to github_output
             variables = get_pipeline_vars()
             
-            # Write to github_output and github_env if available
-            github_output = os.getenv("GITHUB_OUTPUT")
+            # Write to github_env
             github_env = os.getenv("GITHUB_ENV")
             
-            if github_output:
-                with open(github_output, "a", encoding="utf-8") as f:
-                    for key, value in variables.items():
-                        # Only write to github_output for use in other jobs
-                        f.write(f"{key}={value}\n")
-                
             if github_env:
                 # Read existing variables from GITHUB_ENV file to avoid overriding
                 existing_env_vars = {}

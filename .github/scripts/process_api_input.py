@@ -65,20 +65,15 @@ def main():
         return
 
     github_env_file = os.getenv("GITHUB_ENV")
-    github_output_file = os.getenv("GITHUB_OUTPUT")
 
-    if not github_env_file or not github_output_file:
-        print("Error: GITHUB_ENV or GITHUB_OUTPUT variable is not set!")
+    if not github_env_file:
+        print("Error: GITHUB_ENV variable is not set!")
         sys.exit(1)
 
-    with open(github_env_file, "a", encoding="utf-8") as env_file, open(
-        github_output_file, "a", encoding="utf-8"
-    ) as output_file:
-
+    with open(github_env_file, "a", encoding="utf-8") as env_file:
         for key, value in variables.items():
             validated_value = validate_variable(key, value)
             env_file.write(f"{key}={validated_value}\n")
-            output_file.write(f"{key}={validated_value}\n")
 
     print(f"✅ Processed {len(variables)} variables from API input")
 
