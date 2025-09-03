@@ -1,57 +1,23 @@
 #!/usr/bin/env python3
-import json
 import os
-import re
 import sys
-
-import yaml
 
 
 def sanitize_value(value):
-    """Sanitize and convert value to appropriate type"""
+    """Sanitize and convert value to string"""
     if isinstance(value, str):
-        value = value.strip()
-        # Handle JSON strings
-        if value.startswith("{") and value.endswith("}"):
-            try:
-                json.loads(value)
-                return value
-            except:
-                pass
-        # Handle boolean strings
-        if value.lower() in ["true", "false"]:
-            return value.lower()
+        return value.strip()
     return str(value)
 
 
 def parse_api_input(api_input_string):
-    """Parse API input string and extract variables"""
+    """Parse API input string as key=value pairs"""
     variables = {}
 
     if not api_input_string or api_input_string.strip() == "":
         return variables
 
-    # Try to parse as JSON first
-    try:
-        json_data = json.loads(api_input_string)
-        if isinstance(json_data, dict):
-            for key, value in json_data.items():
-                variables[key] = sanitize_value(value)
-            return variables
-    except json.JSONDecodeError:
-        pass
-
-    # Try to parse as YAML with better error handling
-    try:
-        yaml_data = yaml.safe_load(api_input_string)
-        if isinstance(yaml_data, dict):
-            for key, value in yaml_data.items():
-                variables[key] = sanitize_value(value)
-            return variables
-    except yaml.YAMLError:
-        pass
-
-    # Parse as key=value pairs (fallback)
+    # Parse as key=value pairs
     lines = api_input_string.split("\n")
     for line in lines:
         line = line.strip()
@@ -59,38 +25,13 @@ def parse_api_input(api_input_string):
             # Pre-process line to handle spaces around = sign
             if " = " in line:
                 line = line.replace(" = ", "=")
-            # Handle cases where there might be spaces around =
-            # Find the first = that's not inside quotes
-            eq_pos = -1
-            in_quotes = False
-            quote_char = None
             
-            for i, char in enumerate(line):
-                if char in ['"', "'"] and (i == 0 or line[i-1] != '\\'):
-                    if not in_quotes:
-                        in_quotes = True
-                        quote_char = char
-                    elif char == quote_char:
-                        in_quotes = False
-                        quote_char = None
-                elif char == '=' and not in_quotes:
-                    eq_pos = i
-                    break
-            
-            if eq_pos == -1:
-                # Fallback to simple split if no unquoted = found
-                if "=" in line:
-                    key, value = line.split("=", 1)
-                else:
-                    continue
-            else:
-                key = line[:eq_pos]
-                value = line[eq_pos + 1:]
-            
+            # Simple split on first =
+            key, value = line.split("=", 1)
             key = key.strip()
             value = value.strip()
             
-            # Remove outer quotes if present - all variables are treated as strings
+            # Remove outer quotes if present
             if (value.startswith('"') and value.endswith('"')) or (
                 value.startswith("'") and value.endswith("'")
             ):
@@ -102,28 +43,7 @@ def parse_api_input(api_input_string):
 
 
 def validate_variable(key, value):
-    """Validate variable based on known variable types"""
-    boolean_vars = [
-        "ENV_INVENTORY_INIT",
-        "GENERATE_EFFECTIVE_SET",
-        "ENV_TEMPLATE_TEST",
-        "SD_DELTA",
-        "ENV_BUILDER",
-        "GET_PASSPORT",
-        "CMDB_IMPORT",
-    ]
-
-    if key in boolean_vars:
-        if isinstance(value, str) and value.lower() in ["true", "false"]:
-            return value.lower()
-        elif isinstance(value, bool):
-            return "true" if value else "false"
-        else:
-            print(f"Warning: {key} should be boolean, got '{value}', keeping as string")
-            return str(value)
-
-    # For all other variables (including JSON strings), return as string
-    # No need to validate JSON format - they are stored as strings
+    """Validate variable - all variables are treated as strings"""
     return str(value)
 
 
