@@ -325,7 +325,7 @@ jobs:
   credential_rotation:
     name: "${{ matrix.environment }} - Credential Rotation"
     runs-on: ubuntu-22.04
-    if: always() && needs.show_environment_variables.outputs.env_matrix != '[]' && needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != '{}'
+    if: always() && needs.show_environment_variables.outputs.env_matrix != '[]' && needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
     needs:
       - show_environment_variables
       - generate_inventory

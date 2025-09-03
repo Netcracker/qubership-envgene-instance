@@ -147,11 +147,25 @@ def main():
             value = get_pipeline_var(var_name)
             print(value)
         else:
-            # Print all variables
+            # Print all variables and write to github_output
             variables = get_pipeline_vars()
             print("Available pipeline variables:")
-            for key, value in variables.items():
-                print(f"  {key}: {value}")
+            
+            # Write to github_output if available
+            github_output = os.getenv("GITHUB_OUTPUT")
+            if github_output:
+                with open(github_output, "a", encoding="utf-8") as f:
+                    for key, value in variables.items():
+                        print(f"  {key}: {value}")
+                        # Write to github_output for use in other jobs
+                        f.write(f"{key}={value}\n")
+                print(f"\n✅ Written {len(variables)} variables to github_output")
+            else:
+                # Fallback: just print variables
+                for key, value in variables.items():
+                    print(f"  {key}: {value}")
+                print("\n⚠️  GITHUB_OUTPUT not available - variables not written to output")
+                
     except ValueError as e:
         print(f"❌ Error: {e}", file=sys.stderr)
         sys.exit(1)
