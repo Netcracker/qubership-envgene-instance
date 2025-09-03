@@ -141,9 +141,54 @@ def parse_api_input(api_input_string):
     for line in lines:
         line = line.strip()
         if "=" in line and not line.startswith("#"):
-            key, value = line.split("=", 1)
+            # Handle cases where there might be spaces around =
+            # Find the first = that's not inside quotes
+            eq_pos = -1
+            in_quotes = False
+            quote_char = None
+            
+            for i, char in enumerate(line):
+                if char in ['"', "'"] and (i == 0 or line[i-1] != '\\'):
+                    if not in_quotes:
+                        in_quotes = True
+                        quote_char = char
+                    elif char == quote_char:
+                        in_quotes = False
+                        quote_char = None
+                elif char == '=' and not in_quotes:
+                    eq_pos = i
+                    break
+            
+            if eq_pos == -1:
+                # Fallback to simple split if no unquoted = found
+                if "=" in line:
+                    key, value = line.split("=", 1)
+                else:
+                    continue
+            else:
+                key = line[:eq_pos]
+                value = line[eq_pos + 1:]
+            
             key = key.strip()
             value = value.strip()
+            
+            # Remove outer quotes if the entire value is quoted
+            if ((value.startswith('"') and value.endswith('"')) or 
+                (value.startswith("'") and value.endswith("'"))):
+                # Check if it's a JSON value that shouldn't have outer quotes removed
+                inner_value = value[1:-1]
+                if key in ["CRED_ROTATION_PAYLOAD", "SD_DATA", "ENV_SPECIFIC_PARAMETERS", "BG_STATE"]:
+                    # For JSON variables, try to parse the inner value first
+                    try:
+                        json.loads(inner_value)
+                        value = inner_value  # Remove outer quotes for JSON
+                        print(f"🔍 Removed outer quotes from {key}: {value}")
+                    except json.JSONDecodeError:
+                        # Keep outer quotes if inner value is not valid JSON
+                        pass
+                else:
+                    # For non-JSON variables, always remove outer quotes
+                    value = inner_value
             
             # Special handling for JSON variables
             if key in ["CRED_ROTATION_PAYLOAD", "SD_DATA", "ENV_SPECIFIC_PARAMETERS", "BG_STATE"]:
