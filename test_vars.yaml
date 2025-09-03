@@ -1,6 +1,0 @@
----
-# This is a comment - should be ignored
-ENV_INVENTORY_INIT: false
-ENV_TEMPLATE_NAME: "test"
-SD_DATA: {}
-CRED_ROTATION_FORCE: "true"
