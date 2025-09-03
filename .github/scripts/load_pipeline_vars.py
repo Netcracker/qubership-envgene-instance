@@ -164,14 +164,32 @@ def main():
                 print(f"\n✅ Written {len(variables)} variables to github_output")
                 
             if github_env:
+                # Read existing variables from GITHUB_ENV file to avoid overriding
+                existing_env_vars = {}
+                try:
+                    with open(github_env, "r", encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if "=" in line:
+                                key_existing, value_existing = line.split("=", 1)
+                                existing_env_vars[key_existing] = value_existing
+                    print(f"🔍 Found {len(existing_env_vars)} existing variables in GITHUB_ENV")
+                except FileNotFoundError:
+                    print("🔍 GITHUB_ENV file not found, creating new one")
+                
                 with open(github_env, "a", encoding="utf-8") as f:
                     for key, value in variables.items():
-                        # Only set variable if it's not already set (don't override existing values)
-                        existing_value = os.getenv(key)
-                        if existing_value is None or existing_value == "":
+                        # Check both os.getenv and GITHUB_ENV file
+                        existing_os_value = os.getenv(key)
+                        existing_file_value = existing_env_vars.get(key)
+                        
+                        print(f"🔍 Checking {key}: os_env='{existing_os_value}', file_env='{existing_file_value}', pipeline_default='{value}'")
+                        
+                        if (existing_os_value is None or existing_os_value == "") and (existing_file_value is None or existing_file_value == ""):
                             print(f"  Setting {key} from pipeline_vars: {value}")
                             f.write(f"{key}={value}\n")
                         else:
+                            existing_value = existing_file_value or existing_os_value
                             print(f"  Keeping existing {key}: {existing_value}")
                 print(f"\n✅ Set default values from pipeline_vars.yaml (only for unset variables)")
             else:
