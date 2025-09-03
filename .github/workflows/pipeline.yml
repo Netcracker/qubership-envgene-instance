@@ -132,12 +132,8 @@ jobs:
 
       - name: Display GITHUB_ENV Contents
         run: |
-          echo "=== Contents of GITHUB_ENV ==="
-          if [ -f "$GITHUB_ENV" ]; then
-            cat "$GITHUB_ENV"
-          else
-            echo "GITHUB_ENV file not found!"
-          fi
+          echo "=== All Environment Variables ==="
+          env | sort
            
       - name: Display loaded pipeline variables
         run: |
