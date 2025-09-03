@@ -103,6 +103,13 @@ jobs:
 
       - name: Process Input Parameters
         run: |
+           echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
+           echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
+           echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
+           echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
+           echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
+           echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
+
            # Check if API input is provided
            if [ -n "${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" ]; then
              echo "API Mode: Processing GITHUB_PIPELINE_API_INPUT"
@@ -120,20 +127,9 @@ jobs:
              echo "ENV_TEMPLATE_VERSION=${ENV_TEMPLATE_VERSION:-}" >> $GITHUB_ENV
            else
              echo "UI Mode: Processing manual inputs"
-             echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
-             echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
-             echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
-             echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
-             echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
-             echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
            fi
 
            python .github/scripts/load_pipeline_vars.py
-
-      - name: Display GITHUB_ENV Contents
-        run: |
-          echo "=== All Environment Variables ==="
-          env | sort
            
       - name: Display loaded pipeline variables
         run: |
