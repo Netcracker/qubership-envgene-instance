@@ -75,6 +75,7 @@ jobs:
       ENV_BUILDER: ${{ env.ENV_BUILDER }}
       GENERATE_EFFECTIVE_SET: ${{ env.GENERATE_EFFECTIVE_SET }}
       ENV_INVENTORY_INIT: ${{ env.ENV_INVENTORY_INIT }}
+      DOCKER_IMAGE_PIPEGENE: ${{ env.DOCKER_IMAGE_PIPEGENE }}
       DOCKER_IMAGE_ENVGENE: ${{ env.DOCKER_IMAGE_ENVGENE }}
       DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: ${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
 
@@ -116,23 +117,7 @@ jobs:
 
       - name: Create ENV_GENERATION_PARAMS
         run: |
-          ENV_GENERATION_PARAMS=$(jq -nc \
-            --arg sd_source_type "${SD_SOURCE_TYPE:-""}" \
-            --arg sd_version "${SD_VERSION:-""}" \
-            --arg sd_data "${SD_DATA:-"{}"}" \
-            --arg sd_delta "${SD_DELTA:-""}" \
-            --arg env_specific_params "${ENV_SPECIFIC_PARAMETERS:-""}" \
-            --arg env_template_name "${ENV_TEMPLATE_NAME:-""}" \
-            '{
-              "SD_SOURCE_TYPE": $sd_source_type,
-              "SD_VERSION": $sd_version,
-              "SD_DATA": $sd_data,
-              "SD_DELTA": $sd_delta,
-              "ENV_SPECIFIC_PARAMETERS": $env_specific_params,
-              "ENV_TEMPLATE_NAME": $env_template_name
-            }'
-          )
-          echo "ENV_GENERATION_PARAMS=$ENV_GENERATION_PARAMS" >> $GITHUB_ENV
+          python .github/scripts/create_env_generation_params.py
 
       - name: Input Parameters
         run: |
