@@ -130,30 +130,31 @@ jobs:
 
            python .github/scripts/load_pipeline_vars.py
 
-      - name: Load pipeline variables from output
+      - name: Display GITHUB_ENV Contents
         run: |
-          # Load variables from github_output into environment
-          echo "🔍 Debug: GITHUB_OUTPUT = $GITHUB_OUTPUT"
-          echo "🔍 Debug: Checking if github_output file exists..."
-          if [ -f "$GITHUB_OUTPUT" ]; then
-            echo "📄 github_output file found, contents:"
-            cat "$GITHUB_OUTPUT"
-            echo ""
-            echo "Loading pipeline variables from github_output..."
-            loaded_count=0
-            while IFS='=' read -r key value; do
-              if [ -n "$key" ] && [ -n "$value" ]; then
-                echo "Setting $key=$value"
-                echo "$key=$value" >> $GITHUB_ENV
-                loaded_count=$((loaded_count + 1))
-              fi
-            done < "$GITHUB_OUTPUT"
-            echo "✅ Pipeline variables loaded successfully ($loaded_count variables)"
+          echo "=== Contents of GITHUB_ENV ==="
+          if [ -f "$GITHUB_ENV" ]; then
+            cat "$GITHUB_ENV"
           else
-            echo "⚠️  No github_output file found at $GITHUB_OUTPUT"
-            echo "🔍 Debug: Listing files in current directory:"
-            ls -la
+            echo "GITHUB_ENV file not found!"
           fi
+           
+      - name: Display loaded pipeline variables
+        run: |
+          echo "=== Pipeline Configuration ==="
+          echo "Pipeline variables loaded from pipeline_vars.yaml:"
+          echo "  ENV_INVENTORY_INIT: ${{ needs.show_environment_variables.outputs.ENV_INVENTORY_INIT }}"
+          echo "  CRED_ROTATION_PAYLOAD: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_PAYLOAD }}"
+          echo "  ENV_SPECIFIC_PARAMETERS: ${{ needs.show_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS }}"
+          echo "  ENV_TEMPLATE_NAME: ${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_NAME }}"
+          echo "  ENV_TEMPLATE_TEST: ${{ needs.show_environment_variables.outputs.ENV_TEMPLATE_TEST }}"
+          echo "  ENV_BUILDER: ${{ needs.show_environment_variables.outputs.ENV_BUILDER }}"
+          echo "  GENERATE_EFFECTIVE_SET: ${{ needs.show_environment_variables.outputs.GENERATE_EFFECTIVE_SET }}"
+          echo "  SD_DATA: ${{ needs.show_environment_variables.outputs.SD_DATA }}"
+          echo "  SD_VERSION: ${{ needs.show_environment_variables.outputs.SD_VERSION }}"
+          echo "  SD_SOURCE_TYPE: ${{ needs.show_environment_variables.outputs.SD_SOURCE_TYPE }}"
+          echo "  SD_DELTA: ${{ needs.show_environment_variables.outputs.SD_DELTA }}"
+          echo "  CRED_ROTATION_FORCE: ${{ needs.show_environment_variables.outputs.CRED_ROTATION_FORCE }}"
 
       - name: Create ENV_GENERATION_PARAMS
         id: env-generation-params
