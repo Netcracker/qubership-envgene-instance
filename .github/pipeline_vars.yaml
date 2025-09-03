@@ -1,3 +1,7 @@
 ---
 
 ENV_INVENTORY_INIT: false
+SD_DATA: ""
+SD_VERSION: ""
+SD_SOURCE_TYPE: ""
+SD_DELTA: false
