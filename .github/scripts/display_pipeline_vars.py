@@ -59,7 +59,7 @@ def is_pipeline_variable(key):
     system_vars = {
         # Secrets and credentials
         'SECRET_KEY', 'GITHUB_TOKEN', 'ENVGENE_AGE_PUBLIC_KEY', 'ENVGENE_AGE_PRIVATE_KEY',
-        'GH_ACCESS_TOKEN', 'PUBLIC_AGE_KEYS',
+        'GH_ACCESS_TOKEN', 'PUBLIC_AGE_KEYS', 'GPG_KEY',
         
         # GitHub Actions internal variables
         'GITHUB_ENV', 'GITHUB_OUTPUT', 'GITHUB_WORKSPACE', 'GITHUB_REPOSITORY', 
@@ -81,7 +81,8 @@ def is_pipeline_variable(key):
         
         # Python/Node environment
         'PYTHONPATH', 'PYTHON_VERSION', 'NODE_VERSION', 'NPM_VERSION',
-        'PIP_CACHE_DIR', 'PIPENV_CACHE_DIR',
+        'PIP_CACHE_DIR', 'PIPENV_CACHE_DIR', 'PYTHONDONTWRITEBYTECODE', 
+        'PYTHONUNBUFFERED', 'PYTHON_SHA256',
         
         # Common system environment variables
         'DEBIAN_FRONTEND', 'ACCEPT_EULA', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE',
@@ -167,7 +168,7 @@ def display_variables(show_docker=True, show_pipeline=True):
         if not is_pipeline_variable(key):
             continue
             
-        if key.startswith('DOCKER_IMAGE_'):
+        if key.startswith('DOCKER_IMAGE_') or key == 'DOCKER_REGISTRY':
             docker_vars[key] = value
         else:
             # Everything else goes to pipeline vars - fully dynamic!

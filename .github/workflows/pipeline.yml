@@ -164,7 +164,7 @@ jobs:
           # Use dynamic variable display script
           python .github/scripts/display_pipeline_vars.py
 
-      - name: Prepare Parameters
+      - name: Prepare parameters
         id: matrix-generator
         shell: bash
         run: |
