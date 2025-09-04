@@ -90,6 +90,7 @@ export_pipeline_variables() {
     log "✅ Successfully exported $exported_count pipeline variables"
     return 0
 }
+
 # Main function
 main() {
     local variables_json="${1:-}"
@@ -109,7 +110,7 @@ main() {
     log "🎉 Variable export completed successfully"
 }
 
-# Run main function if script is executed directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# Auto-run main function when script is sourced with arguments
+if [ "$#" -gt 0 ]; then
     main "$@"
 fi
