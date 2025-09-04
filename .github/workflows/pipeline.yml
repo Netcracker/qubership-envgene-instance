@@ -41,7 +41,7 @@ on:
       GITHUB_PIPELINE_API_INPUT:
         required: false
         type: string
-        description: "API input string containing all variables in JSON/YAML/key=value format - for API mode"
+        description: "Inputfor API mode"
         default: ""
 
 env:
@@ -50,7 +50,7 @@ env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   GITHUB_USER_EMAIL: 'fake@fake.com'
   GITHUB_USER_NAME: 'envgene'
-  GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
   ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
 
@@ -64,22 +64,11 @@ jobs:
     name: "Input Parameters Processing"
     runs-on: ubuntu-22.04
     container:
-      image: ${{ vars.DOCKER_IMAGE_PIPEGENE || 'ghcr.io/netcracker/qubership-pipegene:feature_enchance_creds_ansible_20250902-132735' }}
+      image: ${{ vars.DOCKER_IMAGE_PIPEGENE }}
       options: --user root
     outputs:
       env_matrix: ${{ steps.matrix-generator.outputs.env_matrix }}
       variables_json: ${{ steps.collect-vars.outputs.variables_json }}
-      # Legacy outputs for backward compatibility
-      ENV_TEMPLATE_TEST: ${{ env.ENV_TEMPLATE_TEST }}
-      ENV_SPECIFIC_PARAMETERS: ${{ env.ENV_SPECIFIC_PARAMETERS }}
-      ENV_TEMPLATE_NAME: ${{ env.ENV_TEMPLATE_NAME }}
-      CRED_ROTATION_PAYLOAD: ${{ env.CRED_ROTATION_PAYLOAD }}
-      ENV_BUILDER: ${{ env.ENV_BUILDER }}
-      GENERATE_EFFECTIVE_SET: ${{ env.GENERATE_EFFECTIVE_SET }}
-      ENV_INVENTORY_INIT: ${{ env.ENV_INVENTORY_INIT }}
-      DOCKER_IMAGE_PIPEGENE: ${{ env.DOCKER_IMAGE_PIPEGENE }}
-      DOCKER_IMAGE_ENVGENE: ${{ env.DOCKER_IMAGE_ENVGENE }}
-      DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: ${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
 
     steps:
       - name: Repository Checkout
@@ -115,18 +104,16 @@ jobs:
 
            python .github/scripts/load_pipeline_vars.py
            
-
-
-      - name: Create ENV_GENERATION_PARAMS
+      - name: Create env_generation_params
         run: |
           python .github/scripts/create_env_generation_params.py
 
-      - name: Collect All Variables
+      - name: Collect all variables
         id: collect-vars
         run: |
           python .github/scripts/collect_all_vars.py
 
-      - name: Input Parameters
+      - name: Input parameters
         run: |
           # Determine execution mode
           if [ -n "${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" ]; then
@@ -258,17 +245,8 @@ jobs:
 
       - name: Generate inventory
         run: |
-          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export CLUSTER_NAME
-
-          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENVIRONMENT_NAME
-
-          ENV_NAME="$ENVIRONMENT_NAME"
-          export ENV_NAME
-
-          # ENV_GENERATION_PARAMS is already available from inherited environment
-          export ENV_GENERATION_PARAMS
+          # Export all variables using the universal script
+          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
 
           python3 /build_env/scripts/build_env/env_inventory_generation.py
 
@@ -325,13 +303,10 @@ jobs:
 
       - name: Credential Rotation
         run: |
-          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-
-          # Variables are already available from inherited environment
-          export CRED_ROTATION_FORCE
-          export CRED_ROTATION_PAYLOAD
-
+          # Export all variables using the universal script
+          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          
+          # Export credential-specific variables
           export ENVGENE_AGE_PRIVATE_KEY
           export ENVGENE_AGE_PUBLIC_KEY
           export PUBLIC_AGE_KEYS
@@ -396,74 +371,8 @@ jobs:
 
       - name: Build Env
         run: |
-          echo "🔧 Exporting all environment variables for build process..."
-          
-          # Export variables from JSON (directly in this step for immediate availability)
-          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
-          
-          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
-            echo "Loading variables from JSON..."
-            # Use eval to export variables directly
-            while IFS= read -r export_cmd; do
-              echo "Executing: $export_cmd"
-              eval "$export_cmd"
-            done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "export \(.key)=\"\(.value)\""')
-          fi
-          
-          # Export job-specific variables
-          ENV_NAMES="${{ matrix.environment }}"
-          export ENV_NAMES
-
-          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
-          export ENV_NAME_SHORT
-
-          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export CLUSTER_NAME
-
-          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENVIRONMENT_NAME
-
-          ENV_NAME="$ENVIRONMENT_NAME"
-          export ENV_NAME
-
-          export CI_PROJECT_DIR
-
-          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
-          export INSTANCES_DIR
-
-          module_ansible_dir="/module/ansible"
-          export module_ansible_dir
-
-          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
-          export module_inventory
-
-          module_ansible_cfg="/module/ansible/ansible.cfg"
-          export module_ansible_cfg
-
-          module_config_default="/module/templates/defaults.yaml"
-          export module_config_default
-
-          envgen_args=" -vvv"
-          export envgen_args
-
-          envgen_debug="true"
-          export envgen_debug
-
-          GIT_STRATEGY="none"
-          export GIT_STRATEGY
-
-          COMMIT_ENV="true"
-          export COMMIT_ENV
-
-          export SECRET_KEY
-          export GITHUB_ACTIONS
-          export GITHUB_REPOSITORY
-          export GITHUB_REF_NAME
-          export GITHUB_USER_EMAIL
-          export GITHUB_USER_NAME
-          export GITHUB_TOKEN
-          
-          echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
+          # Export all variables using the universal script
+          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
 
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
@@ -567,72 +476,8 @@ jobs:
 
       - name: Generate Effective Set
         run: |
-          echo "🔧 Exporting all environment variables for effective set generation..."
-          
-          # Export variables from JSON (directly in this step for immediate availability)
-          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
-          
-          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
-            echo "Loading variables from JSON..."
-            # Use eval to export variables directly
-            while IFS= read -r export_cmd; do
-              eval "$export_cmd"
-            done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "export \(.key)=\"\(.value)\""')
-          fi
-
-          ENV_NAMES="${{ matrix.environment }}"
-          export ENV_NAMES
-
-          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
-          export ENV_NAME_SHORT
-
-          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export CLUSTER_NAME
-
-          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENVIRONMENT_NAME
-
-          ENV_NAME="$ENVIRONMENT_NAME"
-          export ENV_NAME
-
-          export CI_PROJECT_DIR
-
-          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
-          export INSTANCES_DIR
-
-          module_ansible_dir="/module/ansible"
-          export module_ansible_dir
-
-          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
-          export module_inventory
-
-          module_ansible_cfg="/module/ansible/ansible.cfg"
-          export module_ansible_cfg
-
-          module_config_default="/module/templates/defaults.yaml"
-          export module_config_default
-
-          envgen_args=" -vvv"
-          export envgen_args
-
-          envgen_debug="true"
-          export envgen_debug
-
-          GIT_STRATEGY="none"
-          export GIT_STRATEGY
-
-          COMMIT_ENV="true"
-          export COMMIT_ENV
-
-          export SECRET_KEY
-          export GITHUB_ACTIONS
-          export GITHUB_REPOSITORY
-          export GITHUB_REF_NAME
-          export GITHUB_USER_EMAIL
-          export GITHUB_USER_NAME
-          export GITHUB_TOKEN
-          
-          echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
+          # Export all variables using the universal script
+          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
 
           /module/scripts/prepare.sh "generate_effective_set.yaml"
 
@@ -721,57 +566,8 @@ jobs:
 
       - name: Git Commit
         run: |
-          # Environment variables are already exported by composite action!
-          # Only export job-specific variables
-          
-          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
-          export ENV_NAME_SHORT
-
-          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
-          export CLUSTER_NAME
-
-          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
-          export ENVIRONMENT_NAME
-
-          ENV_NAME="$ENVIRONMENT_NAME"
-          export ENV_NAME
-
-          export CI_PROJECT_DIR
-
-          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
-          export INSTANCES_DIR
-
-          module_ansible_dir="/module/ansible"
-          export module_ansible_dir
-
-          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
-          export module_inventory
-
-          module_ansible_cfg="/module/ansible/ansible.cfg"
-          export module_ansible_cfg
-
-          module_config_default="/module/templates/defaults.yaml"
-          export module_config_default
-
-          envgen_args=" -vvv"
-          export envgen_args
-
-          envgen_debug="true"
-          export envgen_debug
-
-          GIT_STRATEGY="none"
-          export GIT_STRATEGY
-
-          COMMIT_ENV="true"
-          export COMMIT_ENV
-
-          export SECRET_KEY
-          export GITHUB_ACTIONS
-          export GITHUB_REPOSITORY
-          export GITHUB_REF_NAME
-          export GITHUB_USER_EMAIL
-          export GITHUB_USER_NAME
-          export GITHUB_TOKEN
+          # Export all variables using the universal script
+          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
 
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
