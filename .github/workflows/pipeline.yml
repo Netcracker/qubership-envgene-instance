@@ -646,8 +646,57 @@ jobs:
 
       - name: Git Commit
         run: |
-          # Export all variables using the universal script
-          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          # Environment variables are already exported by composite action!
+          # Only export job-specific variables
+          
+          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+          export ENV_NAME_SHORT
+
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+
+          export CI_PROJECT_DIR
+
+          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
+          export INSTANCES_DIR
+
+          module_ansible_dir="/module/ansible"
+          export module_ansible_dir
+
+          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
+          export module_inventory
+
+          module_ansible_cfg="/module/ansible/ansible.cfg"
+          export module_ansible_cfg
+
+          module_config_default="/module/templates/defaults.yaml"
+          export module_config_default
+
+          envgen_args=" -vvv"
+          export envgen_args
+
+          envgen_debug="true"
+          export envgen_debug
+
+          GIT_STRATEGY="none"
+          export GIT_STRATEGY
+
+          COMMIT_ENV="true"
+          export COMMIT_ENV
+
+          export SECRET_KEY
+          export GITHUB_ACTIONS
+          export GITHUB_REPOSITORY
+          export GITHUB_REF_NAME
+          export GITHUB_USER_EMAIL
+          export GITHUB_USER_NAME
+          export GITHUB_TOKEN
 
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
