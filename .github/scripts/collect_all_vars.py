@@ -66,7 +66,11 @@ def is_pipeline_variable(key):
         'RUNNER_TEMP', 'RUNNER_WORKSPACE', 'RUNNER_PERFLOG', 'RUNNER_TRACKING_ID',
         'HOME', 'PATH', 'SHELL', 'USER', 'LANG', 'PWD', 'OLDPWD',
         'TERM', 'HOSTNAME', 'HOSTTYPE', 'MACHTYPE', 'OSTYPE',
-        'CI_COMMIT_REF_NAME', 'CI_PROJECT_DIR'
+        'CI_COMMIT_REF_NAME', 'CI_PROJECT_DIR',
+        # Python system variables
+        'PYTHONDONTWRITEBYTECODE', 'PYTHONUNBUFFERED', 'PYTHON_SHA256',
+        # GPG and other technical variables
+        'GPG_KEY', 'GITHUB_PIPELINE_API_INPUT'
     }
     
     if key in system_vars:
@@ -77,7 +81,7 @@ def is_pipeline_variable(key):
                       'AGENT_', 'ANDROID_', 'JAVA_HOME_', 'GOROOT_', 'HOMEBREW_', 'XDG_',
                       'DOTNET_', 'PIPX_', 'GHCUP_')):
         # Allow specific exceptions
-        pipeline_exceptions = {'GITHUB_PIPELINE_API_INPUT', 'GITHUB_TOKEN', 'GITHUB_USER_EMAIL', 'GITHUB_USER_NAME'}
+        pipeline_exceptions = {'GITHUB_TOKEN', 'GITHUB_USER_EMAIL', 'GITHUB_USER_NAME'}
         if key not in pipeline_exceptions:
             return False
     
