@@ -177,21 +177,7 @@ jobs:
 
       - name: Export Environment Variables
         run: |
-          echo "🔧 Exporting environment variables from JSON..."
-          
-          # Direct export from variables_json
-          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
-          
-          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
-            echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
-              if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
-                echo "Setting $key=$value"
-                echo "$key=$value" >> $GITHUB_ENV
-              fi
-            done
-          fi
-          
-          echo "✅ Environment variables exported"
+          python .github/scripts/export_env_from_json.py '${{ needs.show_environment_variables.outputs.variables_json }}'
 
       - name: Prepare variables to work with artifacts
         run: |
@@ -201,7 +187,7 @@ jobs:
       - name: Generate inventory
         run: |
           # Export all variables using the universal script
-          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
 
           python3 /build_env/scripts/build_env/env_inventory_generation.py
 
@@ -259,7 +245,7 @@ jobs:
       - name: Credential Rotation
         run: |
           # Export all variables using the universal script
-          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
           
           # Export credential-specific variables
           export ENVGENE_AGE_PRIVATE_KEY
@@ -333,11 +319,7 @@ jobs:
           
           if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
             echo "Loading variables from JSON..."
-            # Use eval to export variables directly
-            while IFS= read -r export_cmd; do
-              echo "Executing: $export_cmd"
-              eval "$export_cmd"
-            done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "export \(.key)=\"\(.value)\""')
+            python .github/scripts/export_env_from_json.py "$VARIABLES_JSON"
           fi
           
           # Export job-specific variables
@@ -393,8 +375,6 @@ jobs:
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
           
-          echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
-
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
           for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
@@ -447,21 +427,7 @@ jobs:
 
       - name: Export Environment Variables
         run: |
-          echo "🔧 Exporting environment variables from JSON..."
-          
-          # Direct export from variables_json
-          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
-          
-          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
-            echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
-              if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
-                echo "Setting $key=$value"
-                echo "$key=$value" >> $GITHUB_ENV
-              fi
-            done
-          fi
-          
-          echo "✅ Environment variables exported"
+          python .github/scripts/export_env_from_json.py '${{ needs.show_environment_variables.outputs.variables_json }}'
 
       - name: Prepare variables to work with artifacts
         run: |
@@ -497,7 +463,7 @@ jobs:
       - name: Generate Effective Set
         run: |
           # Export all variables using the universal script
-          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
 
           /module/scripts/prepare.sh "generate_effective_set.yaml"
 
@@ -534,21 +500,7 @@ jobs:
 
       - name: Export Environment Variables
         run: |
-          echo "🔧 Exporting environment variables from JSON..."
-          
-          # Direct export from variables_json
-          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
-          
-          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
-            echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
-              if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
-                echo "Setting $key=$value"
-                echo "$key=$value" >> $GITHUB_ENV
-              fi
-            done
-          fi
-          
-          echo "✅ Environment variables exported"
+          python .github/scripts/export_env_from_json.py '${{ needs.show_environment_variables.outputs.variables_json }}'
 
       - name: Prepare variables to work with artifacts
         run: |
@@ -587,7 +539,7 @@ jobs:
       - name: Git Commit
         run: |
           # Export all variables using the universal script
-          source .github/scripts/export_variables.sh '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
 
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
