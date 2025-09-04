@@ -41,7 +41,7 @@ on:
       GITHUB_PIPELINE_API_INPUT:
         required: false
         type: string
-        description: "Inputfor API mode"
+        description: "Input for API mode"
         default: ""
 
 env:
