@@ -76,21 +76,21 @@ export_pipeline_variables() {
         return 1
     fi
     
-    exported_count=0
-    
-    # Export variables using eval in a more portable way
+    # Export variables using eval in the current shell context
     export_commands=$(echo "$variables_json" | jq -r 'to_entries[] | select(.value != null and .value != "") | "export \(.key)=\"\(.value)\""')
     
-    # Process each export command
-    echo "$export_commands" | while IFS= read -r export_cmd; do
+    # Use a here-document to avoid subshell issues
+    exported_count=0
+    while IFS= read -r export_cmd; do
         if [ -n "$export_cmd" ]; then
             echo "  $export_cmd"
             eval "$export_cmd"
+            exported_count=$((exported_count + 1))
         fi
-    done
+    done << EOF
+$export_commands
+EOF
     
-    # Count exported variables for logging
-    exported_count=$(echo "$export_commands" | grep -c "^export" || echo "0")
     log "✅ Successfully exported $exported_count pipeline variables"
     return 0
 }
