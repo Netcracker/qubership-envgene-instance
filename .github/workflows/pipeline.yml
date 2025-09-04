@@ -148,19 +148,6 @@ jobs:
           fi
           echo ""
           
-          # Debug: Check GITHUB_ENV file
-          echo "🔍 Debug: GITHUB_ENV file info:"
-          echo "GITHUB_ENV path: $GITHUB_ENV"
-          if [ -f "$GITHUB_ENV" ]; then
-            echo "File exists, size: $(wc -c < "$GITHUB_ENV") bytes"
-            echo "Line count: $(wc -l < "$GITHUB_ENV")"
-            echo "Last 5 lines:"
-            tail -5 "$GITHUB_ENV"
-          else
-            echo "❌ GITHUB_ENV file does not exist!"
-          fi
-          echo ""
-          
           # Use dynamic variable display script
           python .github/scripts/display_pipeline_vars.py
 

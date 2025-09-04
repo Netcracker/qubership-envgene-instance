@@ -40,8 +40,6 @@ def get_pipeline_variables():
     
     # If no variables from file, fall back to environment variables
     if not variables:
-        print("📝 Reading from environment variables (GITHUB_ENV file not available)")
-        
         # Get all environment variables
         for key, value in os.environ.items():
             if value and is_pipeline_variable(key):
@@ -196,15 +194,7 @@ def display_variables(show_docker=True, show_pipeline=True):
         print("   - Variables are not set yet")
         print("   - GITHUB_ENV file is empty or doesn't exist")
         print("   - All variables have empty values")
-    else:
-        print(f"📊 Total variables displayed: {total_count}")
-        
-        # Show source information
-        github_env_file = os.getenv("GITHUB_ENV")
-        if github_env_file and os.path.exists(github_env_file):
-            print(f"📁 Source: GITHUB_ENV file ({github_env_file})")
-        else:
-            print("📁 Source: Environment variables")
+    # No additional statistics or source information displayed
 
 
 def main():
