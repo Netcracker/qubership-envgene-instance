@@ -51,6 +51,9 @@ def main():
         return
 
     print(f"✅ Processing GITHUB_PIPELINE_API_INPUT ({len(api_input)} chars)")
+    print(f"📝 Full GITHUB_PIPELINE_API_INPUT content:")
+    print(f"'{api_input}'")
+    print("--- End of content ---")
 
     # Parse the API input string
     variables = parse_api_input(api_input)
@@ -66,12 +69,20 @@ def main():
         print("Error: GITHUB_ENV variable is not set!")
         sys.exit(1)
 
+    print(f"📋 Parsed variables from API input:")
+    for key, value in variables.items():
+        print(f"  {key} = {value}")
+
     with open(github_env_file, "a", encoding="utf-8") as env_file:
+        # First, preserve the original GITHUB_PIPELINE_API_INPUT
+        env_file.write(f"GITHUB_PIPELINE_API_INPUT={api_input}\n")
+        
+        # Then write parsed variables
         for key, value in variables.items():
             validated_value = validate_variable(key, value)
             env_file.write(f"{key}={validated_value}\n")
 
-    print(f"✅ Processed {len(variables)} variables from API input")
+    print(f"✅ Processed {len(variables)} variables from API input and preserved original GITHUB_PIPELINE_API_INPUT")
 
 
 if __name__ == "__main__":
