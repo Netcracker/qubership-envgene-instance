@@ -26,11 +26,16 @@ runs:
         echo "$VARIABLES_JSON" | jq . || echo "Raw JSON: $VARIABLES_JSON"
         
         # Parse JSON and export each variable
-        echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
+        # Avoid subshell issue with while loop by using a different approach
+        vars_output=$(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
+        
+        while IFS='=' read -r key value; do
           if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
             echo "Exporting $key=$value"
             echo "$key=$value" >> $GITHUB_ENV
+            # Also export to current session
+            export "$key=$value"
           fi
-        done
+        done <<< "$vars_output"
         
         echo "✅ Environment variables exported successfully"

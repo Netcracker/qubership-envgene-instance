@@ -234,9 +234,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Export Environment Variables
-        uses: ./.github/actions/export-env-vars
-        with:
-          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
+        run: |
+          echo "🔧 Exporting environment variables from JSON..."
+          
+          # Direct export from variables_json
+          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
+          
+          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
+            echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
+              if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
+                echo "Setting $key=$value"
+                echo "$key=$value" >> $GITHUB_ENV
+              fi
+            done
+          fi
+          
+          echo "✅ Environment variables exported"
 
       - name: Prepare variables to work with artifacts
         run: |
@@ -284,11 +297,6 @@ jobs:
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
-
-      - name: Export Environment Variables
-        uses: ./.github/actions/export-env-vars
-        with:
-          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
 
       - name: Prepare variables to download the artifacts
         run: |
@@ -358,11 +366,6 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
-      - name: Export Environment Variables
-        uses: ./.github/actions/export-env-vars
-        with:
-          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
-
       - name: Prepare variables to download the artifacts
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
@@ -393,9 +396,21 @@ jobs:
 
       - name: Build Env
         run: |
-          # Environment variables are already exported by composite action!
-          # Only export job-specific variables
+          echo "🔧 Exporting all environment variables for build process..."
           
+          # Export variables from JSON (directly in this step for immediate availability)
+          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
+          
+          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
+            echo "Loading variables from JSON..."
+            # Use eval to export variables directly
+            while IFS= read -r export_cmd; do
+              echo "Executing: $export_cmd"
+              eval "$export_cmd"
+            done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "export \(.key)=\"\(.value)\""')
+          fi
+          
+          # Export job-specific variables
           ENV_NAMES="${{ matrix.environment }}"
           export ENV_NAMES
 
@@ -447,6 +462,8 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
+          
+          echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
 
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
@@ -500,9 +517,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Export Environment Variables
-        uses: ./.github/actions/export-env-vars
-        with:
-          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
+        run: |
+          echo "🔧 Exporting environment variables from JSON..."
+          
+          # Direct export from variables_json
+          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
+          
+          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
+            echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
+              if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
+                echo "Setting $key=$value"
+                echo "$key=$value" >> $GITHUB_ENV
+              fi
+            done
+          fi
+          
+          echo "✅ Environment variables exported"
 
       - name: Prepare variables to work with artifacts
         run: |
@@ -537,8 +567,18 @@ jobs:
 
       - name: Generate Effective Set
         run: |
-          # Environment variables are already exported by composite action!
-          # Only export job-specific variables
+          echo "🔧 Exporting all environment variables for effective set generation..."
+          
+          # Export variables from JSON (directly in this step for immediate availability)
+          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
+          
+          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
+            echo "Loading variables from JSON..."
+            # Use eval to export variables directly
+            while IFS= read -r export_cmd; do
+              eval "$export_cmd"
+            done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "export \(.key)=\"\(.value)\""')
+          fi
 
           ENV_NAMES="${{ matrix.environment }}"
           export ENV_NAMES
@@ -591,6 +631,8 @@ jobs:
           export GITHUB_USER_EMAIL
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
+          
+          echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
 
           /module/scripts/prepare.sh "generate_effective_set.yaml"
 
@@ -626,9 +668,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Export Environment Variables
-        uses: ./.github/actions/export-env-vars
-        with:
-          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
+        run: |
+          echo "🔧 Exporting environment variables from JSON..."
+          
+          # Direct export from variables_json
+          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
+          
+          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
+            echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
+              if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
+                echo "Setting $key=$value"
+                echo "$key=$value" >> $GITHUB_ENV
+              fi
+            done
+          fi
+          
+          echo "✅ Environment variables exported"
 
       - name: Prepare variables to work with artifacts
         run: |
