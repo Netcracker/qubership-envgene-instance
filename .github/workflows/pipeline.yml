@@ -64,10 +64,12 @@ jobs:
     name: "Input Parameters Processing"
     runs-on: ubuntu-22.04
     container:
-      image: ${{ vars.DOCKER_IMAGE_PIPEGENE }}
+      image: ${{ vars.DOCKER_IMAGE_PIPEGENE || 'ghcr.io/netcracker/qubership-pipegene:feature_enchance_creds_ansible_20250902-132735' }}
       options: --user root
     outputs:
       env_matrix: ${{ steps.matrix-generator.outputs.env_matrix }}
+      variables_json: ${{ steps.collect-vars.outputs.variables_json }}
+      # Legacy outputs for backward compatibility
       ENV_TEMPLATE_TEST: ${{ env.ENV_TEMPLATE_TEST }}
       ENV_SPECIFIC_PARAMETERS: ${{ env.ENV_SPECIFIC_PARAMETERS }}
       ENV_TEMPLATE_NAME: ${{ env.ENV_TEMPLATE_NAME }}
@@ -118,6 +120,11 @@ jobs:
       - name: Create ENV_GENERATION_PARAMS
         run: |
           python .github/scripts/create_env_generation_params.py
+
+      - name: Collect All Variables
+        id: collect-vars
+        run: |
+          python .github/scripts/collect_all_vars.py
 
       - name: Input Parameters
         run: |
@@ -226,6 +233,11 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
+      - name: Export Environment Variables
+        uses: ./.github/actions/export-env-vars
+        with:
+          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
+
       - name: Prepare variables to work with artifacts
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
@@ -272,6 +284,11 @@ jobs:
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
+
+      - name: Export Environment Variables
+        uses: ./.github/actions/export-env-vars
+        with:
+          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
 
       - name: Prepare variables to download the artifacts
         run: |
@@ -341,6 +358,11 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
+      - name: Export Environment Variables
+        uses: ./.github/actions/export-env-vars
+        with:
+          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
+
       - name: Prepare variables to download the artifacts
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
@@ -371,14 +393,14 @@ jobs:
 
       - name: Build Env
         run: |
+          # Environment variables are already exported by composite action!
+          # Only export job-specific variables
+          
           ENV_NAMES="${{ matrix.environment }}"
           export ENV_NAMES
 
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
-
-          ENV_TEMPLATE_TEST="$ENV_TEMPLATE_TEST"
-          export ENV_TEMPLATE_TEST
 
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
@@ -390,9 +412,6 @@ jobs:
           export ENV_NAME
 
           export CI_PROJECT_DIR
-
-          ENV_TEMPLATE_VERSION="${{ env.ENV_TEMPLATE_VERSION }}"
-          export ENV_TEMPLATE_VERSION
 
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
@@ -480,6 +499,11 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
+      - name: Export Environment Variables
+        uses: ./.github/actions/export-env-vars
+        with:
+          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
+
       - name: Prepare variables to work with artifacts
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
@@ -513,14 +537,14 @@ jobs:
 
       - name: Generate Effective Set
         run: |
+          # Environment variables are already exported by composite action!
+          # Only export job-specific variables
 
           ENV_NAMES="${{ matrix.environment }}"
           export ENV_NAMES
 
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
-
-          export ENV_TEMPLATE_TEST
 
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
@@ -532,8 +556,6 @@ jobs:
           export ENV_NAME
 
           export CI_PROJECT_DIR
-
-          export ENV_TEMPLATE_VERSION
 
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR
@@ -603,6 +625,11 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
+      - name: Export Environment Variables
+        uses: ./.github/actions/export-env-vars
+        with:
+          variables_json: ${{ needs.show_environment_variables.outputs.variables_json }}
+
       - name: Prepare variables to work with artifacts
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
@@ -639,10 +666,11 @@ jobs:
 
       - name: Git Commit
         run: |
+          # Environment variables are already exported by composite action!
+          # Only export job-specific variables
+          
           ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
           export ENV_NAME_SHORT
-
-          export ENV_TEMPLATE_TEST
 
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
           export CLUSTER_NAME
@@ -654,8 +682,6 @@ jobs:
           export ENV_NAME
 
           export CI_PROJECT_DIR
-
-          export ENV_TEMPLATE_VERSION
 
           INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
           export INSTANCES_DIR

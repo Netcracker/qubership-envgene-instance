@@ -1,0 +1,36 @@
+name: 'Export Environment Variables'
+description: 'Exports all pipeline variables from previous job outputs to current job environment'
+
+inputs:
+  variables_json:
+    description: 'JSON string containing all variables to export'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Export Environment Variables
+      shell: bash
+      run: |
+        echo "🔧 Exporting environment variables from JSON input..."
+        
+        # Get JSON input
+        VARIABLES_JSON='${{ inputs.variables_json }}'
+        
+        if [ -z "$VARIABLES_JSON" ] || [ "$VARIABLES_JSON" = "{}" ]; then
+          echo "⚠️ No variables to export (empty or null JSON)"
+          exit 0
+        fi
+        
+        echo "📝 Processing variables JSON:"
+        echo "$VARIABLES_JSON" | jq . || echo "Raw JSON: $VARIABLES_JSON"
+        
+        # Parse JSON and export each variable
+        echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
+          if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
+            echo "Exporting $key=$value"
+            echo "$key=$value" >> $GITHUB_ENV
+          fi
+        done
+        
+        echo "✅ Environment variables exported successfully"
