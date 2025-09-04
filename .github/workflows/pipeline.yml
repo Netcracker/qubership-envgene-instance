@@ -153,9 +153,8 @@ jobs:
 
       - name: Prepare parameters
         id: matrix-generator
-        shell: bash
         run: |
-          .github/scripts/generate_env_matrix.sh
+          python .github/scripts/generate_env_matrix.py
 
   generate_inventory:
     name: "${{ matrix.environment }} - Generate Inventory"
