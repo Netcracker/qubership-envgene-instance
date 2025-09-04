@@ -177,7 +177,21 @@ jobs:
 
       - name: Export Environment Variables
         run: |
-          python .github/scripts/export_env_from_json.py '${{ needs.show_environment_variables.outputs.variables_json }}'
+          echo "🔧 Exporting environment variables from JSON..."
+          
+          # Direct export from variables_json
+          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
+          
+          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
+            echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
+              if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
+                echo "Setting $key=$value"
+                echo "$key=$value" >> $GITHUB_ENV
+              fi
+            done
+          fi
+          
+          echo "✅ Environment variables exported"
 
       - name: Prepare variables to work with artifacts
         run: |
@@ -186,8 +200,17 @@ jobs:
 
       - name: Generate inventory
         run: |
-          # Export all variables using the universal script
-          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+
+          # ENV_GENERATION_PARAMS is already available from inherited environment
+          export ENV_GENERATION_PARAMS
 
           python3 /build_env/scripts/build_env/env_inventory_generation.py
 
@@ -244,10 +267,13 @@ jobs:
 
       - name: Credential Rotation
         run: |
-          # Export all variables using the universal script
-          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
-          
-          # Export credential-specific variables
+          export CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export ENV_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+
+          # Variables are already available from inherited environment
+          export CRED_ROTATION_FORCE
+          export CRED_ROTATION_PAYLOAD
+
           export ENVGENE_AGE_PRIVATE_KEY
           export ENVGENE_AGE_PUBLIC_KEY
           export PUBLIC_AGE_KEYS
@@ -312,14 +338,18 @@ jobs:
 
       - name: Build Env
         run: |
-          echo "🔧 Exporting all environment variables for build process..."
+          echo "Exporting all environment variables for build process..."
           
           # Export variables from JSON (directly in this step for immediate availability)
           VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
           
           if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
             echo "Loading variables from JSON..."
-            python .github/scripts/export_env_from_json.py "$VARIABLES_JSON"
+            # Use eval to export variables directly
+            while IFS= read -r export_cmd; do
+              echo "Executing: $export_cmd"
+              eval "$export_cmd"
+            done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "export \(.key)=\"\(.value)\""')
           fi
           
           # Export job-specific variables
@@ -375,6 +405,8 @@ jobs:
           export GITHUB_USER_NAME
           export GITHUB_TOKEN
           
+          echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
+
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
           env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
           for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
@@ -425,10 +457,6 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
-      - name: Export Environment Variables
-        run: |
-          python .github/scripts/export_env_from_json.py '${{ needs.show_environment_variables.outputs.variables_json }}'
-
       - name: Prepare variables to work with artifacts
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
@@ -462,8 +490,72 @@ jobs:
 
       - name: Generate Effective Set
         run: |
-          # Export all variables using the universal script
-          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          echo "🔧 Exporting all environment variables for effective set generation..."
+          
+          # Export variables from JSON (directly in this step for immediate availability)
+          VARIABLES_JSON='${{ needs.show_environment_variables.outputs.variables_json }}'
+          
+          if [ -n "$VARIABLES_JSON" ] && [ "$VARIABLES_JSON" != "{}" ]; then
+            echo "Loading variables from JSON..."
+            # Use eval to export variables directly
+            while IFS= read -r export_cmd; do
+              eval "$export_cmd"
+            done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "export \(.key)=\"\(.value)\""')
+          fi
+
+          ENV_NAMES="${{ matrix.environment }}"
+          export ENV_NAMES
+
+          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+          export ENV_NAME_SHORT
+
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+
+          export CI_PROJECT_DIR
+
+          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
+          export INSTANCES_DIR
+
+          module_ansible_dir="/module/ansible"
+          export module_ansible_dir
+
+          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
+          export module_inventory
+
+          module_ansible_cfg="/module/ansible/ansible.cfg"
+          export module_ansible_cfg
+
+          module_config_default="/module/templates/defaults.yaml"
+          export module_config_default
+
+          envgen_args=" -vvv"
+          export envgen_args
+
+          envgen_debug="true"
+          export envgen_debug
+
+          GIT_STRATEGY="none"
+          export GIT_STRATEGY
+
+          COMMIT_ENV="true"
+          export COMMIT_ENV
+
+          export SECRET_KEY
+          export GITHUB_ACTIONS
+          export GITHUB_REPOSITORY
+          export GITHUB_REF_NAME
+          export GITHUB_USER_EMAIL
+          export GITHUB_USER_NAME
+          export GITHUB_TOKEN
+          
+          echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
 
           /module/scripts/prepare.sh "generate_effective_set.yaml"
 
@@ -497,10 +589,6 @@ jobs:
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
-
-      - name: Export Environment Variables
-        run: |
-          python .github/scripts/export_env_from_json.py '${{ needs.show_environment_variables.outputs.variables_json }}'
 
       - name: Prepare variables to work with artifacts
         run: |
@@ -538,8 +626,57 @@ jobs:
 
       - name: Git Commit
         run: |
-          # Export all variables using the universal script
-          python .github/scripts/export_variables.py '${{ needs.show_environment_variables.outputs.variables_json }}' '${{ matrix.environment }}'
+          # Environment variables are already exported by composite action!
+          # Only export job-specific variables
+          
+          ENV_NAME_SHORT=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+          export ENV_NAME_SHORT
+
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f1)
+          export CLUSTER_NAME
+
+          ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xargs)
+          export ENVIRONMENT_NAME
+
+          ENV_NAME="$ENVIRONMENT_NAME"
+          export ENV_NAME
+
+          export CI_PROJECT_DIR
+
+          INSTANCES_DIR="${CI_PROJECT_DIR}/environments"
+          export INSTANCES_DIR
+
+          module_ansible_dir="/module/ansible"
+          export module_ansible_dir
+
+          module_inventory="${CI_PROJECT_DIR}/configuration/inventory.yaml"
+          export module_inventory
+
+          module_ansible_cfg="/module/ansible/ansible.cfg"
+          export module_ansible_cfg
+
+          module_config_default="/module/templates/defaults.yaml"
+          export module_config_default
+
+          envgen_args=" -vvv"
+          export envgen_args
+
+          envgen_debug="true"
+          export envgen_debug
+
+          GIT_STRATEGY="none"
+          export GIT_STRATEGY
+
+          COMMIT_ENV="true"
+          export COMMIT_ENV
+
+          export SECRET_KEY
+          export GITHUB_ACTIONS
+          export GITHUB_REPOSITORY
+          export GITHUB_REF_NAME
+          export GITHUB_USER_EMAIL
+          export GITHUB_USER_NAME
+          export GITHUB_TOKEN
 
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
