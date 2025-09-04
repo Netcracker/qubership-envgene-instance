@@ -41,7 +41,7 @@ export_common_config() {
 
 # Function to export job-specific variables
 export_job_variables() {
-    local matrix_environment="${1:-}"
+    matrix_environment="${1:-}"
     
     if [ -n "$matrix_environment" ]; then
         log "Exporting job-specific variables for environment: $matrix_environment"
@@ -61,7 +61,7 @@ export_job_variables() {
 
 # Function to export variables from JSON
 export_pipeline_variables() {
-    local variables_json="${1:-}"
+    variables_json="${1:-}"
     
     if [ -z "$variables_json" ] || [ "$variables_json" = "{}" ] || [ "$variables_json" = "null" ]; then
         log "⚠️ No pipeline variables to export (empty or null JSON)"
@@ -76,25 +76,29 @@ export_pipeline_variables() {
         return 1
     fi
     
-    local exported_count=0
+    exported_count=0
     
-    # Export variables using process substitution to avoid subshell issues
-    while IFS= read -r export_cmd; do
+    # Export variables using eval in a more portable way
+    export_commands=$(echo "$variables_json" | jq -r 'to_entries[] | select(.value != null and .value != "") | "export \(.key)=\"\(.value)\""')
+    
+    # Process each export command
+    echo "$export_commands" | while IFS= read -r export_cmd; do
         if [ -n "$export_cmd" ]; then
             echo "  $export_cmd"
             eval "$export_cmd"
-            ((exported_count++))
         fi
-    done < <(echo "$variables_json" | jq -r 'to_entries[] | select(.value != null and .value != "") | "export \(.key)=\"\(.value)\""')
+    done
     
+    # Count exported variables for logging
+    exported_count=$(echo "$export_commands" | grep -c "^export" || echo "0")
     log "✅ Successfully exported $exported_count pipeline variables"
     return 0
 }
 
 # Main function
 main() {
-    local variables_json="${1:-}"
-    local matrix_environment="${2:-}"
+    variables_json="${1:-}"
+    matrix_environment="${2:-}"
     
     log "🚀 Starting variable export process..."
     
