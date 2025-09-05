@@ -1,7 +1,9 @@
-# Important!
-# Please use your own runner and docker-images
+# Example Pipeline Integration with Unified Variable Exporter
+# ===========================================================
+# This file shows how to integrate the unified variable exporter
+# into the existing pipeline steps.
 
-name: "EnvGene Execution"
+name: "EnvGene Execution with Unified Exporter"
 
 run-name: "EnvGene Execution - ${{ github.event.inputs.ENV_NAMES }}"
 
@@ -11,7 +13,6 @@ permissions:
   pull-requests: write
 
 on:
-  # Manual trigger only
   workflow_dispatch:
     inputs:
       ENV_NAMES:
@@ -107,11 +108,8 @@ jobs:
            # Check if API input is provided
            if [ -n "${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" ]; then
              echo "API Mode: Processing GITHUB_PIPELINE_API_INPUT"
-
              export GITHUB_PIPELINE_API_INPUT="${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}"
              echo "GITHUB_PIPELINE_API_INPUT=${{ github.event.inputs.GITHUB_PIPELINE_API_INPUT }}" >> $GITHUB_ENV
-
-             # Process API input variables
              python .github/scripts/process_api_input.py
            else
              echo "UI Mode: Processing manual inputs"
@@ -175,17 +173,14 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
+      # UNIFIED VARIABLE EXPORT - Replace all individual exports with this single step
       - name: Export All Variables
         run: |
           python .github/scripts/unified_variable_exporter.py \
             --step generate_inventory \
             --matrix-env ${{ matrix.environment }} \
-            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
-
-      - name: Prepare variables to work with artifacts
-        run: |
-          echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
-          echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
+            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}' \
+            --list-vars
 
       - name: Generate inventory
         run: |
@@ -243,12 +238,14 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
+      # UNIFIED VARIABLE EXPORT - Replace all individual exports with this single step
       - name: Export All Variables
         run: |
           python .github/scripts/unified_variable_exporter.py \
             --step credential_rotation \
             --matrix-env ${{ matrix.environment }} \
-            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}' \
+            --list-vars
 
       - name: Credential Rotation
         run: |
@@ -311,16 +308,20 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
+      # UNIFIED VARIABLE EXPORT - Replace all individual exports with this single step
       - name: Export All Variables
         run: |
           python .github/scripts/unified_variable_exporter.py \
             --step env_build \
             --matrix-env ${{ matrix.environment }} \
-            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}' \
+            --list-vars
 
       - name: Build Env
         run: |
           # All variables are now available from the unified exporter
+          # No need for individual exports anymore!
+          
           echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
 
           if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
@@ -404,18 +405,19 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
+      # UNIFIED VARIABLE EXPORT - Replace all individual exports with this single step
       - name: Export All Variables
         run: |
           python .github/scripts/unified_variable_exporter.py \
             --step generate_effective_set \
             --matrix-env ${{ matrix.environment }} \
-            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}' \
+            --list-vars
 
       - name: Generate Effective Set
         run: |
           # All variables are now available from the unified exporter
           echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
-
           /module/scripts/prepare.sh "generate_effective_set.yaml"
 
           env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
@@ -483,12 +485,14 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
+      # UNIFIED VARIABLE EXPORT - Replace all individual exports with this single step
       - name: Export All Variables
         run: |
           python .github/scripts/unified_variable_exporter.py \
             --step git_commit \
             --matrix-env ${{ matrix.environment }} \
-            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}' \
+            --list-vars
 
       - name: Git Commit
         run: |

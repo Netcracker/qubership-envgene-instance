@@ -1,1 +1,2 @@
-ENV_TEMPLATE_TEST: "false"
+TEST_VAR_1: test_value_1
+TEST_VAR_2: test_value_2
