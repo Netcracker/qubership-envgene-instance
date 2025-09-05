@@ -54,18 +54,18 @@ export_pipeline_vars_from_yaml() {
     
     while IFS= read -r line; do
         # Skip empty lines and comments
-        if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
+        if [ -z "$line" ] || echo "$line" | grep -q "^[[:space:]]*#"; then
             continue
         fi
         
         # Check if it's a variable assignment
-        if [[ "$line" =~ ^[^:]+: ]]; then
+        if echo "$line" | grep -q "^[^:]*:"; then
             local key=$(echo "$line" | cut -d':' -f1 | xargs)
             local value=$(echo "$line" | cut -d':' -f2- | xargs)
             
             # Remove quotes if present
-            if [[ "$value" =~ ^\".*\"$ ]] || [[ "$value" =~ ^\'.*\'$ ]]; then
-                value="${value:1:-1}"
+            if echo "$value" | grep -q '^".*"$' || echo "$value" | grep -q "^'.*'$"; then
+                value=$(echo "$value" | sed 's/^.\(.*\).$/\1/')
             fi
             
             if [ -n "$key" ] && [ -n "$value" ]; then
@@ -119,7 +119,7 @@ export_api_input_variables() {
     # Try to parse as JSON first
     if command -v jq >/dev/null 2>&1 && echo "$api_input" | jq . >/dev/null 2>&1; then
         log "Parsed API input as JSON"
-        while IFS= read -r line; do
+        echo "$api_input" | jq -r 'to_entries[] | "\(.key): \(.value)"' | while IFS= read -r line; do
             local key=$(echo "$line" | cut -d':' -f1 | xargs)
             local value=$(echo "$line" | cut -d':' -f2- | xargs)
             
@@ -128,12 +128,12 @@ export_api_input_variables() {
                 log "  API: $key = $value"
                 exported_count=$((exported_count + 1))
             fi
-        done < <(echo "$api_input" | jq -r 'to_entries[] | "\(.key): \(.value)"')
+        done
     else
         # Fall back to key=value format
         log "Parsing API input as key=value pairs"
-        while IFS= read -r line; do
-            if [[ "$line" =~ ^[^=]+= ]]; then
+        echo "$api_input" | while IFS= read -r line; do
+            if echo "$line" | grep -q "^[^=]*="; then
                 local key=$(echo "$line" | cut -d'=' -f1 | xargs)
                 local value=$(echo "$line" | cut -d'=' -f2- | xargs)
                 
@@ -143,7 +143,7 @@ export_api_input_variables() {
                     exported_count=$((exported_count + 1))
                 fi
             fi
-        done <<< "$api_input"
+        done
     fi
     
     log "✅ Exported $exported_count variables from API input"
@@ -162,7 +162,7 @@ export_variables_from_json() {
     local exported_count=0
     
     if command -v jq >/dev/null 2>&1 && echo "$VARIABLES_JSON" | jq . >/dev/null 2>&1; then
-        while IFS= read -r line; do
+        echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key): \(.value)"' | while IFS= read -r line; do
             local key=$(echo "$line" | cut -d':' -f1 | xargs)
             local value=$(echo "$line" | cut -d':' -f2- | xargs)
             
@@ -171,7 +171,7 @@ export_variables_from_json() {
                 log "  JSON: $key = $value"
                 exported_count=$((exported_count + 1))
             fi
-        done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key): \(.value)"')
+        done
     else
         log "❌ Invalid JSON format or jq not available" "ERROR"
         return 0
