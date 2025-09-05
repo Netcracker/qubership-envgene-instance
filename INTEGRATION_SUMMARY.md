@@ -32,13 +32,21 @@ export ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xar
 # ... много других экспортов в каждом шаге
 ```
 
-### Стало (единый скрипт):
-```bash
-python .github/scripts/unified_variable_exporter.py \
-  --step generate_inventory \
-  --matrix-env ${{ matrix.environment }} \
-  --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+### Стало (единый скрипт в том же шаге):
+```yaml
+- name: Generate inventory
+  run: |
+    # Export all variables using unified exporter
+    python .github/scripts/unified_variable_exporter.py \
+      --step generate_inventory \
+      --matrix-env ${{ matrix.environment }} \
+      --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+    
+    # All variables are now available from the unified exporter
+    python3 /build_env/scripts/build_env/env_inventory_generation.py
 ```
+
+**ВАЖНО**: Переменные экспортируются в том же шаге, где используются!
 
 ## 📊 Результаты
 

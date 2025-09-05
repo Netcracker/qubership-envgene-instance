@@ -39,15 +39,31 @@ python .github/scripts/unified_variable_exporter.py --step credential_rotation -
 
 ### Интеграция в pipeline
 
+**ВАЖНО**: Переменные должны экспортироваться в том же шаге, где они используются!
+
 Замените существующие блоки экспорта в шагах pipeline на:
 
 ```yaml
-- name: Export Environment Variables
+- name: Generate inventory
   run: |
+    # Export all variables using unified exporter
     python .github/scripts/unified_variable_exporter.py \
       --step generate_inventory \
       --matrix-env ${{ matrix.environment }} \
       --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+    
+    # All variables are now available from the unified exporter
+    python3 /build_env/scripts/build_env/env_inventory_generation.py
+```
+
+**НЕ ДЕЛАЙТЕ ТАК** (переменные не передаются между шагами):
+```yaml
+- name: Export Environment Variables
+  run: |
+    python .github/scripts/unified_variable_exporter.py ...
+- name: Generate inventory
+  run: |
+    # Переменные здесь НЕ БУДУТ доступны!
 ```
 
 ## Конфигурация переменных

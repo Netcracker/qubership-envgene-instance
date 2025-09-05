@@ -173,17 +173,14 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
-      # UNIFIED VARIABLE EXPORT - Replace all individual exports with this single step
-      - name: Export All Variables
+      - name: Generate inventory
         run: |
+          # Export all variables using unified exporter
           python .github/scripts/unified_variable_exporter.py \
             --step generate_inventory \
             --matrix-env ${{ matrix.environment }} \
-            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}' \
-            --list-vars
-
-      - name: Generate inventory
-        run: |
+            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+          
           # All variables are now available from the unified exporter
           python3 /build_env/scripts/build_env/env_inventory_generation.py
 

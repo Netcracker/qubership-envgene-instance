@@ -175,13 +175,6 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
-      - name: Export All Variables
-        run: |
-          python .github/scripts/unified_variable_exporter.py \
-            --step generate_inventory \
-            --matrix-env ${{ matrix.environment }} \
-            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
-
       - name: Prepare variables to work with artifacts
         run: |
           echo "SANITIZED_NAME=$(echo "${{ matrix.environment }}" | sed 's|/|_|g')" >> $GITHUB_ENV
@@ -189,6 +182,12 @@ jobs:
 
       - name: Generate inventory
         run: |
+          # Export all variables using unified exporter
+          python .github/scripts/unified_variable_exporter.py \
+            --step generate_inventory \
+            --matrix-env ${{ matrix.environment }} \
+            --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
+          
           # All variables are now available from the unified exporter
           python3 /build_env/scripts/build_env/env_inventory_generation.py
 
@@ -243,15 +242,14 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
-      - name: Export All Variables
+      - name: Credential Rotation
         run: |
+          # Export all variables using unified exporter
           python .github/scripts/unified_variable_exporter.py \
             --step credential_rotation \
             --matrix-env ${{ matrix.environment }} \
             --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
-
-      - name: Credential Rotation
-        run: |
+          
           # All variables are now available from the unified exporter
           python3 /module/creds_rotation_scripts/creds_rotation_handler.py
 
@@ -311,15 +309,14 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
-      - name: Export All Variables
+      - name: Build Env
         run: |
+          # Export all variables using unified exporter
           python .github/scripts/unified_variable_exporter.py \
             --step env_build \
             --matrix-env ${{ matrix.environment }} \
             --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
-
-      - name: Build Env
-        run: |
+          
           # All variables are now available from the unified exporter
           echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
 
@@ -404,15 +401,14 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
-      - name: Export All Variables
+      - name: Generate Effective Set
         run: |
+          # Export all variables using unified exporter
           python .github/scripts/unified_variable_exporter.py \
             --step generate_effective_set \
             --matrix-env ${{ matrix.environment }} \
             --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
-
-      - name: Generate Effective Set
-        run: |
+          
           # All variables are now available from the unified exporter
           echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
 
@@ -483,15 +479,14 @@ jobs:
           cp -rf ./downloaded_artifact/* "${{ env.PROJECT_DIR }}/environments/${{ env.FULL_ENV }}/"
           rm -rf ./downloaded_artifact
 
-      - name: Export All Variables
+      - name: Git Commit
         run: |
+          # Export all variables using unified exporter
           python .github/scripts/unified_variable_exporter.py \
             --step git_commit \
             --matrix-env ${{ matrix.environment }} \
             --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
-
-      - name: Git Commit
-        run: |
+          
           # All variables are now available from the unified exporter
           echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
