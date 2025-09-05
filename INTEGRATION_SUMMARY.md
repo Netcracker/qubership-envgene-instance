@@ -42,11 +42,18 @@ export ENVIRONMENT_NAME=$(echo "${{ matrix.environment }}" | cut -d'/' -f2 | xar
       --matrix-env ${{ matrix.environment }} \
       --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
     
+    # Load variables from GITHUB_ENV
+    if [ -f "$GITHUB_ENV" ]; then
+      set -a
+      source "$GITHUB_ENV"
+      set +a
+    fi
+    
     # All variables are now available from the unified exporter
     python3 /build_env/scripts/build_env/env_inventory_generation.py
 ```
 
-**ВАЖНО**: Переменные экспортируются в том же шаге, где используются!
+**ВАЖНО**: Переменные экспортируются в том же шаге, где используются, и загружаются через GITHUB_ENV!
 
 ## 📊 Результаты
 

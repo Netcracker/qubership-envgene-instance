@@ -52,6 +52,13 @@ python .github/scripts/unified_variable_exporter.py --step credential_rotation -
       --matrix-env ${{ matrix.environment }} \
       --variables-json '${{ needs.show_environment_variables.outputs.variables_json }}'
     
+    # Load variables from GITHUB_ENV
+    if [ -f "$GITHUB_ENV" ]; then
+      set -a
+      source "$GITHUB_ENV"
+      set +a
+    fi
+    
     # All variables are now available from the unified exporter
     python3 /build_env/scripts/build_env/env_inventory_generation.py
 ```

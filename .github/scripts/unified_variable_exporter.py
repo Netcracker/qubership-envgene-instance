@@ -314,6 +314,9 @@ class UnifiedVariableExporter:
         # 6. Export job-specific variables
         total_exported += self.export_job_specific_variables()
         
+        # 7. Write variables to GITHUB_ENV for shell access
+        self.write_to_github_env()
+        
         self.log(f"🎉 Variable export completed successfully! Total: {total_exported} variables")
         
         return {
@@ -322,6 +325,46 @@ class UnifiedVariableExporter:
             'step_name': self.step_name,
             'matrix_environment': self.matrix_environment
         }
+    
+    def write_to_github_env(self):
+        """Write exported variables to GITHUB_ENV file for shell access"""
+        github_env_file = os.getenv("GITHUB_ENV")
+        if not github_env_file:
+            self.log("⚠️  GITHUB_ENV not available, skipping shell export")
+            return
+        
+        try:
+            # Read existing variables to avoid duplicates
+            existing_vars = set()
+            if os.path.exists(github_env_file):
+                with open(github_env_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if "=" in line:
+                            key = line.split("=")[0].strip()
+                            existing_vars.add(key)
+            
+            with open(github_env_file, "a", encoding="utf-8") as f:
+                for key, value in self.exported_vars.items():
+                    # Skip if variable already exists
+                    if key in existing_vars:
+                        continue
+                        
+                    # Escape special characters for shell and wrap in quotes if needed
+                    value_str = str(value)
+                    if ' ' in value_str or any(char in value_str for char in ['$', '`', '"', "'"]):
+                        escaped_value = f'"{value_str.replace('"', '\\"')}"'
+                    else:
+                        escaped_value = value_str
+                    f.write(f"{key}={escaped_value}\n")
+            
+            self.log(f"✅ Written {len(self.exported_vars)} variables to GITHUB_ENV")
+            
+            # Also export to current shell environment for immediate use
+            for key, value in self.exported_vars.items():
+                os.environ[key] = str(value)
+                
+        except Exception as e:
+            self.log(f"❌ Error writing to GITHUB_ENV: {e}", "ERROR")
     
     def generate_export_script(self, output_file: str = None) -> str:
         """Generate a shell script with all export commands"""
