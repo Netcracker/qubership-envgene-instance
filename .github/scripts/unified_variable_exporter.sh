@@ -71,7 +71,7 @@ export_pipeline_vars_from_yaml() {
             if [ -n "$key" ] && [ -n "$value" ]; then
                 export "$key"="$value"
                 log "  Found: $key = $value"
-                ((exported_count++))
+                exported_count=$((exported_count + 1))
             fi
         fi
     done < "$pipeline_vars_file"
@@ -87,24 +87,15 @@ export_github_inputs() {
     local exported_count=0
     
     # Common GitHub inputs that are available in all steps
-    local github_inputs=(
-        "DEPLOYMENT_TICKET_ID"
-        "ENV_NAMES"
-        "ENV_BUILDER"
-        "GET_PASSPORT"
-        "CMDB_IMPORT"
-        "ENV_TEMPLATE_VERSION"
-        "GENERATE_EFFECTIVE_SET"
-        "GITHUB_PIPELINE_API_INPUT"
-    )
+    local github_inputs="DEPLOYMENT_TICKET_ID ENV_NAMES ENV_BUILDER GET_PASSPORT CMDB_IMPORT ENV_TEMPLATE_VERSION GENERATE_EFFECTIVE_SET GITHUB_PIPELINE_API_INPUT"
     
-    for var in "${github_inputs[@]}"; do
+    for var in $github_inputs; do
         local value=""
         eval "value=\${$var:-}"
         if [ -n "$value" ]; then
             export "$var"="$value"
             log "  Input: $var = $value"
-            ((exported_count++))
+            exported_count=$((exported_count + 1))
         fi
     done
     
@@ -135,7 +126,7 @@ export_api_input_variables() {
             if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
                 export "$key"="$value"
                 log "  API: $key = $value"
-                ((exported_count++))
+                exported_count=$((exported_count + 1))
             fi
         done < <(echo "$api_input" | jq -r 'to_entries[] | "\(.key): \(.value)"')
     else
@@ -149,7 +140,7 @@ export_api_input_variables() {
                 if [ -n "$key" ] && [ -n "$value" ]; then
                     export "$key"="$value"
                     log "  API: $key = $value"
-                    ((exported_count++))
+                    exported_count=$((exported_count + 1))
                 fi
             fi
         done <<< "$api_input"
@@ -178,7 +169,7 @@ export_variables_from_json() {
             if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
                 export "$key"="$value"
                 log "  JSON: $key = $value"
-                ((exported_count++))
+                exported_count=$((exported_count + 1))
             fi
         done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key): \(.value)"')
     else
@@ -197,29 +188,15 @@ export_system_variables() {
     local exported_count=0
     
     # Essential system variables that should be available in all steps
-    local system_vars=(
-        "CI_PROJECT_DIR"
-        "SECRET_KEY"
-        "GITHUB_ACTIONS"
-        "GITHUB_REPOSITORY"
-        "GITHUB_REF_NAME"
-        "GITHUB_USER_EMAIL"
-        "GITHUB_USER_NAME"
-        "GITHUB_TOKEN"
-        "ENVGENE_AGE_PUBLIC_KEY"
-        "ENVGENE_AGE_PRIVATE_KEY"
-        "DOCKER_IMAGE_PIPEGENE"
-        "DOCKER_IMAGE_ENVGENE"
-        "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR"
-    )
+    local system_vars="CI_PROJECT_DIR SECRET_KEY GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_REF_NAME GITHUB_USER_EMAIL GITHUB_USER_NAME GITHUB_TOKEN ENVGENE_AGE_PUBLIC_KEY ENVGENE_AGE_PRIVATE_KEY DOCKER_IMAGE_PIPEGENE DOCKER_IMAGE_ENVGENE DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR"
     
-    for var in "${system_vars[@]}"; do
+    for var in $system_vars; do
         local value=""
         eval "value=\${$var:-}"
         if [ -n "$value" ]; then
             export "$var"="$value"
             log "  System: $var = $value"
-            ((exported_count++))
+            exported_count=$((exported_count + 1))
         fi
     done
     
