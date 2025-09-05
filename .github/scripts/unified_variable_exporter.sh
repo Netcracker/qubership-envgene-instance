@@ -69,7 +69,7 @@ export_pipeline_vars_from_yaml() {
             fi
             
             if [ -n "$key" ] && [ -n "$value" ]; then
-                export "$key"="$value"
+                echo "export \"$key\"=\"$value\""
                 log "  Found: $key = $value"
                 exported_count=$((exported_count + 1))
             fi
@@ -77,7 +77,7 @@ export_pipeline_vars_from_yaml() {
     done < "$pipeline_vars_file"
     
     log "✅ Exported $exported_count variables from pipeline_vars.yaml"
-    echo $exported_count
+    echo $exported_count >&2
 }
 
 # 2. Export GitHub workflow input variables
@@ -93,14 +93,14 @@ export_github_inputs() {
         local value=""
         eval "value=\${$var:-}"
         if [ -n "$value" ]; then
-            export "$var"="$value"
+            echo "export \"$var\"=\"$value\""
             log "  Input: $var = $value"
             exported_count=$((exported_count + 1))
         fi
     done
     
     log "✅ Exported $exported_count GitHub input variables"
-    echo $exported_count
+    echo $exported_count >&2
 }
 
 # 3. Export API input variables
@@ -119,35 +119,36 @@ export_api_input_variables() {
     # Try to parse as JSON first
     if command -v jq >/dev/null 2>&1 && echo "$api_input" | jq . >/dev/null 2>&1; then
         log "Parsed API input as JSON"
-        echo "$api_input" | jq -r 'to_entries[] | "\(.key): \(.value)"' | while IFS= read -r line; do
+        # Use process substitution to avoid subshell issues
+        while IFS= read -r line; do
             local key=$(echo "$line" | cut -d':' -f1 | xargs)
             local value=$(echo "$line" | cut -d':' -f2- | xargs)
             
             if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
-                export "$key"="$value"
+                echo "export \"$key\"=\"$value\""
                 log "  API: $key = $value"
                 exported_count=$((exported_count + 1))
             fi
-        done
+        done < <(echo "$api_input" | jq -r 'to_entries[] | "\(.key): \(.value)"')
     else
         # Fall back to key=value format
         log "Parsing API input as key=value pairs"
-        echo "$api_input" | while IFS= read -r line; do
+        while IFS= read -r line; do
             if echo "$line" | grep -q "^[^=]*="; then
                 local key=$(echo "$line" | cut -d'=' -f1 | xargs)
                 local value=$(echo "$line" | cut -d'=' -f2- | xargs)
                 
                 if [ -n "$key" ] && [ -n "$value" ]; then
-                    export "$key"="$value"
+                    echo "export \"$key\"=\"$value\""
                     log "  API: $key = $value"
                     exported_count=$((exported_count + 1))
                 fi
             fi
-        done
+        done < <(echo "$api_input")
     fi
     
     log "✅ Exported $exported_count variables from API input"
-    echo $exported_count
+    echo $exported_count >&2
 }
 
 # 4. Export variables from JSON
@@ -162,23 +163,24 @@ export_variables_from_json() {
     local exported_count=0
     
     if command -v jq >/dev/null 2>&1 && echo "$VARIABLES_JSON" | jq . >/dev/null 2>&1; then
-        echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key): \(.value)"' | while IFS= read -r line; do
+        # Use process substitution to avoid subshell issues
+        while IFS= read -r line; do
             local key=$(echo "$line" | cut -d':' -f1 | xargs)
             local value=$(echo "$line" | cut -d':' -f2- | xargs)
             
             if [ -n "$key" ] && [ -n "$value" ] && [ "$value" != "null" ]; then
-                export "$key"="$value"
+                echo "export \"$key\"=\"$value\""
                 log "  JSON: $key = $value"
                 exported_count=$((exported_count + 1))
             fi
-        done
+        done < <(echo "$VARIABLES_JSON" | jq -r 'to_entries[] | "\(.key): \(.value)"')
     else
         log "❌ Invalid JSON format or jq not available" "ERROR"
         return 0
     fi
     
     log "✅ Exported $exported_count variables from JSON"
-    echo $exported_count
+    echo $exported_count >&2
 }
 
 # 5. Export system variables
@@ -194,14 +196,14 @@ export_system_variables() {
         local value=""
         eval "value=\${$var:-}"
         if [ -n "$value" ]; then
-            export "$var"="$value"
+            echo "export \"$var\"=\"$value\""
             log "  System: $var = $value"
             exported_count=$((exported_count + 1))
         fi
     done
     
     log "✅ Exported $exported_count system variables"
-    echo $exported_count
+    echo $exported_count >&2
 }
 
 # 6. Export job-specific variables
@@ -213,29 +215,29 @@ export_job_specific_variables() {
     local environment_name=$(echo "$MATRIX_ENVIRONMENT" | cut -d'/' -f2 | xargs)
     
     # Export job variables
-    export FULL_ENV="$MATRIX_ENVIRONMENT"
-    export ENV_NAMES="$MATRIX_ENVIRONMENT"
-    export CLUSTER_NAME="$cluster_name"
-    export ENVIRONMENT_NAME="$environment_name"
-    export ENV_NAME="$environment_name"
-    export ENV_NAME_SHORT=$(echo "$environment_name" | awk -F "/" '{print $NF}')
-    export SANITIZED_NAME=$(echo "$MATRIX_ENVIRONMENT" | sed 's|/|_|g')
-    export PROJECT_DIR="${CI_PROJECT_DIR:-$(pwd)}"
+    echo "export \"FULL_ENV\"=\"$MATRIX_ENVIRONMENT\""
+    echo "export \"ENV_NAMES\"=\"$MATRIX_ENVIRONMENT\""
+    echo "export \"CLUSTER_NAME\"=\"$cluster_name\""
+    echo "export \"ENVIRONMENT_NAME\"=\"$environment_name\""
+    echo "export \"ENV_NAME\"=\"$environment_name\""
+    echo "export \"ENV_NAME_SHORT\"=\"$(echo "$environment_name" | awk -F "/" '{print $NF}')\""
+    echo "export \"SANITIZED_NAME\"=\"$(echo "$MATRIX_ENVIRONMENT" | sed 's|/|_|g')\""
+    echo "export \"PROJECT_DIR\"=\"${CI_PROJECT_DIR:-$(pwd)}\""
     
-    log "  Job: FULL_ENV = $FULL_ENV"
-    log "  Job: ENV_NAMES = $ENV_NAMES"
-    log "  Job: CLUSTER_NAME = $CLUSTER_NAME"
-    log "  Job: ENVIRONMENT_NAME = $ENVIRONMENT_NAME"
-    log "  Job: ENV_NAME = $ENV_NAME"
-    log "  Job: ENV_NAME_SHORT = $ENV_NAME_SHORT"
-    log "  Job: SANITIZED_NAME = $SANITIZED_NAME"
-    log "  Job: PROJECT_DIR = $PROJECT_DIR"
+    log "  Job: FULL_ENV = $MATRIX_ENVIRONMENT"
+    log "  Job: ENV_NAMES = $MATRIX_ENVIRONMENT"
+    log "  Job: CLUSTER_NAME = $cluster_name"
+    log "  Job: ENVIRONMENT_NAME = $environment_name"
+    log "  Job: ENV_NAME = $environment_name"
+    log "  Job: ENV_NAME_SHORT = $(echo "$environment_name" | awk -F "/" '{print $NF}')"
+    log "  Job: SANITIZED_NAME = $(echo "$MATRIX_ENVIRONMENT" | sed 's|/|_|g')"
+    log "  Job: PROJECT_DIR = ${CI_PROJECT_DIR:-$(pwd)}"
     
     # Add step-specific variables
     export_step_specific_variables
     
     log "✅ Exported job-specific variables"
-    echo 1
+    echo 1 >&2
 }
 
 # 7. Export step-specific variables
@@ -243,70 +245,62 @@ export_step_specific_variables() {
     case "$STEP_NAME" in
         "generate_inventory"|"credential_rotation"|"env_build"|"generate_effective_set"|"git_commit")
             # Common variables for all steps
-            export INSTANCES_DIR="${PROJECT_DIR}/environments"
-            export module_ansible_dir="/module/ansible"
-            export module_inventory="${PROJECT_DIR}/configuration/inventory.yaml"
-            export module_ansible_cfg="/module/ansible/ansible.cfg"
-            export module_config_default="/module/templates/defaults.yaml"
-            export envgen_args=" -vvv"
-            export envgen_debug="true"
-            export GIT_STRATEGY="none"
-            export COMMIT_ENV="true"
+            echo "export \"INSTANCES_DIR\"=\"${PROJECT_DIR}/environments\""
+            echo "export \"module_ansible_dir\"=\"/module/ansible\""
+            echo "export \"module_inventory\"=\"${PROJECT_DIR}/configuration/inventory.yaml\""
+            echo "export \"module_ansible_cfg\"=\"/module/ansible/ansible.cfg\""
+            echo "export \"module_config_default\"=\"/module/templates/defaults.yaml\""
+            echo "export \"envgen_args\"=\" -vvv\""
+            echo "export \"envgen_debug\"=\"true\""
+            echo "export \"GIT_STRATEGY\"=\"none\""
+            echo "export \"COMMIT_ENV\"=\"true\""
             
-            log "  Step: INSTANCES_DIR = $INSTANCES_DIR"
-            log "  Step: module_ansible_dir = $module_ansible_dir"
-            log "  Step: module_inventory = $module_inventory"
-            log "  Step: module_ansible_cfg = $module_ansible_cfg"
-            log "  Step: module_config_default = $module_config_default"
-            log "  Step: envgen_args = $envgen_args"
-            log "  Step: envgen_debug = $envgen_debug"
-            log "  Step: GIT_STRATEGY = $GIT_STRATEGY"
-            log "  Step: COMMIT_ENV = $COMMIT_ENV"
+            log "  Step: INSTANCES_DIR = ${PROJECT_DIR}/environments"
+            log "  Step: module_ansible_dir = /module/ansible"
+            log "  Step: module_inventory = ${PROJECT_DIR}/configuration/inventory.yaml"
+            log "  Step: module_ansible_cfg = /module/ansible/ansible.cfg"
+            log "  Step: module_config_default = /module/templates/defaults.yaml"
+            log "  Step: envgen_args =  -vvv"
+            log "  Step: envgen_debug = true"
+            log "  Step: GIT_STRATEGY = none"
+            log "  Step: COMMIT_ENV = true"
             ;;
     esac
     
     case "$STEP_NAME" in
         "credential_rotation")
-            export CRED_ROTATION_FORCE="${CRED_ROTATION_FORCE:-}"
-            export CRED_ROTATION_PAYLOAD="${CRED_ROTATION_PAYLOAD:-}"
-            export PUBLIC_AGE_KEYS="${PUBLIC_AGE_KEYS:-}"
+            echo "export \"CRED_ROTATION_FORCE\"=\"${CRED_ROTATION_FORCE:-}\""
+            echo "export \"CRED_ROTATION_PAYLOAD\"=\"${CRED_ROTATION_PAYLOAD:-}\""
+            echo "export \"PUBLIC_AGE_KEYS\"=\"${PUBLIC_AGE_KEYS:-}\""
             
-            log "  Step: CRED_ROTATION_FORCE = $CRED_ROTATION_FORCE"
-            log "  Step: CRED_ROTATION_PAYLOAD = $CRED_ROTATION_PAYLOAD"
-            log "  Step: PUBLIC_AGE_KEYS = $PUBLIC_AGE_KEYS"
+            log "  Step: CRED_ROTATION_FORCE = ${CRED_ROTATION_FORCE:-}"
+            log "  Step: CRED_ROTATION_PAYLOAD = ${CRED_ROTATION_PAYLOAD:-}"
+            log "  Step: PUBLIC_AGE_KEYS = ${PUBLIC_AGE_KEYS:-}"
             ;;
     esac
 }
 
 # Main execution
 main() {
-    local total_exported=0
-    
     # 1. Export pipeline variables from YAML
-    local count=$(export_pipeline_vars_from_yaml)
-    total_exported=$((total_exported + count))
+    export_pipeline_vars_from_yaml
     
     # 2. Export GitHub workflow inputs
-    count=$(export_github_inputs)
-    total_exported=$((total_exported + count))
+    export_github_inputs
     
     # 3. Export API input variables
-    count=$(export_api_input_variables)
-    total_exported=$((total_exported + count))
+    export_api_input_variables
     
     # 4. Export variables from JSON
-    count=$(export_variables_from_json)
-    total_exported=$((total_exported + count))
+    export_variables_from_json
     
     # 5. Export system variables
-    count=$(export_system_variables)
-    total_exported=$((total_exported + count))
+    export_system_variables
     
     # 6. Export job-specific variables
-    count=$(export_job_specific_variables)
-    total_exported=$((total_exported + count))
+    export_job_specific_variables
     
-    log "🎉 Variable export completed successfully! Total: $total_exported variables"
+    log "🎉 Variable export completed successfully!" >&2
 }
 
 # Run main function
