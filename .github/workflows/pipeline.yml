@@ -69,7 +69,7 @@ jobs:
     name: "Input Parameters Processing"
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME }}
     container:
-      image: ${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-pipegene:feature_update_instance_pipe_20250916-081107
+      image: $DOCKER_IMAGE_PIPEGENE
       options: --user root
     outputs:
       env_matrix: ${{ steps.matrix-generator.outputs.env_matrix }}
