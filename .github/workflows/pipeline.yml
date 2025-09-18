@@ -28,7 +28,7 @@ on:
       ENV_BUILDER:
         required: false
         default: ""
-        type: string
+        type: choice
         description: ""
         options:
           - "true"
@@ -36,7 +36,7 @@ on:
       GENERATE_EFFECTIVE_SET:
         required: false
         default: ""
-        type: string
+        type: choice
         description: ""
         options:
           - "true"
@@ -44,12 +44,15 @@ on:
       GET_PASSPORT:
         required: false
         default: ""
-        type: string
+        type: choice
         description: ""
+        options:
+          - "true"
+          - "false"
       CMDB_IMPORT:
         required: false
         default: ""
-        type: string
+        type: choice
         description: ""
         options:
           - "true"
