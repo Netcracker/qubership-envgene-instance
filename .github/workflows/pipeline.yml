@@ -22,14 +22,17 @@ on:
         required: false
         default: ""
         type: string
+        description: ""
       ENV_TEMPLATE_VERSION:
         required: false
         default: ""
         type: string
+        description: ""
       ENV_BUILDER:
         required: false
         default: "true"
         type: choice
+        description: ""
         options:
           - "true"
           - "false"
@@ -37,6 +40,7 @@ on:
         required: false
         default: "false"
         type: choice
+        description: ""
         options:
           - "true"
           - "false"
@@ -44,6 +48,7 @@ on:
         required: false
         default: "false"
         type: choice
+        description: ""
         options:
           - "true"
           - "false"
