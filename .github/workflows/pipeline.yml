@@ -31,32 +31,32 @@ on:
         type: choice
         description: ""
         options:
-          - "true"
           - "false"
+          - "true"
       GENERATE_EFFECTIVE_SET:
         required: false
         default: ""
         type: choice
         description: ""
         options:
-          - "true"
           - "false"
+          - "true"
       GET_PASSPORT:
         required: false
         default: ""
         type: choice
         description: ""
         options:
-          - "true"
           - "false"
+          - "true"
       CMDB_IMPORT:
         required: false
         default: ""
         type: choice
         description: ""
         options:
-          - "true"
           - "false"
+          - "true"
       GITHUB_PIPELINE_API_INPUT:
         required: false
         type: string
