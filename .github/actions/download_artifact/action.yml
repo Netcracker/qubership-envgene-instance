@@ -6,15 +6,12 @@ inputs:
   sanitized_name:
     description: "Updated environment name without special symbols."
     required: true
-    type: string
   full_env:
     description: "Full environment name."
     required: true
-    type: string
   project_dir:
     description: "Workspace."
     required: true
-    type: string
 
 outputs:
   artifact_id:

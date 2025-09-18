@@ -30,11 +30,17 @@ on:
         default: ""
         type: string
         description: ""
+        options:
+          - "true"
+          - "false"
       GENERATE_EFFECTIVE_SET:
         required: false
         default: ""
         type: string
         description: ""
+        options:
+          - "true"
+          - "false"
       GET_PASSPORT:
         required: false
         default: ""
@@ -45,6 +51,9 @@ on:
         default: ""
         type: string
         description: ""
+        options:
+          - "true"
+          - "false"
       GITHUB_PIPELINE_API_INPUT:
         required: false
         type: string
