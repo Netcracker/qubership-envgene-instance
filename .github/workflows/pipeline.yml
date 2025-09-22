@@ -206,7 +206,7 @@ jobs:
             --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(/github/workspace/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
 
             # All variables are now available from the unified exporter
             python3 /build_env/scripts/build_env/env_inventory_generation.py
@@ -226,7 +226,7 @@ jobs:
             --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(/github/workspace/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
             # All variables are now available from the unified exporter
             python3 /module/creds_rotation_scripts/creds_rotation_handler.py      
@@ -245,7 +245,7 @@ jobs:
             --user root
           run: |
               # Export all variables using unified exporter
-              eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+              eval "$(/github/workspace/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
     
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
@@ -288,7 +288,7 @@ jobs:
             --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(/github/workspace/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
             # All variables are now available from the unified exporter
             echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
@@ -322,7 +322,7 @@ jobs:
             --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(/github/workspace/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
             # All variables are now available from the unified exporter
             echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
