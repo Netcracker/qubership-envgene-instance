@@ -240,6 +240,7 @@ jobs:
           options: -v ${{ github.workspace }}:/work --user root
           run: |
               pwd
+              ls -la
               # Export all variables using unified exporter
               eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
     
