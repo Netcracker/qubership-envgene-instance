@@ -244,6 +244,10 @@ jobs:
             -w ${{ github.workspace }}
             --user root
           run: |
+              pwd
+              ls -la /github/workspace
+              ls -la /github/workspace/.github/scripts    
+          
               # Export all variables using unified exporter
               eval "$(/github/workspace/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
     
@@ -321,6 +325,8 @@ jobs:
             -w ${{ github.workspace }}
             --user root
           run: |
+            
+          
             # Export all variables using unified exporter
             eval "$(/github/workspace/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
