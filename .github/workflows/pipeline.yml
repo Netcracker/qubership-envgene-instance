@@ -237,8 +237,9 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work -w /work -e CI_PROJECT_DIR=/work -e GITHUB_ACTIONS=true -e ENV_NAME=${{ matrix.environment }} -e ENVIRONMENT_NAME=${{ matrix.environment }} -e FULL_ENV=${{ matrix.environment }} -e ENV_NAMES=${{ matrix.environment }} -e CLUSTER_NAME=${{ matrix.environment }} -e ENV_NAME_SHORT=${{ matrix.environment }} -e PROJECT_DIR=/work -e INSTANCES_DIR=/work/environments -e ENVIRONMENTS_DIR=/work/environments -e CI_INSTANCES_DIR=/work/environments -e module_ansible_dir=/module/ansible -e module_inventory=/work/configuration/inventory.yaml -e module_ansible_cfg=/module/ansible/ansible.cfg -e module_config_default=/module/templates/defaults.yaml -e envgen_args=" -vvv" -e envgen_debug=true -e GIT_STRATEGY=none -e COMMIT_ENV=true --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e CI_PROJECT_DIR=/work --user root
           run: |
+              echo "${{ needs.process_environment_variables.outputs.variables_json }}"
               # Export all variables using unified exporter
               eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '$VARIABLES_JSON')"
     
