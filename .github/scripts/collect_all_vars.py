@@ -122,6 +122,12 @@ def is_secret_variable(key):
     Check if variable contains sensitive information.
     """
     secret_keywords = ['SECRET', 'KEY', 'PASSWORD', 'PRIVATE']
+    
+    # Allow specific exceptions for pipeline variables
+    pipeline_exceptions = {'GITHUB_TOKEN', 'ENVGENE_AGE_PUBLIC_KEY', 'ENVGENE_AGE_PRIVATE_KEY'}
+    if key in pipeline_exceptions:
+        return False
+        
     return any(keyword in key.upper() for keyword in secret_keywords)
 
 
