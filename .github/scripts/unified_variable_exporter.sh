@@ -227,7 +227,7 @@ export_environment_variables() {
     echo "export \"ENVIRONMENT_NAME\"=\"$environment_name\""
     echo "export \"ENV_NAME\"=\"$environment_name\""
     echo "export \"ENV_NAME_SHORT\"=\"$(echo "$environment_name" | awk -F "/" '{print $NF}')\""
-    echo "export \"PROJECT_DIR\"=\"${CI_PROJECT_DIR:-$(pwd)}\""
+    echo "export \"PROJECT_DIR\"=\"${CI_PROJECT_DIR:-/work}\""
     
     log "  FULL_ENV = $MATRIX_ENVIRONMENT"
     log "  ENV_NAMES = $MATRIX_ENVIRONMENT"
@@ -235,7 +235,7 @@ export_environment_variables() {
     log "  ENVIRONMENT_NAME = $environment_name"
     log "  ENV_NAME = $environment_name"
     log "  ENV_NAME_SHORT = $(echo "$environment_name" | awk -F "/" '{print $NF}')"
-    log "  PROJECT_DIR = ${CI_PROJECT_DIR:-$(pwd)}"
+    log "  PROJECT_DIR = ${CI_PROJECT_DIR:-/work}"
     
     # Export common pipeline variables
     export_common_pipeline_variables
@@ -245,7 +245,7 @@ export_environment_variables() {
 export_common_pipeline_variables() {
     # Common variables for all pipeline steps
     echo "export \"module_ansible_dir\"=\"/module/ansible\""
-    echo "export \"module_inventory\"=\"${CI_PROJECT_DIR:-$(pwd)}/configuration/inventory.yaml\""
+    echo "export \"module_inventory\"=\"${CI_PROJECT_DIR:-/work}/configuration/inventory.yaml\""
     echo "export \"module_ansible_cfg\"=\"/module/ansible/ansible.cfg\""
     echo "export \"module_config_default\"=\"/module/templates/defaults.yaml\""
     echo "export \"envgen_args\"=\" -vvv\""
@@ -254,7 +254,7 @@ export_common_pipeline_variables() {
     echo "export \"COMMIT_ENV\"=\"true\""
     
     log "  module_ansible_dir = /module/ansible"
-    log "  module_inventory = ${CI_PROJECT_DIR:-$(pwd)}/configuration/inventory.yaml"
+    log "  module_inventory = ${CI_PROJECT_DIR:-/work}/configuration/inventory.yaml"
     log "  module_ansible_cfg = /module/ansible/ansible.cfg"
     log "  module_config_default = /module/templates/defaults.yaml"
     log "  envgen_args =  -vvv"

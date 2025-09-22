@@ -235,9 +235,12 @@ jobs:
       - name: Build Env
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        env:
+          CI_PROJECT_DIR: /work
+          GITHUB_WORKSPACE: /work
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work --user root
+          options: -v ${{ github.workspace }}:/work -w /work --user root
           run: |
               ls -la /work
               ls -la /work/environments
