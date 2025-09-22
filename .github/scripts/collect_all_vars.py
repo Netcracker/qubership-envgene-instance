@@ -121,7 +121,7 @@ def is_secret_variable(key):
     """
     Check if variable contains sensitive information.
     """
-    secret_keywords = ['SECRET', 'KEY', 'TOKEN', 'PASSWORD', 'PRIVATE']
+    secret_keywords = ['SECRET', 'KEY', 'PASSWORD', 'PRIVATE']
     return any(keyword in key.upper() for keyword in secret_keywords)
 
 
