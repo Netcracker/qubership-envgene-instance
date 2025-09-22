@@ -234,7 +234,7 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work -w /work -e --user root
+          options: -v ${{ github.workspace }}:/work -w /work --user root
           run: |
               # Export all variables using unified exporter
               eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '$VARIABLES_JSON')"
@@ -269,9 +269,6 @@ jobs:
       - name: Generate Effective Set
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
-        env:
-          CI_PROJECT_DIR: /work
-          GITHUB_WORKSPACE: /work
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
           options: -v ${{ github.workspace }}:/work -w /work --user root
@@ -329,5 +326,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: git_commit_${{ env.SANITIZED_NAME }}
-          path: ${{ github.workspace }}/git_envs      
+          name: git_commit_${{ matrix.environment }}
+          path: ${CI_PROJECT_DIR}/git_envs      
