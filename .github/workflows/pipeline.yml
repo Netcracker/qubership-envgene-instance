@@ -240,22 +240,10 @@ jobs:
           GITHUB_WORKSPACE: /work
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: >-
-            -v ${{ github.workspace }}:/work
-            -w /work
-            --user root
+          options: -v ${{ github.workspace }}:/work --user root
           run: |
-              pwd
-              ls -la /work
-              ls -la /work/.github/scripts    
-          
               # Export all variables using unified exporter
               eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
-    
-              # Create symlink for legacy ansible paths
-              if [ ! -L "/environments" ] && [ ! -d "/environments" ]; then
-                ln -sf "${CI_PROJECT_DIR}/environments" "/environments"
-              fi
     
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
