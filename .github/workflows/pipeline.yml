@@ -195,12 +195,18 @@ jobs:
       - name: Generate Inventory
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.process_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.process_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+        env:
+          CI_PROJECT_DIR: ${{ github.workspace }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: --user root
+          options: >-
+            -v ${{ github.workspace }}:${{ github.workspace }}
+            -w ${{ github.workspace }}
+            --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
 
             # All variables are now available from the unified exporter
             python3 /build_env/scripts/build_env/env_inventory_generation.py
@@ -209,12 +215,18 @@ jobs:
       - name: Credential Rotation
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
+        env:
+          CI_PROJECT_DIR: ${{ github.workspace }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: --user root
+          options: >-
+            -v ${{ github.workspace }}:${{ github.workspace }}
+            -w ${{ github.workspace }}
+            --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
             # All variables are now available from the unified exporter
             python3 /module/creds_rotation_scripts/creds_rotation_handler.py      
@@ -222,6 +234,9 @@ jobs:
       - name: Build Env
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        env:
+          CI_PROJECT_DIR: ${{ github.workspace }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: >-
@@ -262,12 +277,18 @@ jobs:
       - name: Generate Effective Set
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        env:
+          CI_PROJECT_DIR: ${{ github.workspace }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
-          options: --user root
+          options: >-
+            -v ${{ github.workspace }}:${{ github.workspace }}
+            -w ${{ github.workspace }}
+            --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
             # All variables are now available from the unified exporter
             echo "ENV_TEMPLATE_VERSION value: $ENV_TEMPLATE_VERSION"
@@ -290,12 +311,18 @@ jobs:
             
       - name: Git Commit
         uses: addnab/docker-run-action@v3
+        env:
+          CI_PROJECT_DIR: ${{ github.workspace }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: --user root
+          options: >-
+            -v ${{ github.workspace }}:${{ github.workspace }}
+            -w ${{ github.workspace }}
+            --user root
           run: |
             # Export all variables using unified exporter
-            eval "$(.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+            eval "$(${CI_PROJECT_DIR}/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
             # All variables are now available from the unified exporter
             echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
