@@ -28,3 +28,10 @@ on:
         description: ""
 
 jobs:
+  checkout_repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
