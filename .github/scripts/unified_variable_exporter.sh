@@ -244,9 +244,9 @@ export_environment_variables() {
 # 7. Export common pipeline variables
 export_common_pipeline_variables() {
     # Common variables for all pipeline steps
-    echo "export \"INSTANCES_DIR\"=\"${PROJECT_DIR}/environments\""
+    echo "export \"INSTANCES_DIR\"=\"${CI_PROJECT_DIR:-$(pwd)}/environments\""
     echo "export \"module_ansible_dir\"=\"/module/ansible\""
-    echo "export \"module_inventory\"=\"${PROJECT_DIR}/configuration/inventory.yaml\""
+    echo "export \"module_inventory\"=\"${CI_PROJECT_DIR:-$(pwd)}/configuration/inventory.yaml\""
     echo "export \"module_ansible_cfg\"=\"/module/ansible/ansible.cfg\""
     echo "export \"module_config_default\"=\"/module/templates/defaults.yaml\""
     echo "export \"envgen_args\"=\" -vvv\""
@@ -254,9 +254,9 @@ export_common_pipeline_variables() {
     echo "export \"GIT_STRATEGY\"=\"none\""
     echo "export \"COMMIT_ENV\"=\"true\""
     
-    log "  INSTANCES_DIR = ${PROJECT_DIR}/environments"
+    log "  INSTANCES_DIR = ${CI_PROJECT_DIR:-$(pwd)}/environments"
     log "  module_ansible_dir = /module/ansible"
-    log "  module_inventory = ${PROJECT_DIR}/configuration/inventory.yaml"
+    log "  module_inventory = ${CI_PROJECT_DIR:-$(pwd)}/configuration/inventory.yaml"
     log "  module_ansible_cfg = /module/ansible/ansible.cfg"
     log "  module_config_default = /module/templates/defaults.yaml"
     log "  envgen_args =  -vvv"
