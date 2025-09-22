@@ -282,7 +282,7 @@ jobs:
           run: |
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
-  
+            export GITHUB_TOKEN
             # Create symlink for legacy ansible paths
             if [ ! -L "/environments" ] && [ ! -d "/environments" ]; then
               ln -sf "${CI_PROJECT_DIR}/environments" "/environments"
@@ -315,7 +315,8 @@ jobs:
           run: |
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
-  
+
+            echo "${{ needs.process_environment_variables.outputs.variables_json }}"
             # All variables are now available from the unified exporter
             echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
   
