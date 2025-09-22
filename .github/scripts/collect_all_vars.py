@@ -114,13 +114,10 @@ def is_pipeline_variable(key):
         return False
     
     # System prefixes to exclude
-    if key.startswith(('RUNNER_', 'GITHUB_', 'ACTIONS_', 'INPUT_', 'ImageOS', 'ImageVersion', 
+    if key.startswith(('RUNNER_', 'ACTIONS_', 'INPUT_', 'ImageOS', 'ImageVersion', 
                       'AGENT_', 'ANDROID_', 'JAVA_HOME_', 'GOROOT_', 'HOMEBREW_', 'XDG_',
                       'DOTNET_', 'PIPX_', 'GHCUP_')):
-        # Allow specific exceptions
-        pipeline_exceptions = {'GITHUB_TOKEN', 'GITHUB_USER_EMAIL', 'GITHUB_USER_NAME'}
-        if key not in pipeline_exceptions:
-            return False
+        return False
     
     return True
 
