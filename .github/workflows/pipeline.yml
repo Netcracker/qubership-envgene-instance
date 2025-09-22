@@ -224,7 +224,10 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: --user root
+          options: >-
+            -v ${{ github.workspace }}:${{ github.workspace }}
+            -w ${{ github.workspace }}
+            --user root
           run: |
               # Export all variables using unified exporter
               eval "$(.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
