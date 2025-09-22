@@ -240,7 +240,7 @@ jobs:
           GITHUB_WORKSPACE: /work
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work -w /work --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e CI_PROJECT_DIR=/work --user root
           run: |
               ls -la /work
               ls -la /work/environments
