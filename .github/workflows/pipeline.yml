@@ -239,8 +239,6 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e CI_PROJECT_DIR=/work --user root
           run: |
-              ls -la /work
-              ls -la /work/environments
               # Export all variables using unified exporter
               eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
     
@@ -279,10 +277,7 @@ jobs:
           GITHUB_WORKSPACE: /work
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
-          options: >-
-            -v ${{ github.workspace }}:/work
-            -w /work
-            --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e CI_PROJECT_DIR=/work --user root
           run: |
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
@@ -318,13 +313,8 @@ jobs:
           GITHUB_WORKSPACE: /work
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: >-
-            -v ${{ github.workspace }}:/work
-            -w /work
-            --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e CI_PROJECT_DIR=/work --user root
           run: |
-            
-          
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
