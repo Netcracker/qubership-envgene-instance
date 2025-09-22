@@ -221,6 +221,16 @@ export_environment_variables() {
     local environment_name=$(echo "$MATRIX_ENVIRONMENT" | cut -d'/' -f2 | xargs)
     
     # Export environment variables
+    echo "export \"CI_PROJECT_DIR\"=\"${CI_PROJECT_DIR:-/work}\""
+    echo "export \"GITHUB_TOKEN\"=\"${GITHUB_TOKEN:-}\""
+    echo "export \"GITHUB_ACTIONS\"=\"${GITHUB_ACTIONS:-true}\""
+    echo "export \"GITHUB_REPOSITORY\"=\"${GITHUB_REPOSITORY:-}\""
+    echo "export \"GITHUB_REF_NAME\"=\"${GITHUB_REF_NAME:-}\""
+    echo "export \"GITHUB_USER_EMAIL\"=\"${GITHUB_USER_EMAIL:-}\""
+    echo "export \"GITHUB_USER_NAME\"=\"${GITHUB_USER_NAME:-}\""
+    echo "export \"GITHUB_REF\"=\"${GITHUB_REF:-}\""
+    echo "export \"GITHUB_SHA\"=\"${GITHUB_SHA:-}\""
+    echo "export \"GITHUB_EVENT_NAME\"=\"${GITHUB_EVENT_NAME:-}\""
     echo "export \"FULL_ENV\"=\"$MATRIX_ENVIRONMENT\""
     echo "export \"ENV_NAMES\"=\"$MATRIX_ENVIRONMENT\""
     echo "export \"CLUSTER_NAME\"=\"$cluster_name\""
