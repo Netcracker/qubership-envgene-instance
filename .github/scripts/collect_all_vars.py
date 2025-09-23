@@ -18,9 +18,9 @@ def get_all_pipeline_variables():
     pipeline_mode = os.getenv("PIPELINE_MODE", "MANUAL")
     api_mode = (pipeline_mode == "API")
     if api_mode:
-        print("API Mode detected - filtering out Docker container built-in variables")
+        print("🔧 API Mode detected - filtering out Docker container built-in variables")
     else:
-        print("Manual Mode detected - including all variables")
+        print("🔧 Manual Mode detected - including all variables")
     
     # Read from GITHUB_ENV file first (highest priority)
     github_env_file = os.getenv("GITHUB_ENV")
@@ -39,12 +39,12 @@ def get_all_pipeline_variables():
                             if value:
                                 # In API mode, exclude Docker container built-in variables
                                 if api_mode and is_docker_container_variable(key):
-                                    print(f"Excluding Docker container variable in API mode: {key}")
+                                    print(f"🚫 Excluding Docker container variable in API mode: {key}")
                                     continue
                                 
                                 variables[key] = value
                         except ValueError:
-                            print(f"Warning: Skipping malformed line {line_num}: {line}")
+                            print(f"⚠️  Warning: Skipping malformed line {line_num}: {line}")
                             continue
         except Exception as e:
             print(f"⚠️  Error reading GITHUB_ENV file: {e}")
@@ -121,13 +121,7 @@ def is_secret_variable(key):
     """
     Check if variable contains sensitive information.
     """
-    secret_keywords = ['SECRET', 'KEY', 'PASSWORD', 'PRIVATE', 'TOKEN']
-    
-    # Allow specific exceptions for pipeline variables
-    pipeline_exceptions = {'ENVGENE_AGE_PUBLIC_KEY', 'ENVGENE_AGE_PRIVATE_KEY'}
-    if key in pipeline_exceptions:
-        return False
-        
+    secret_keywords = ['SECRET', 'KEY', 'TOKEN', 'PASSWORD', 'PRIVATE']
     return any(keyword in key.upper() for keyword in secret_keywords)
 
 
