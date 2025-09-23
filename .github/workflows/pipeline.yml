@@ -292,7 +292,7 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           name: build_env_${{ env.PACKAGE_NAME }}
-          path: /work/environments/${{ matrix.environment }}
+          path: environments/${{ matrix.environment }}
       ##########################
 
 
