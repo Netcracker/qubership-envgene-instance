@@ -272,9 +272,6 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           run: |
-              # Enable strict error handling
-              set -euo pipefail
-              
               # Export all variables using unified exporter
               eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
     
@@ -285,20 +282,16 @@ jobs:
               echo "Executing build environment operations..."
               if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" != "true" ]; then
                 if ! /module/scripts/prepare.sh "set_template_version.yaml"; then
-                  echo "❌ Set template version failed with exit code $?"
                   exit 1
                 fi
                 if ! /module/scripts/prepare.sh "build_env.yaml"; then
-                  echo "❌ Build environment failed with exit code $?"
                   exit 1
                 fi
               else
                 if ! /module/scripts/prepare.sh "build_env.yaml"; then
-                  echo "❌ Build environment failed with exit code $?"
                   exit 1
                 fi
               fi
-              echo "✅ Build environment operations completed successfully"
     
               if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
                 env_name=$(cat set_variable.txt)
