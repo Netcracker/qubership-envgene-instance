@@ -221,7 +221,7 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.process_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.process_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
         with:
           name: generate_inventory_${{ env.PACKAGE_NAME }}
-          path: /work/environments/${{ matrix.environment }}
+          path: environments/${{ matrix.environment }}
       ##########################
 
 
@@ -244,7 +244,7 @@ jobs:
         if: needs.process_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
         with:
           name: credential_rotation_${{ env.PACKAGE_NAME }}
-          path: /work/environments/${{ matrix.environment }}
+          path: environments/${{ matrix.environment }}
       ##########################
 
 
@@ -284,8 +284,6 @@ jobs:
                   chmod ugo+rw "$path/Credentials/"*
                 fi
               done
-
-              ls -la
 
       - name: Upload Build Env Package       
         uses: actions/upload-artifact@v4
@@ -328,7 +326,7 @@ jobs:
         if: needs.process_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
         with:
           name: generate_effective_set_${{ env.PACKAGE_NAME }}
-          path: /work/environments/${{ matrix.environment }}
+          path: environments/${{ matrix.environment }}
       ##########################
 
 
@@ -368,4 +366,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: git_commit_${{ env.PACKAGE_NAME }}
-          path: /work/environments/${{ matrix.environment }}   
+          path: environments/${{ matrix.environment }}   
