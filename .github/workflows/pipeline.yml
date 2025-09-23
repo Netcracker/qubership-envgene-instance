@@ -263,7 +263,7 @@ jobs:
           options: -v ${{ github.workspace }}:/work -w /work --user root
           run: |
               # Export all variables using unified exporter
-              eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '$VARIABLES_JSON')"
+              eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
     
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
