@@ -71,7 +71,7 @@ env:
 
   #DOCKER_IMAGE_TAGS
   DOCKER_IMAGE_TAG_PIPEGENE: "main_20250921-203813"
-  DOCKER_IMAGE_TAG_ENVGENE: "main_20250921-203818"
+  DOCKER_IMAGE_TAG_ENVGENE: "feature_add_token_render_ansible"
   DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "main_20250921-203914"
 
 jobs:
@@ -192,7 +192,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Create Package Name
+        run: |
+          PACKAGE_NAME="$(echo '${{ matrix.environment }}' | sed 's|/|_|g')"
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+        shell: bash    
       
+      ### GENERATE INVENTORY ###
       - name: Generate Inventory
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.process_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.process_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
@@ -212,7 +219,16 @@ jobs:
             # All variables are now available from the unified exporter
             python3 /build_env/scripts/build_env/env_inventory_generation.py
 
-            
+      - name: Upload Generate Inventory Package       
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.process_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.process_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+        with:
+          name: generate_inventory_${{ env.PACKAGE_NAME }}
+          path: /work/environments/${{ matrix.environment }}
+      ##########################
+
+
+      ### CREDENTIAL ROTATION ###
       - name: Credential Rotation
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
@@ -229,6 +245,16 @@ jobs:
             # All variables are now available from the unified exporter
             python3 /module/creds_rotation_scripts/creds_rotation_handler.py      
 
+      - name: Upload Credential Rotation Artifact       
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
+        with:
+          name: credential_rotation_${{ env.PACKAGE_NAME }}
+          path: /work/environments/${{ matrix.environment }}
+      ##########################
+
+
+      ### BUILD ENV ###
       - name: Build Env
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
@@ -265,7 +291,16 @@ jobs:
                 fi
               done
 
-       
+      - name: Upload Build Env Package       
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        with:
+          name: build_env_${{ env.PACKAGE_NAME }}
+          path: /work/environments/${{ matrix.environment }}
+      ##########################
+
+
+      ### GENERATE EFFECTIVE SET ###
       - name: Generate Effective Set
         uses: addnab/docker-run-action@v3
         if: needs.process_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
@@ -291,7 +326,17 @@ jobs:
                 chmod ugo+rw "$path/Credentials/"*
               fi
             done
-            
+
+      - name: Upload Generate Effective Set Package       
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        with:
+          name: generate_effective_set_${{ env.PACKAGE_NAME }}
+          path: /work/environments/${{ matrix.environment }}
+      ##########################
+
+
+      ### GIT COMMIT ###
       - name: Git Commit
         uses: addnab/docker-run-action@v3
         with:
@@ -322,15 +367,9 @@ jobs:
             done
   
             cp -rf ${CI_PROJECT_DIR}/environments ${CI_PROJECT_DIR}/git_envs
-            
-      - name: Create artifact name
-        run: |
-          ARTIFACT_NAME="git_commit_$(echo '${{ matrix.environment }}' | sed 's|/|_|g')"
-          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
-        shell: bash
-        
-      - name: Upload Artifact Files
+
+      - name: Upload Git Commit Package
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: /work/git_envs      
+          name: git_commit_${{ env.PACKAGE_NAME }}
+          path: /work/environments/${{ matrix.environment }}   
