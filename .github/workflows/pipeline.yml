@@ -210,11 +210,19 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           run: |
+            # Enable strict error handling
+            set -euo pipefail
+            
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
 
             # All variables are now available from the unified exporter
-            python3 /build_env/scripts/build_env/env_inventory_generation.py
+            echo "Executing inventory generation..."
+            if ! python3 /build_env/scripts/build_env/env_inventory_generation.py; then
+              echo "❌ Inventory generation failed with exit code $?"
+              exit 1
+            fi
+            echo "✅ Inventory generation completed successfully"
 
       - name: Upload Generate Inventory Package       
         uses: actions/upload-artifact@v4
@@ -233,11 +241,19 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           run: |
+            # Enable strict error handling
+            set -euo pipefail
+            
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
   
             # All variables are now available from the unified exporter
-            python3 /module/creds_rotation_scripts/creds_rotation_handler.py      
+            echo "Executing credential rotation..."
+            if ! python3 /module/creds_rotation_scripts/creds_rotation_handler.py; then
+              echo "❌ Credential rotation failed with exit code $?"
+              exit 1
+            fi
+            echo "✅ Credential rotation completed successfully"      
 
       - name: Upload Credential Rotation Artifact       
         uses: actions/upload-artifact@v4
@@ -256,6 +272,9 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           run: |
+              # Enable strict error handling
+              set -euo pipefail
+              
               # Export all variables using unified exporter
               eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
     
@@ -263,12 +282,23 @@ jobs:
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
               for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
     
+              echo "Executing build environment operations..."
               if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" != "true" ]; then
-                /module/scripts/prepare.sh "set_template_version.yaml"
-                /module/scripts/prepare.sh "build_env.yaml"
+                if ! /module/scripts/prepare.sh "set_template_version.yaml"; then
+                  echo "❌ Set template version failed with exit code $?"
+                  exit 1
+                fi
+                if ! /module/scripts/prepare.sh "build_env.yaml"; then
+                  echo "❌ Build environment failed with exit code $?"
+                  exit 1
+                fi
               else
-                /module/scripts/prepare.sh "build_env.yaml"
+                if ! /module/scripts/prepare.sh "build_env.yaml"; then
+                  echo "❌ Build environment failed with exit code $?"
+                  exit 1
+                fi
               fi
+              echo "✅ Build environment operations completed successfully"
     
               if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
                 env_name=$(cat set_variable.txt)
@@ -302,6 +332,9 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           run: |
+            # Enable strict error handling
+            set -euo pipefail
+            
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
             
@@ -312,7 +345,12 @@ jobs:
               done
             fi
   
-            /module/scripts/prepare.sh "generate_effective_set.yaml"
+            echo "Executing effective set generation..."
+            if ! /module/scripts/prepare.sh "generate_effective_set.yaml"; then
+              echo "❌ Effective set generation failed with exit code $?"
+              exit 1
+            fi
+            echo "✅ Effective set generation completed successfully"
   
             env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
             for path in $env_path; do
@@ -337,6 +375,9 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           run: |
+            # Enable strict error handling
+            set -euo pipefail
+            
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
             
@@ -351,7 +392,14 @@ jobs:
   
             git config --global --add safe.directory "${CI_PROJECT_DIR}"
   
-            /module/scripts/prepare.sh "git_commit.yaml"
+            # Execute git commit with proper error handling
+            echo "Executing git commit operations..."
+            if ! /module/scripts/prepare.sh "git_commit.yaml"; then
+              echo "❌ Git commit operations failed with exit code $?"
+              echo "This could be due to authentication issues or other git errors"
+              exit 1
+            fi
+            echo "✅ Git commit operations completed successfully"
   
             env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
             for path in $env_path; do
