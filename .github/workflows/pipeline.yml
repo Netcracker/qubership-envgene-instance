@@ -368,9 +368,6 @@ jobs:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           run: |
-            # Enable strict error handling
-            set -euo pipefail
-            
             # Export all variables using unified exporter
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
             
