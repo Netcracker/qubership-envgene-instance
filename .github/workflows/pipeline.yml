@@ -285,6 +285,8 @@ jobs:
                 fi
               done
 
+              ls -la
+
       - name: Upload Build Env Package       
         uses: actions/upload-artifact@v4
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
