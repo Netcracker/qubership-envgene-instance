@@ -96,7 +96,6 @@ def is_pipeline_variable(key):
         'RUNNER_TEMP', 'RUNNER_WORKSPACE', 'RUNNER_PERFLOG', 'RUNNER_TRACKING_ID',
         'HOME', 'PATH', 'SHELL', 'USER', 'LANG', 'PWD', 'OLDPWD',
         'TERM', 'HOSTNAME', 'HOSTTYPE', 'MACHTYPE', 'OSTYPE',
-        'CI_COMMIT_REF_NAME',
         # Python system variables
         'PYTHONDONTWRITEBYTECODE', 'PYTHONUNBUFFERED', 'PYTHON_SHA256',
         # GPG and other technical variables
