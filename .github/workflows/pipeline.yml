@@ -322,12 +322,9 @@ jobs:
             done
   
             cp -rf ${CI_PROJECT_DIR}/environments ${CI_PROJECT_DIR}/git_envs
-
-            ls -aR ${{ github.workspace }}
-            ls -aR ${CI_PROJECT_DIR}
             
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: git_commit_${{ matrix.environment }}
-          path: ${{ github.workspace }}/git_envs      
+          path: /work/git_envs      
