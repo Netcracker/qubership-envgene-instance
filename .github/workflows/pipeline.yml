@@ -28,22 +28,26 @@ on:
       ENV_BUILDER:
         required: false
         default: "true"
-        type: string
+        type: choice
+        options: ["false", "true"]
         description: ""
       GENERATE_EFFECTIVE_SET:
         required: false
         default: "false"
-        type: string
+        type: choice
+        options: ["false", "true"]
         description: ""
       GET_PASSPORT:
         required: false
         default: "false"
-        type: string
+        type: choice
+        options: ["false", "true"]
         description: ""
       CMDB_IMPORT:
         required: false
         default: "false"
-        type: string
+        type: choice
+        options: ["false", "true"]
         description: ""
       GITHUB_PIPELINE_API_INPUT:
         required: false
