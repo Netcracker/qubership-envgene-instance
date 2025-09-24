@@ -180,7 +180,7 @@ jobs:
           python .github/scripts/generate_env_matrix.py
 
   envgene_execution:
-    name: "${{ matrix.environment }}"
+    name: "EnvGene - ${{ matrix.environment }}"
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     needs:
       - set_docker_images
