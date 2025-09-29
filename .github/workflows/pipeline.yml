@@ -363,9 +363,9 @@ jobs:
       - name: Set Secret Name
         run: |
           CLUSTER_NAME=$(echo "${{ matrix.environment }}" | awk -F "/" '{print $1}')
-          echo "CLUSTER_NAME=$CLUSTER_NAME"
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
           SECRET_NAME=${CLUSTER_NAME}_${SECRET_POSTFIX}
-          echo "$SECRET_NAME"
+          echo "SECRET_NAME=$SECRET_NAME" >> $GITHUB_ENV
 
       - name: Git Commit
         uses: addnab/docker-run-action@v3
