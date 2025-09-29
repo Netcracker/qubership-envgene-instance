@@ -360,7 +360,7 @@ jobs:
       ### GIT COMMIT ###
       - name: Set Dynamic Secret Variable
         run: |
-          SECRET_NAME=${CLUSTER_NAME}_secret
+          SECRET_NAME=${CLUSTER_NAME}_SECRET
           echo "SECRET_NAME=${SECRET_NAME}" >> $GITHUB_ENV
       
       - name: Git Commit
@@ -369,7 +369,7 @@ jobs:
           DYNAMIC_SECRET: ${{ secrets[env.SECRET_NAME] }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN -e SECRET_NAME  --user root
           
           run: |
             # Export all variables using unified exporter
