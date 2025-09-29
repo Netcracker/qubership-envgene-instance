@@ -371,7 +371,7 @@ jobs:
           DYNAMIC_SECRET: ${{ secrets[env.SECRET_NAME] }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN -e SECRET_NAME -e DYNAMIC_SECRET --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN -e DYNAMIC_SECRET --user root
           
           run: |
             # Export all variables using unified exporter
