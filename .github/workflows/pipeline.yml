@@ -377,6 +377,8 @@ jobs:
             echo "-===DEBUG THE VARS===-"
             echo "$SECRET_NAME"
             echo "$DYNAMIC_SECRET"
+            echo "Secret length: ${#DYNAMIC_SECRET}"
+            echo "DYNAMIC_SECRET is set: $([ -n "$DYNAMIC_SECRET" ] && echo "YES" || echo "NO")"
             echo "-====================-"
             
             echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
