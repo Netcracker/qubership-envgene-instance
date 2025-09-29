@@ -222,7 +222,6 @@ export_environment_variables() {
     
     # Set DYNAMIC_SECRET based on SECRET_NAME (this will be overridden by GitHub secrets in the workflow)
     local secret_name="${cluster_name}_${SECRET_POSTFIX}"
-    echo "export \"DYNAMIC_SECRET\"=\"\${$secret_name:-}\""
     
     log "  FULL_ENV = $MATRIX_ENVIRONMENT"
     log "  ENV_NAMES = $MATRIX_ENVIRONMENT"
@@ -232,7 +231,6 @@ export_environment_variables() {
     log "  ENV_NAME_SHORT = $(echo "$environment_name" | awk -F "/" '{print $NF}')"
     log "  PROJECT_DIR = ${CI_PROJECT_DIR:-$(pwd)}"
     log "  SECRET_NAME = ${cluster_name}_${SECRET_POSTFIX}"
-    log "  DYNAMIC_SECRET = \${$secret_name:-}"
     
     # Export common pipeline variables
     export_common_pipeline_variables
