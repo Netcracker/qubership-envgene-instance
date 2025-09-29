@@ -141,11 +141,14 @@ jobs:
              # Load pipeline_vars.yaml only in Manual Mode
              python .github/scripts/load_pipeline_vars.py
            fi
+          
+           SECRET_NAME=${CLUSTER_NAME}_SECRET
+           echo "SECRET_NAME=${SECRET_NAME}" >> $GITHUB_ENV      
 
       - name: Create env_generation_params
         run: |
-          python .github/scripts/create_env_generation_params.py
-
+          python .github/scripts/create_env_generation_params.py  
+      
       - name: Collect All Variables
         id: collect-vars
         run: |
