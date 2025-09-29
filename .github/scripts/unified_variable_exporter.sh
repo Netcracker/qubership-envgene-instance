@@ -232,7 +232,7 @@ export_environment_variables() {
     log "  ENV_NAME_SHORT = $(echo "$environment_name" | awk -F "/" '{print $NF}')"
     log "  PROJECT_DIR = ${CI_PROJECT_DIR:-$(pwd)}"
     log "  SECRET_NAME = ${cluster_name}_${SECRET_POSTFIX}"
-    log "  DYNAMIC_SECRET = \${$SECRET_NAME:-}"
+    log "  DYNAMIC_SECRET = \${$secret_name:-}"
     
     # Export common pipeline variables
     export_common_pipeline_variables
