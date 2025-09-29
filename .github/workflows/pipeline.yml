@@ -362,7 +362,7 @@ jobs:
       ### GIT COMMIT ###
       - name: Set Secret Name
         run: |
-          eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+          CLUSTER_NAME=$(echo "$ENV_NAME" | awk -F "/" '{print $1}')
           SECRET_NAME=${CLUSTER_NAME}_${SECRET_POSTFIX}
           echo "$SECRET_NAME"
 
