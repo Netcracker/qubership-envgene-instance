@@ -363,6 +363,7 @@ jobs:
       - name: Set Secret Name
         run: |
           CLUSTER_NAME=$(echo "$ENV_NAME" | awk -F "/" '{print $1}')
+          echo "CLUSTER_NAME=$CLUSTER_NAME"
           SECRET_NAME=${CLUSTER_NAME}_${SECRET_POSTFIX}
           echo "$SECRET_NAME"
 
