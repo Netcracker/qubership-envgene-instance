@@ -368,7 +368,11 @@ jobs:
             eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
 
             #Debug variables
+            echo "-===DEBUG THE VARS===-"
             echo "${CLUSTER_NAME}"
+            echo "SECRET_NAME=${CLUSTER_NAME}_secret" >> $GITHUB_ENV
+            echo "SECRET_NAME=${SECRET_NAME}"
+            echo "-====================-"
             
             echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
 
