@@ -367,7 +367,7 @@ jobs:
           MY_VAR: ${{ vars.MY_VAR }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN -e MY_VAR -e DYNAMIC_SECRET --user root
           
           run: |
             # Export all variables using unified exporter
