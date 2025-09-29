@@ -221,7 +221,8 @@ export_environment_variables() {
     echo "export \"SECRET_NAME\"=\"${cluster_name}_${SECRET_POSTFIX}\""
     
     # Set DYNAMIC_SECRET based on SECRET_NAME (this will be overridden by GitHub secrets in the workflow)
-    echo "export \"DYNAMIC_SECRET\"=\"\${$SECRET_NAME:-}\""
+    local secret_name="${cluster_name}_${SECRET_POSTFIX}"
+    echo "export \"DYNAMIC_SECRET\"=\"\${$secret_name:-}\""
     
     log "  FULL_ENV = $MATRIX_ENVIRONMENT"
     log "  ENV_NAMES = $MATRIX_ENVIRONMENT"
