@@ -363,7 +363,7 @@ jobs:
       - name: Git Commit
         uses: addnab/docker-run-action@v3
         env: 
-          DYNAMIC_SECRET: ${{ secrets.TEST_CLUSTER_SECRET }}
+          DYNAMIC_SECRET: ${{ secrets[env.SECRET_NAME] }}
           MY_VAR: ${{ vars.MY_VAR }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
