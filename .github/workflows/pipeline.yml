@@ -371,7 +371,7 @@ jobs:
             echo "-===DEBUG THE VARS===-"
             echo "${CLUSTER_NAME}"
             echo "SECRET_NAME=${CLUSTER_NAME}_secret" >> $GITHUB_ENV
-            echo "SECRET_NAME=${SECRET_NAME}"
+            echo "SECRET_NAME=${{ env.SECRET_NAME }}"
             echo "-====================-"
             
             echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
