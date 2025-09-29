@@ -360,11 +360,6 @@ jobs:
 
 
       ### GIT COMMIT ###
-      - name: Set Dynamic Secret Variable
-        run: |
-          SECRET_NAME=${CLUSTER_NAME}_SECRET
-          echo "SECRET_NAME=${SECRET_NAME}" >> $GITHUB_ENV
-      
       - name: Git Commit
         uses: addnab/docker-run-action@v3
         env: 
