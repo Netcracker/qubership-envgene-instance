@@ -360,6 +360,11 @@ jobs:
 
 
       ### GIT COMMIT ###
+      - name: Set Secret Name
+        run: |
+          echo "SECRET_NAME=${{ env.SECRET_NAME }}" >> $GITHUB_ENV
+          echo "$SECRET_NAME"
+
       - name: Git Commit
         uses: addnab/docker-run-action@v3
         env: 
