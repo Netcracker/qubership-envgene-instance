@@ -363,11 +363,10 @@ jobs:
       - name: Git Commit
         uses: addnab/docker-run-action@v3
         env: 
-          SECRET_NAME: ${{ matrix.environment == 'test_cluster/e01' && 'TEST_CLUSTER_SECRET' || matrix.environment == 'test_cluster/e02' && 'TEST_CLUSTER_SECRET' || 'DEFAULT_SECRET' }}
           DYNAMIC_SECRET: ${{ secrets.TEST_CLUSTER_SECRET }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN -e DYNAMIC_SECRET --user root
+          options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
           
           run: |
             # Export all variables using unified exporter
