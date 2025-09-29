@@ -364,6 +364,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         env: 
           DYNAMIC_SECRET: ${{ secrets.TEST_CLUSTER_SECRET }}
+          MY_VAR: ${{ vars.MY_VAR }}
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
           options: -v ${{ github.workspace }}:/work -w /work -e GITHUB_TOKEN --user root
@@ -374,6 +375,7 @@ jobs:
 
             #Debug variables
             echo "-===DEBUG THE VARS===-"
+            echo "$MY_VAR"
             echo "$SECRET_NAME"
             echo "$DYNAMIC_SECRET"
             echo "Secret length: ${#DYNAMIC_SECRET}"
