@@ -362,7 +362,7 @@ jobs:
       ### GIT COMMIT ###
       - name: Set Secret Name
         run: |
-          CLUSTER_NAME=$(echo "$ENV_NAME" | awk -F "/" '{print $1}')
+          CLUSTER_NAME=$(echo "${{ matrix.environment }}" | awk -F "/" '{print $1}')
           echo "CLUSTER_NAME=$CLUSTER_NAME"
           SECRET_NAME=${CLUSTER_NAME}_${SECRET_POSTFIX}
           echo "$SECRET_NAME"
