@@ -218,6 +218,7 @@ export_environment_variables() {
     echo "export \"ENV_NAME\"=\"$environment_name\""
     echo "export \"ENV_NAME_SHORT\"=\"$(echo "$environment_name" | awk -F "/" '{print $NF}')\""
     echo "export \"PROJECT_DIR\"=\"${CI_PROJECT_DIR:-/work}\""
+    echo "export \"SECRET_NAME\"=\"${cluster_name}_${SECRET_POSTFIX}\""
     
     log "  FULL_ENV = $MATRIX_ENVIRONMENT"
     log "  ENV_NAMES = $MATRIX_ENVIRONMENT"
@@ -226,6 +227,7 @@ export_environment_variables() {
     log "  ENV_NAME = $environment_name"
     log "  ENV_NAME_SHORT = $(echo "$environment_name" | awk -F "/" '{print $NF}')"
     log "  PROJECT_DIR = ${CI_PROJECT_DIR:-$(pwd)}"
+    log "  SECRET_NAME = ${cluster_name}_${SECRET_POSTFIX}"
     
     # Export common pipeline variables
     export_common_pipeline_variables

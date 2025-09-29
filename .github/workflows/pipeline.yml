@@ -62,6 +62,7 @@ env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
   ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
+  SECRET_POSTFIX: 'SECRET'
 
   GITHUB_USER_EMAIL: 'envgene@qubership.org'
   GITHUB_USER_NAME: 'envgene'
@@ -141,9 +142,7 @@ jobs:
              # Load pipeline_vars.yaml only in Manual Mode
              python .github/scripts/load_pipeline_vars.py
            fi
-          
-           SECRET_NAME=${CLUSTER_NAME}_SECRET
-           echo "SECRET_NAME=${SECRET_NAME}" >> $GITHUB_ENV      
+
 
       - name: Create env_generation_params
         run: |
