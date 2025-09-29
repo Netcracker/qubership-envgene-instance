@@ -57,7 +57,7 @@ def is_pipeline_variable(key):
     system_vars = {
         # Secrets and credentials
         'SECRET_KEY', 'GITHUB_TOKEN', 'ENVGENE_AGE_PUBLIC_KEY', 'ENVGENE_AGE_PRIVATE_KEY',
-        'GH_ACCESS_TOKEN', 'PUBLIC_AGE_KEYS', 'GPG_KEY',
+        'GH_ACCESS_TOKEN', 'PUBLIC_AGE_KEYS', 'GPG_KEY', 'SECRET_POSTFIX'
         
         # GitHub Actions internal variables
         'GITHUB_ENV', 'GITHUB_OUTPUT', 'GITHUB_WORKSPACE', 'GITHUB_REPOSITORY', 
