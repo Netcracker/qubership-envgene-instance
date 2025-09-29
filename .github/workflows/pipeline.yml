@@ -362,7 +362,7 @@ jobs:
       ### GIT COMMIT ###
       - name: Set Secret Name
         run: |
-          echo "SECRET_NAME=${{ env.SECRET_NAME }}" >> $GITHUB_ENV
+          SECRET_NAME=${CLUSTER_NAME}_${SECRET_POSTFIX}
           echo "$SECRET_NAME"
 
       - name: Git Commit
