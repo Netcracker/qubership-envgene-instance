@@ -379,7 +379,7 @@ jobs:
 
             #Debug variables
             echo "-===DEBUG THE VARS===-"
-            echo "$DYNAMIC_SECRET"
+            echo "$SECRET_NAME"
             echo "-====================-"
             
             echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
