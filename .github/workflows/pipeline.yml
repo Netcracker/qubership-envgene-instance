@@ -203,6 +203,7 @@ jobs:
         run: |
           PACKAGE_NAME="$(echo '${{ matrix.environment }}' | sed 's|/|_|g')"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+          echo "NAME=Andrey" >> $GITHUB_ENV
         shell: bash
 
       - name: Show GitHub Env
