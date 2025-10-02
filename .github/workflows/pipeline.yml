@@ -97,9 +97,6 @@ jobs:
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04'  }}
     needs:
       - set_docker_images
-    container:
-      image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_PIPEGENE }}
-      options: --user root
     outputs:
       env_matrix: ${{ steps.matrix-generator.outputs.env_matrix }}
       variables_json: ${{ steps.collect-vars.outputs.variables_json }}
