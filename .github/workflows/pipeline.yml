@@ -114,21 +114,12 @@ jobs:
       - name: Repository Checkout
         uses: actions/checkout@v4
 
-      - name: Load environment variables from configuration file
-        run: |
-          if [ -f ./.github/configuration/.env ]; then
-            cat ./.github/configuration/.env >> "$GITHUB_ENV"
-          else
-            echo "File .env not found."
-          fi
-
-      - name: Load variables from pipeline_vars.env
-        run: |
-          if [ -f ./.github/pipeline_vars.env ]; then
-            cat ./.github/pipeline_vars.env >> "$GITHUB_ENV"
-          else
-            echo "File pipeline_vars.env not found."
-          fi
+      - name: Load environment variables from configuration files
+        uses: ./.github/actions/load-env-files
+        with:
+          paths: |
+            .github/configuration/.env
+            pipeline_vars.env
 
       - name: Process Input Parameters
         run: |
@@ -140,17 +131,10 @@ jobs:
            echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
            echo "ADDITIONAL_VARIABLES=${{ github.event.inputs.ADDITIONAL_VARIABLES }}" >> $GITHUB_ENV
 
-      - name: Process Additional Variables
+      - name: Process other variables
         run: |
           .github/scripts/process_additional_variables.sh
-
-      - name: Create env_generation_params
-        run: |
           .github/scripts/create_env_generation_params.sh
-
-      - name: Show github_env
-        run: |
-          cat $GITHUB_ENV
 
       - name: Multiple Environment Proccessing
         id: matrix-generator
