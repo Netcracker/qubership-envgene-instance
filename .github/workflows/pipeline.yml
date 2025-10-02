@@ -142,5 +142,5 @@ jobs:
       - name: Multiple Environment Proccessing
         id: matrix-generator
         run: |
-          python .github/scripts/generate_env_matrix.py
+          .github/scripts/generate_env_matrix.sh
  
