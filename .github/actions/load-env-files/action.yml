@@ -16,10 +16,11 @@ runs:
       run: |
         echo "Loading environment files..."
         
-        # Read paths from environment variable
-        IFS=$'\n' read -d '' -ra file_paths <<< "$PATHS_INPUT"
+        # Create a temporary file with the paths
+        echo "$PATHS_INPUT" > /tmp/paths.txt
         
-        for file_path in "${file_paths[@]}"; do
+        # Read paths from the temporary file
+        while IFS= read -r file_path; do
           # Remove any whitespace
           clean_path=$(echo "$file_path" | xargs)
           
@@ -32,6 +33,9 @@ runs:
               echo "⚠️  File not found: $clean_path"
             fi
           fi
-        done
+        done < /tmp/paths.txt
+        
+        # Clean up
+        rm -f /tmp/paths.txt
         
         echo "Finished loading environment files"
