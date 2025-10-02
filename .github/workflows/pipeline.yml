@@ -140,6 +140,10 @@ jobs:
            echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
            echo "ADDITIONAL_VARIABLES=${{ github.event.inputs.ADDITIONAL_VARIABLES }}" >> $GITHUB_ENV
 
+      - name: Process Additional Variables
+        run: |
+          .github/scripts/process_additional_variables.sh
+
       - name: Create env_generation_params
         run: |
           .github/scripts/create_env_generation_params.sh
@@ -152,5 +156,4 @@ jobs:
         id: matrix-generator
         run: |
           python .github/scripts/generate_env_matrix.py
-
-  
+ 
