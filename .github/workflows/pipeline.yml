@@ -131,9 +131,12 @@ jobs:
            echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
            echo "ADDITIONAL_VARIABLES=${{ github.event.inputs.ADDITIONAL_VARIABLES }}" >> $GITHUB_ENV
 
-      - name: Process other variables
+      - name: Process additional variables
         run: |
           .github/scripts/process_additional_variables.sh
+          
+      - name: Create env_generation_params
+        run: |
           .github/scripts/create_env_generation_params.sh
 
       - name: Multiple Environment Proccessing
