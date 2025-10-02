@@ -144,6 +144,10 @@ jobs:
         run: |
           .github/scripts/create_env_generation_params.sh
 
+      - name: Show github_env
+        run: |
+          cat $GITHUB_ENV
+
       - name: Multiple Environment Proccessing
         id: matrix-generator
         run: |
