@@ -11,11 +11,13 @@ runs:
   steps:
     - name: Load environment files
       shell: bash
+      env:
+        PATHS_INPUT: ${{ inputs.paths }}
       run: |
         echo "Loading environment files..."
         
-        # Read paths from input
-        IFS=$'\n' read -d '' -ra file_paths <<< "${{ inputs.paths }}"
+        # Read paths from environment variable
+        IFS=$'\n' read -d '' -ra file_paths <<< "$PATHS_INPUT"
         
         for file_path in "${file_paths[@]}"; do
           # Remove any whitespace
