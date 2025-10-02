@@ -120,7 +120,6 @@ jobs:
             cat ./.github/configuration/.env >> "$GITHUB_ENV"
           else
             echo "File .env not found."
-            exit 1
           fi
 
       - name: Load variables from pipeline_vars.env
@@ -129,7 +128,6 @@ jobs:
             cat ./.github/pipeline_vars.env >> "$GITHUB_ENV"
           else
             echo "File pipeline_vars.env not found."
-            exit 1
           fi
 
       - name: Process Input Parameters
