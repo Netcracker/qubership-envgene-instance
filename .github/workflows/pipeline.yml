@@ -119,7 +119,7 @@ jobs:
         with:
           paths: |
             .github/configuration/.env
-            pipeline_vars.env
+            .github/pipeline_vars.env
 
       - name: Process Input Parameters
         run: |
