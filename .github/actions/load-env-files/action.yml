@@ -27,23 +27,9 @@ runs:
           if [ -n "$clean_path" ]; then
             if [ -f "$clean_path" ]; then
               echo "Loading variables from: $clean_path"
-              
-              # Process each line of the .env file
-              while IFS= read -r line; do
-                # Skip empty lines and comments
-                if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
-                  # Split into key and value
-                  IFS='=' read -r key value <<< "$line"
-                  
-                  # Remove quotes from value if present
-                  clean_value=$(echo "$value" | sed 's/^"\(.*\)"$/\1/; s/^\'\(.*\)\'$/\1/')
-                  
-                  # Add to GitHub environment
-                  echo "$key=$clean_value" >> "$GITHUB_ENV"
-                  echo "✅ $key=$clean_value"
-                fi
-              done < "$clean_path"
-              
+              # Ensure newline before appending file content
+              echo "" >> "$GITHUB_ENV"
+              cat "$clean_path" >> "$GITHUB_ENV"
               echo "✅ Successfully loaded $clean_path"
             else
               echo "⚠️  File not found: $clean_path"
