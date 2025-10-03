@@ -57,7 +57,6 @@ on:
 
 env:
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
-  CI_PROJECT_DIR: /workspace
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
   ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
@@ -230,41 +229,37 @@ jobs:
       ### GIT COMMIT ###
       - name: Git Commit
         run: |
-           cat $GITHUB_ENV
            env > .env.container
-           echo "Docker image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}"
-           echo "Workspace: ${{ github.workspace }}"
-           echo "Testing Docker command..."
            docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
               source /module/venv/bin/activate
                 
-              echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
+              echo 'Prepare git_commit job for \${ENVIRONMENT_NAME}...'
 
-              if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
-                env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs")
-                for path in $env_path; do
-                  bash /module/scripts/update_ca_cert.sh "${CI_PROJECT_DIR}/configuration/certs/$path"
+              if [ -d \"\${CI_PROJECT_DIR}/configuration/certs\" ]; then
+                env_path=\$(ls -A \"\${CI_PROJECT_DIR}/configuration/certs\")
+                for path in \$env_path; do
+                  bash /module/scripts/update_ca_cert.sh \"\${CI_PROJECT_DIR}/configuration/certs/\$path\"
                 done
               fi
 
-              git config --global --add safe.directory "${CI_PROJECT_DIR}"
+              git config --global --add safe.directory \"\${CI_PROJECT_DIR}\"
 
               # Execute git commit with proper error handling
-              echo "Executing git commit operations..."
-              if ! /module/scripts/prepare.sh "git_commit.yaml"; then
-                echo "Git commit operations failed with exit code $?"
-                echo "This could be due to authentication issues or other git errors"
+              echo 'Executing git commit operations...'
+              if ! /module/scripts/prepare.sh \"git_commit.yaml\"; then
+                echo 'Git commit operations failed with exit code \$?'
+                echo 'This could be due to authentication issues or other git errors'
                 exit 1
               fi
 
-              env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
-              for path in $env_path; do
-                if [ -d "$path/Credentials" ]; then
-                  chmod ugo+rw "$path/Credentials/"*
+              env_path=\$(find \"\${CI_PROJECT_DIR}/environments\" -type d -name \"\$env_name\")
+              for path in \$env_path; do
+                if [ -d \"\$path/Credentials\" ]; then
+                  chmod ugo+rw \"\$path/Credentials/\"*
                 fi
               done
 
-              cp -rf ${CI_PROJECT_DIR}/environments ${CI_PROJECT_DIR}/git_envs
+              cp -rf \${CI_PROJECT_DIR}/environments \${CI_PROJECT_DIR}/git_envs
             "
 
       - name: Upload Git Commit Package
