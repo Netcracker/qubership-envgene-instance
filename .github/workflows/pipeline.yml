@@ -205,7 +205,7 @@ jobs:
         run: |
               cat $GITHUB_ENV
               env > .env.container
-              docker run -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root ${{ env.DOCKER_IMAGE_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
+              docker run -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
 
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
