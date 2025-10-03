@@ -180,7 +180,7 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         run: |
               env > .env.container
-              docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
+              docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
                 # Activate virtual environment to get proper PATH
                 source /module/venv/bin/activate
                 
@@ -231,10 +231,12 @@ jobs:
       - name: Git Commit
         run: |
            env > .env.container
-           docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
+           docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
               source /module/venv/bin/activate
                 
               echo '=== DEBUG INFO ==='
+              echo 'HOME:' \$HOME
+              echo 'USER:' \$USER
               echo 'Current directory:' \$(pwd)
               echo 'Environment variables:'
               echo 'CI_PROJECT_DIR:' \$CI_PROJECT_DIR
