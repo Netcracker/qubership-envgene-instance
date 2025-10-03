@@ -115,7 +115,7 @@ jobs:
         uses: ./.github/actions/load-env-files
         with:
           paths: |
-            .github/configuration/.env
+            .github/configuration/config.env
             .github/pipeline_vars.env
 
       - name: Process Input Parameters
