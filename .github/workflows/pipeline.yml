@@ -154,5 +154,98 @@ jobs:
         with:
             include-hidden-files: true
             name: environment-file
-            path: .env  
+            path: .env
+
+  envgene_execution:
+    name: "EnvGene - ${{ matrix.environment }}"
+    runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
+    needs:
+      - set_docker_images
+      - process_environment_variables
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(needs.process_environment_variables.outputs.env_matrix) }}
+    steps:
+      - name: Repository Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download environment-file
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-file
+      
+      - name: Source the .env file
+        run: |
+          while IFS= read -r line; do
+            if [[ -n "$line" && ! "$line" =~ ^# ]]; then
+              echo "$line" >> "$GITHUB_ENV"
+            fi
+          done < ./.env
+
+      - name: Create Package Name
+        run: |
+          PACKAGE_NAME="$(echo '${{ matrix.environment }}' | sed 's|/|_|g')"
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Process matrix iteration
+        run: |
+          .github/scripts/process_matrix_iteration.sh ${{ matrix.environment }}
+      
+      - name: Show github_env
+        run: |
+          cat $GITHUB_ENV
+
+      ### BUILD ENV ###
+      - name: Build Env
+        uses: addnab/docker-run-action@v3
+        if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        with:
+          image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
+          options: -v ${{ github.workspace }}:${CI_PROJECT_DIR} -w ${CI_PROJECT_DIR} -e ${GITHUB_TOKEN} --user root
+          run: |
+              if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
+              env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
+              for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
+
+              echo "Executing build environment operations..."
+              if [ "$ENV_TEMPLATE_VERSION" != "" ] && [ "$ENV_TEMPLATE_TEST" != "true" ]; then
+                if ! /module/scripts/prepare.sh "set_template_version.yaml"; then
+                  exit 1
+                fi
+                if ! /module/scripts/prepare.sh "build_env.yaml"; then
+                  exit 1
+                fi
+              else
+                if ! /module/scripts/prepare.sh "build_env.yaml"; then
+                  exit 1
+                fi
+              fi
+
+              if [ "$ENV_TEMPLATE_TEST" == "true" ]; then
+                env_name=$(cat set_variable.txt)
+                sed -i "s|\\\"envgeneNullValue\\\"|\\\"test_value\\\"|g" "${CI_PROJECT_DIR}/environments/$env_name/Credentials/credentials.yml"
+              else
+                env_name=$(echo "$ENV_NAME" | awk -F "/" '{print $NF}')
+                export env_name
+              fi
+
+              env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
+              for path in $env_path; do
+                if [ -d "$path/Credentials" ]; then
+                  chmod ugo+rw "$path/Credentials/"*
+                fi
+              done
+
+      - name: Upload Build Env Package
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        with:
+          name: build_env_${{ env.PACKAGE_NAME }}
+          path: environments/${{ matrix.environment }}
+          include-hidden-files: true
+      ##########################
  
