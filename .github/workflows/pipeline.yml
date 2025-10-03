@@ -140,4 +140,8 @@ jobs:
         id: matrix-generator
         run: |
           .github/scripts/generate_env_matrix.sh
+
+      - name: Show github_env
+        run: |
+          cat $GITHUB_ENV
  
