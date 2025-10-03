@@ -144,4 +144,15 @@ jobs:
       - name: Show github_env
         run: |
           cat $GITHUB_ENV
+
+      - name: Create .env file
+        run: |
+          env > ${{ github.workspace }}/.env
+
+      - name: Upload .env as artifact
+        uses: actions/upload-artifact@v4
+        with:
+            include-hidden-files: true
+            name: environment-file
+            path: .env  
  
