@@ -205,7 +205,7 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           image: ${{ needs.set_docker_images.outputs.DOCKER_IMAGE_ENVGENE }}
-          options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }}-w ${{ env.CI_PROJECT_DIR }} -e GITHUB_TOKEN --user root
+          options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e GITHUB_TOKEN --user root
           run: |
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
