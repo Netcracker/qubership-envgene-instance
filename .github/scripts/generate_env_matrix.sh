@@ -36,7 +36,7 @@ echo "Generated matrix: $matrix_output"
 
 # Add to GitHub output
 if [ -n "$GITHUB_OUTPUT" ]; then
-    echo "matrix=$matrix_output" >> "$GITHUB_OUTPUT"
+    echo "env_matrix=$matrix_output" >> "$GITHUB_OUTPUT"
     echo "✅ Matrix written to GITHUB_OUTPUT"
 else
     echo "❌ GITHUB_OUTPUT variable is not set!"
