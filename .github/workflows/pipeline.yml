@@ -228,64 +228,44 @@ jobs:
       ##########################
 
       ### GIT COMMIT ###
+      - name: Create env file for container
+        run: env > .env.container
+
       - name: Git Commit
-        run: |
-           env > .env.container
-           docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
-              source /module/venv/bin/activate
-                
-              echo '=== DEBUG INFO ==='
-              echo 'HOME:' \$HOME
-              echo 'USER:' \$USER
-              echo 'Current directory:' \$(pwd)
-              echo 'Environment variables:'
-              echo 'CI_PROJECT_DIR:' \$CI_PROJECT_DIR
-              echo 'ENVIRONMENT_NAME:' \$ENVIRONMENT_NAME
-              echo 'ENV_NAME:' \$ENV_NAME
-              echo 'env_name:' \$env_name
-              echo 'Workspace contents:'
-              ls -la /workspace/
-              echo 'Configuration directory:'
-              ls -la /workspace/configuration/ || echo 'No configuration directory'
-              echo 'Environments directory:'
-              ls -la /workspace/environments/ || echo 'No environments directory'
-              echo '=================='
-                
-              echo 'Prepare git_commit job for \${ENVIRONMENT_NAME}...'
-
-              # Set env_name if not set
-              if [ -z \"\$env_name\" ]; then
-                env_name=\$(echo \"\$ENV_NAME\" | awk -F \"/\" '{print \$NF}')
-                export env_name
-                echo \"Set env_name to: \$env_name\"
-              fi
-
-              if [ -d \"\${CI_PROJECT_DIR}/configuration/certs\" ]; then
-                env_path=\$(ls -A \"\${CI_PROJECT_DIR}/configuration/certs\")
-                for path in \$env_path; do
-                  bash /module/scripts/update_ca_cert.sh \"\${CI_PROJECT_DIR}/configuration/certs/\$path\"
-                done
-              fi
-
-              git config --global --add safe.directory \"\${CI_PROJECT_DIR}\"
-
-              # Execute git commit with proper error handling
-              echo 'Executing git commit operations...'
-              if ! /module/scripts/prepare.sh \"git_commit.yaml\"; then
-                echo 'Git commit operations failed with exit code \$?'
-                echo 'This could be due to authentication issues or other git errors'
-                exit 1
-              fi
-
-              env_path=\$(find \"\${CI_PROJECT_DIR}/environments\" -type d -name \"\$env_name\")
-              for path in \$env_path; do
-                if [ -d \"\$path/Credentials\" ]; then
-                  chmod ugo+rw \"\$path/Credentials/\"*
-                fi
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
+          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file ${{ github.workspace }}/.env.container --user root -e HOME=/root
+          run: |
+            source /module/venv/bin/activate
+            
+            echo 'Prepare git_commit job for ${ENVIRONMENT_NAME}...'
+            
+            if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
+              env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs")
+              for path in $env_path; do
+                bash /module/scripts/update_ca_cert.sh "${CI_PROJECT_DIR}/configuration/certs/$path"
               done
+            fi
 
-              cp -rf \${CI_PROJECT_DIR}/environments \${CI_PROJECT_DIR}/git_envs
-            "
+            git config --global --add safe.directory "${CI_PROJECT_DIR}"
+
+            # Execute git commit with proper error handling
+            echo 'Executing git commit operations...'
+            if ! /module/scripts/prepare.sh "git_commit.yaml"; then
+              echo 'Git commit operations failed with exit code $?'
+              echo 'This could be due to authentication issues or other git errors'
+              exit 1
+            fi
+
+            env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
+            for path in $env_path; do
+              if [ -d "$path/Credentials" ]; then
+                chmod ugo+rw "$path/Credentials/"*
+              fi
+            done
+
+            cp -rf ${CI_PROJECT_DIR}/environments ${CI_PROJECT_DIR}/git_envs
 
       - name: Upload Git Commit Package
         uses: actions/upload-artifact@v4
