@@ -13,6 +13,6 @@ envTemplate:
   additionalTemplateVariables:
     key: "value"
   artifactIsZip: true
-  artifact: "qubership_envgene_templates:0.0.1"
+  artifact: "qubership_envgene_templates:0.0.5"
 generatedVersions:
-  generateEnvironmentLatestVersion: "qubership_envgene_templates:0.0.1"  # This value is automatically generated during job run.
+  generateEnvironmentLatestVersion: "qubership_envgene_templates:0.0.5"  # This value is automatically generated during job run.
