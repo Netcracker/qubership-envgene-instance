@@ -210,6 +210,13 @@ jobs:
                 
                 ls -la /
 
+                echo 'Debugging environment...'
+                echo 'PATH: ' \$PATH
+                echo 'Which ansible-playbook: ' \$(which ansible-playbook || echo 'not found')
+                echo 'Find ansible: ' \$(find /usr -name ansible-playbook 2>/dev/null || echo 'not found')
+                echo 'Python version: ' \$(python3 --version || echo 'not found')
+                echo 'Pip list: ' \$(pip3 list | grep -i ansible || echo 'no ansible packages')
+
                 echo 'Executing build environment operations...'
                 if [ -d \"\${CI_PROJECT_DIR}/configuration/certs\" ]; then
                 env_path=\$(ls -A \"\${CI_PROJECT_DIR}/configuration/certs\");
