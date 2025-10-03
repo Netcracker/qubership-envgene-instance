@@ -209,7 +209,7 @@ jobs:
 
               pwd
               
-              ls -la
+              ls -la .
 
               echo "Executing build environment operations..."
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
