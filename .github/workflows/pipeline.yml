@@ -251,6 +251,13 @@ jobs:
                 
               echo 'Prepare git_commit job for \${ENVIRONMENT_NAME}...'
 
+              # Set env_name if not set
+              if [ -z \"\$env_name\" ]; then
+                env_name=\$(echo \"\$ENV_NAME\" | awk -F \"/\" '{print \$NF}')
+                export env_name
+                echo \"Set env_name to: \$env_name\"
+              fi
+
               if [ -d \"\${CI_PROJECT_DIR}/configuration/certs\" ]; then
                 env_path=\$(ls -A \"\${CI_PROJECT_DIR}/configuration/certs\")
                 for path in \$env_path; do
