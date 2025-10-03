@@ -78,25 +78,9 @@ env:
   DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "1.5.7"
 
 jobs:
-  set_docker_images:
-    name: "Set Docker Images"
-    runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
-    outputs:
-      DOCKER_IMAGE_PIPEGENE: ${{ env.DOCKER_IMAGE_PIPEGENE }}
-      DOCKER_IMAGE_ENVGENE: ${{ env.DOCKER_IMAGE_ENVGENE }}
-      DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR: ${{ env.DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR }}
-    steps:
-    - name: Set Docker Images
-      run: |
-        echo "DOCKER_IMAGE_PIPEGENE=${{ env.DOCKER_IMAGE_NAME_PIPEGENE }}:${{ env.DOCKER_IMAGE_TAG_PIPEGENE }}" >> $GITHUB_ENV
-        echo "DOCKER_IMAGE_ENVGENE=${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}" >> $GITHUB_ENV
-        echo "DOCKER_IMAGE_EFFECTIVE_SET_GENERATOR=${{ env.DOCKER_IMAGE_NAME_EFFECTIVE_SET_GENERATOR }}:${{ env.DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR }}" >> $GITHUB_ENV
-
   process_environment_variables:
     name: "Input Parameters Processing"
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04'  }}
-    needs:
-      - set_docker_images
     outputs:
       env_matrix: ${{ steps.matrix-generator.outputs.env_matrix }}
       variables_json: ${{ steps.collect-vars.outputs.variables_json }}
@@ -160,7 +144,6 @@ jobs:
     name: "EnvGene - ${{ matrix.environment }}"
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     needs:
-      - set_docker_images
       - process_environment_variables
     strategy:
       fail-fast: false
@@ -195,25 +178,16 @@ jobs:
         run: |
           .github/scripts/process_matrix_iteration.sh ${{ matrix.environment }}
       
-      - name: Show github_env
-        run: |
-          cat $GITHUB_ENV
 
       ### BUILD ENV ###
       - name: Build Env
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         run: |
-              cat $GITHUB_ENV
               env > .env.container
               docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
                 # Activate virtual environment to get proper PATH
                 source /module/venv/bin/activate
                 
-                pwd
-                
-                ls -la /workspace
-                
-                echo 'Executing build environment operations...'
                 if [ -d \"\${CI_PROJECT_DIR}/configuration/certs\" ]; then
                 env_path=\$(ls -A \"\${CI_PROJECT_DIR}/configuration/certs\");
                 for path in \$env_path; do bash /module/scripts/update_ca_cert.sh \${CI_PROJECT_DIR}/configuration/certs/\$path; done; fi
@@ -253,6 +227,49 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           name: build_env_${{ env.PACKAGE_NAME }}
+          path: environments/${{ matrix.environment }}
+          include-hidden-files: true
+      ##########################
+
+      ### GIT COMMIT ###
+      - name: Git Commit
+        run: |
+            env > .env.container
+            docker run -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} bash -c "
+            source /module/venv/bin/activate
+              
+            echo "Prepare git_commit job for ${ENVIRONMENT_NAME}..."
+
+            if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
+              env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs")
+              for path in $env_path; do
+                bash /module/scripts/update_ca_cert.sh "${CI_PROJECT_DIR}/configuration/certs/$path"
+              done
+            fi
+
+            git config --global --add safe.directory "${CI_PROJECT_DIR}"
+
+            # Execute git commit with proper error handling
+            echo "Executing git commit operations..."
+            if ! /module/scripts/prepare.sh "git_commit.yaml"; then
+              echo "Git commit operations failed with exit code $?"
+              echo "This could be due to authentication issues or other git errors"
+              exit 1
+            fi
+
+            env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
+            for path in $env_path; do
+              if [ -d "$path/Credentials" ]; then
+                chmod ugo+rw "$path/Credentials/"*
+              fi
+            done
+
+            cp -rf ${CI_PROJECT_DIR}/environments ${CI_PROJECT_DIR}/git_envs
+
+      - name: Upload Git Commit Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: git_commit_${{ env.PACKAGE_NAME }}
           path: environments/${{ matrix.environment }}
           include-hidden-files: true
       ##########################
