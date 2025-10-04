@@ -191,6 +191,8 @@ jobs:
               echo "CI_PROJECT_DIR=$CI_PROJECT_DIR"
               echo "PWD=$(pwd)"
               echo "USER=$(whoami)"
+              ls -la
+              ls -la /
               echo "=== END DEBUG ==="
               
               source /module/venv/bin/activate
