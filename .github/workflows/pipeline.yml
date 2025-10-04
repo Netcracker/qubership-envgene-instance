@@ -229,10 +229,8 @@ jobs:
           include-hidden-files: true
       ##########################
 
-      ### GIT COMMIT ###
-      - name: Create env file for container
-        run: env > .env.container
 
+      ### GIT COMMIT ###
       - name: Git Commit
         uses: addnab/docker-run-action@v3
         with:
