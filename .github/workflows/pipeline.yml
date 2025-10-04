@@ -185,6 +185,14 @@ jobs:
           image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
           options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root
           run: |
+              set -x
+              echo "=== DEBUG INFO ==="
+              echo "HOME=$HOME"
+              echo "CI_PROJECT_DIR=$CI_PROJECT_DIR"
+              echo "PWD=$(pwd)"
+              echo "USER=$(whoami)"
+              echo "=== END DEBUG ==="
+              
               source /module/venv/bin/activate
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
