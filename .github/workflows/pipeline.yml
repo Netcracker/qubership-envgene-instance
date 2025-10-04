@@ -235,7 +235,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
-          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root
+          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root
           run: |
             source /module/venv/bin/activate
             
