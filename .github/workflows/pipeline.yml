@@ -195,7 +195,9 @@ jobs:
               ls -la /
               echo "=== END DEBUG ==="
               
+              echo "=== Activating venv ==="
               source /module/venv/bin/activate
+              echo "=== Venv activated ==="
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
               env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs");
               for path in $env_path; do bash /module/scripts/update_ca_cert.sh ${CI_PROJECT_DIR}/configuration/certs/$path; done; fi
