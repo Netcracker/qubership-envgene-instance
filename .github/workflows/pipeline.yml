@@ -89,7 +89,7 @@ jobs:
       ENV_INVENTORY_INIT: ${{ env.ENV_INVENTORY_INIT }}
     steps:
       - name: Repository Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.0
         with:
           persist-credentials: false
 
@@ -149,7 +149,7 @@ jobs:
         environment: ${{ fromJson(needs.process_environment_variables.outputs.env_matrix) }}
     steps:
       - name: Repository Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.0
         with:
           fetch-depth: 0
         
@@ -175,6 +175,55 @@ jobs:
       - name: Create env file for container
         run: env > .env.container    
       
+      ### GENERATE INVENTORY ###
+      - name: Generate Inventory
+        uses: addnab/docker-run-action@v3
+        if: needs.process_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.process_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.process_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+        with:
+          image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
+          options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }}  --env-file .env.container --user root -e HOME=/root
+          run: |
+            source /module/venv/bin/activate
+
+            echo "Executing inventory generation..."
+            if ! python3 /build_env/scripts/build_env/env_inventory_generation.py; then
+              echo "Inventory generation failed with exit code $?"
+              exit 1
+            fi
+
+      - name: Upload Generate Inventory Package
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.ENV_TEMPLATE_TEST == 'false' && (needs.process_environment_variables.outputs.ENV_SPECIFIC_PARAMETERS != '' || needs.process_environment_variables.outputs.ENV_TEMPLATE_NAME != '')
+        with:
+          name: generate_inventory_${{ env.PACKAGE_NAME }}
+          path: environments/${{ matrix.environment }}
+          include-hidden-files: true
+      ##########################
+      
+      ### CREDENTIAL ROTATION ###
+      - name: Credential Rotation
+        uses: addnab/docker-run-action@v3
+        if: needs.process_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
+        with:
+          image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
+          options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root
+          run: |
+            source /module/venv/bin/activate
+
+            echo "Executing credential rotation..."
+            if ! python3 /module/creds_rotation_scripts/creds_rotation_handler.py; then
+              echo "Credential rotation failed with exit code $?"
+              exit 1
+            fi
+
+      - name: Upload Credential Rotation Artifact
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.CRED_ROTATION_PAYLOAD != ''
+        with:
+          name: credential_rotation_${{ env.PACKAGE_NAME }}
+          path: environments/${{ matrix.environment }}
+          include-hidden-files: true
+      ##########################
 
       ### BUILD ENV ###
       - name: Build Env
@@ -182,7 +231,7 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
-          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root
+          options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root
           run: |
               source /module/venv/bin/activate
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
@@ -227,13 +276,53 @@ jobs:
           include-hidden-files: true
       ##########################
 
+      ### GENERATE EFFECTIVE SET ###
+      - name: Generate Effective Set
+        uses: addnab/docker-run-action@v3
+        if: needs.process_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        with:
+          image: ${{ env.DOCKER_IMAGE_NAME_EFFECTIVE_SET_GENERATOR }}:${{ env.DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR }}
+          options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e GITHUB_TOKEN --user root
+          run: |
+            # Export all variables using unified exporter
+            eval "$(/work/.github/scripts/unified_variable_exporter.sh ${{ matrix.environment }} '${{ needs.process_environment_variables.outputs.variables_json }}')"
+
+            if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
+              env_path=$(ls -A "${CI_PROJECT_DIR}/configuration/certs")
+              for path in $env_path; do
+                bash /module/scripts/update_ca_cert.sh "${CI_PROJECT_DIR}/configuration/certs/$path"
+              done
+            fi
+
+            echo "Executing effective set generation..."
+            if ! /module/scripts/prepare.sh "generate_effective_set.yaml"; then
+              echo "Effective set generation failed with exit code $?"
+              exit 1
+            fi
+
+            env_path=$(find "${CI_PROJECT_DIR}/environments" -type d -name "$env_name")
+            for path in $env_path; do
+              if [ -d "$path/Credentials" ]; then
+                chmod ugo+rw "$path/Credentials/"*
+              fi
+            done
+
+      - name: Upload Generate Effective Set Package
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.GENERATE_EFFECTIVE_SET == 'true'
+        with:
+          name: generate_effective_set_${{ env.PACKAGE_NAME }}
+          path: environments/${{ matrix.environment }}
+          include-hidden-files: true
+      ##########################
+
 
       ### GIT COMMIT ###
       - name: Git Commit
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
-          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root
+          options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root
           run: |
             source /module/venv/bin/activate
             
