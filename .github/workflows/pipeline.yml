@@ -147,6 +147,8 @@ jobs:
       fail-fast: false
       matrix:
         environment: ${{ fromJson(needs.process_environment_variables.outputs.env_matrix) }}
+    env:
+      HOME: /root
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
