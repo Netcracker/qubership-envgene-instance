@@ -156,23 +156,19 @@ jobs:
         with:
           name: environment-file
       
-      - name: Source the .env file
+      - name: Prepare environment
         run: |
           while IFS= read -r line; do
             if [[ -n "$line" && ! "$line" =~ ^# ]]; then
               echo "$line" >> "$GITHUB_ENV"
             fi
           done < ./.env
-
-      - name: Create Package Name
-        run: |
+          
           PACKAGE_NAME="$(echo '${{ matrix.environment }}' | sed 's|/|_|g')"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Process matrix iteration
-        run: |
+          
           .github/scripts/process_matrix_iteration.sh ${{ matrix.environment }}
+        shell: bash
 
       - name: Create env file for container
         run: env > .env.container    
