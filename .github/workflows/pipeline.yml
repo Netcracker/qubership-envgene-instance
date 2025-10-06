@@ -147,8 +147,6 @@ jobs:
       fail-fast: false
       matrix:
         environment: ${{ fromJson(needs.process_environment_variables.outputs.env_matrix) }}
-    env:
-      HOME: /root
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
@@ -184,7 +182,7 @@ jobs:
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
-          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root
+          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root
           run: |
               source /module/venv/bin/activate
               if [ -d "${CI_PROJECT_DIR}/configuration/certs" ]; then
@@ -235,7 +233,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
-          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root
+          options: -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container --user root -e HOME=/root
           run: |
             source /module/venv/bin/activate
             
