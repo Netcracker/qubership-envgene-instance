@@ -177,8 +177,7 @@ jobs:
 
       - name: Create dynamic secret name
         run: |
-          DYNAMIC_SECRET: ${{ secrets[env.SECRET_NAME] }}
-          echo "DYNAMIC_SECRET=$DYNAMIC_SECRET" >> $GITHUB_ENV
+          DYNAMIC_SECRET= ${{ secrets[env.SECRET_NAME] }} >> $GITHUB_ENV
 
       - name: Create env file for container
         run: env > .env.container    
