@@ -1,17 +1,17 @@
 #!/bin/bash
-# Script to parse ADDITIONAL_VARIABLES and add them to GitHub environment
+# Script to parse GH_ADDITIONAL_PARAMS and add them to GitHub environment
 
-echo "Processing ADDITIONAL_VARIABLES..."
+echo "Processing GH_ADDITIONAL_PARAMS..."
 
-# Get the ADDITIONAL_VARIABLES content
-ADDITIONAL_VARS="${ADDITIONAL_VARIABLES:-}"
+# Get the GH_ADDITIONAL_PARAMS content
+ADDITIONAL_VARS="${GH_ADDITIONAL_PARAMS:-}"
 
 if [ -z "$ADDITIONAL_VARS" ]; then
-    echo "ADDITIONAL_VARIABLES is empty, skipping..."
+    echo "GH_ADDITIONAL_PARAMS is empty, skipping..."
     exit 0
 fi
 
-echo "Raw ADDITIONAL_VARIABLES: $ADDITIONAL_VARS"
+echo "Raw GH_ADDITIONAL_PARAMS: $ADDITIONAL_VARS"
 
 # Split by comma and process each variable assignment
 IFS=',' read -ra VAR_PAIRS <<< "$ADDITIONAL_VARS"
@@ -43,4 +43,4 @@ for pair in "${VAR_PAIRS[@]}"; do
     fi
 done
 
-echo "Finished processing ADDITIONAL_VARIABLES"
+echo "Finished processing GH_ADDITIONAL_PARAMS"
