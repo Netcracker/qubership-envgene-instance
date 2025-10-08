@@ -170,7 +170,7 @@ jobs:
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
           
           .github/scripts/process_matrix_iteration.sh ${{ matrix.environment }}
-          SECRET_NAME=$(echo "${{ matrix.environment }}" | awk -F "/" '{print $1}')_${{ env.SECRET_POSTFIX }}
+          SECRET_NAME=$(echo "${{ matrix.environment }}" | awk -F "/" '{print $1}')_${SECRET_POSTFIX}
           echo "SECRET_NAME=$SECRET_NAME" >> $GITHUB_ENV
 
         shell: bash
