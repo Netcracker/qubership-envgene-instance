@@ -87,6 +87,7 @@ jobs:
       ENV_BUILDER: ${{ env.ENV_BUILDER }}
       GENERATE_EFFECTIVE_SET: ${{ env.GENERATE_EFFECTIVE_SET }}
       ENV_INVENTORY_INIT: ${{ env.ENV_INVENTORY_INIT }}
+      BG_MANAGE: ${{ env.BG_MANAGE }}
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4.1.0
@@ -239,7 +240,7 @@ jobs:
       ### BUILD ENV ###
       - name: Build Env
         uses: addnab/docker-run-action@v3
-        if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        if: needs.process_environment_variables.outputs.BG_MANAGE == 'true'
         with:
           image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
           options: -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root
