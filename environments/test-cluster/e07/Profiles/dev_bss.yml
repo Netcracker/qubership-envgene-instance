@@ -48,5 +48,3 @@ applications:
             value: "120Mi"
           - name: "MEMORY_LIMIT"
             value: "808Mi"
-
-
