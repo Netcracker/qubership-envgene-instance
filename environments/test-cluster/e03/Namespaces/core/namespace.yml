@@ -1,0 +1,29 @@
+# The contents of this file is generated from template artifact: qubership_envgene_templates.
+# Contents will be overwritten by next generation.
+# Please modify this contents only for development purposes or as workaround.
+name: "e03-core"
+credentialsId: ""
+isServerSideMerge: false
+labels:
+  - "solutionInstance-e03"
+  - "solution-test-tenant"
+cleanInstallApprovalRequired: false
+mergeDeployParametersAndE2EParameters: false
+profile:
+  name: "dev_core"
+  baseline: "dev"
+deployParameters:
+  BSS_NAMESPACE: "e03-bss"
+  CORE_NAMESPACE: "e03-core"
+  ENVGENE_CONFIG_REF_NAME: "bugfix/test_git_commit"
+  ENVGENE_CONFIG_TAG: ""
+e2eParameters: {}
+technicalConfigurationParameters:
+  BSS_NAMESPACE: "e03-bss"
+  CORE_NAMESPACE: "e03-core"
+deployParameterSets: []
+e2eParameterSets: []
+technicalConfigurationParameterSets: []
+tenantName: "dev"
+
+
