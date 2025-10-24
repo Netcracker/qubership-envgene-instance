@@ -16,4 +16,3 @@ envTemplate:
   artifact: "qubership_envgene_templates:0.0.1"
 generatedVersions:
   generateEnvironmentLatestVersion: "qubership_envgene_templates:0.0.1"  # This value is automatically generated during job run.
-

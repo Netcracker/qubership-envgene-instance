@@ -5,4 +5,3 @@ name: "Access-Control"
 deployParameters:
   key1: "value2" # paramset: paramsetA version: 1 source: instance
 technicalConfigurationParameters: {}
-
