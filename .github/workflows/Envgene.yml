@@ -70,7 +70,7 @@ env:
 
   #DOCKER_IMAGE_TAGS
   DOCKER_IMAGE_TAG_PIPEGENE: "1.6.5"
-  DOCKER_IMAGE_TAG_ENVGENE: "1.6.5"
+  DOCKER_IMAGE_TAG_ENVGENE: "742-bug-multiple-simultaneous-commit-during-multiple-environment-build-in-github-pipeline"
   DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "1.6.5"
 
 jobs:
