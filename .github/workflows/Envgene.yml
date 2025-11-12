@@ -381,7 +381,9 @@ jobs:
 
               cp -rf \${CI_PROJECT_DIR}/environments \${CI_PROJECT_DIR}/git_envs
             "
+          ls -la ${CI_PROJECT_DIR}
           env > .env.container
+          ls -la ${CI_PROJECT_DIR}
 
       - name: Upload Git Commit Package
         uses: actions/upload-artifact@v4
