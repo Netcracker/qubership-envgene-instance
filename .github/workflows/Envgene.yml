@@ -249,12 +249,7 @@ jobs:
       - name: Build Env
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} \
-            -w ${{ env.CI_PROJECT_DIR }} \
-            --env-file .env.container \
-            --user root \
-            -e HOME=/root \
+          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --user root -e HOME=/root --env-file .env.container \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               source /module/venv/bin/activate
