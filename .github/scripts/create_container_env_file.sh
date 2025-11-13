@@ -31,16 +31,22 @@
     # Extract value (everything after first =)
     var_value="${line#*=}"
     
-    # Replace newlines with spaces (Docker --env-file doesn't support multiline values)
-    # This ensures Docker --env-file format is valid while preserving all content
+    # Docker --env-file doesn't support spaces in values (treats them as delimiters)
+    # Replace newlines with spaces first, then replace all spaces with a safe delimiter
+    # We'll use __SPACE__ as a marker that can be replaced back in the application if needed
+    # Or the application can use the value as-is with __SPACE__ markers
+    
+    # Replace newlines with spaces
     single_line_value=$(printf '%s' "$var_value" | tr '\n' ' ' 2>/dev/null || printf '%s' "$var_value")
     # Remove trailing space if any
     single_line_value="${single_line_value% }"
     
+    # Replace spaces with __SPACE__ marker to avoid Docker parsing issues
+    # This preserves all content while keeping Docker --env-file format valid
+    safe_value=$(printf '%s' "$single_line_value" | sed 's/ /__SPACE__/g' 2>/dev/null || printf '%s' "$single_line_value")
+    
     # Escape special characters that might cause issues in Docker env-file
-    # Escape backslashes first
-    escaped_value=$(printf '%s' "$single_line_value" | sed 's/\\/\\\\/g' 2>/dev/null || printf '%s' "$single_line_value")
-    # Escape dollar signs to prevent variable expansion issues  
+    escaped_value=$(printf '%s' "$safe_value" | sed 's/\\/\\\\/g' 2>/dev/null || printf '%s' "$safe_value")
     escaped_value=$(printf '%s' "$escaped_value" | sed 's/\$/\\$/g' 2>/dev/null || printf '%s' "$escaped_value")
     
     # Write to file in format: KEY=value
