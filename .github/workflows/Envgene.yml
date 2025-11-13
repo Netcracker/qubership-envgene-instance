@@ -183,7 +183,7 @@ jobs:
           echo "DYNAMIC_SECRET=$DYNAMIC_SECRET" >> $GITHUB_ENV
 
       - name: Create env file for container
-        run: env > .env.container
+        run: .github/scripts/create_container_env_file.sh
 
       ### GENERATE INVENTORY ###
       - name: Generate Inventory
@@ -382,7 +382,7 @@ jobs:
               cp -rf \${CI_PROJECT_DIR}/environments \${CI_PROJECT_DIR}/git_envs
             "
           ls -la ${{ github.workspace }}
-          env > .env.container
+          .github/scripts/create_container_env_file.sh
           ls -la ${{ github.workspace }}
 
       - name: Upload Git Commit Package
