@@ -26,14 +26,29 @@ if [ -n "$GITHUB_ENV" ]; then
             continue
         fi
         
+        # Skip variables with invalid names (contain colons, spaces, or start with numbers)
+        # These are likely continuation lines from multiline values that were split
+        if [[ "$var_name" =~ [:\ ] ]] || [[ "$var_name" =~ ^[0-9] ]]; then
+            continue
+        fi
+        
         # Get the actual value using printenv (preserves newlines)
-        var_value=$(printenv "$var_name" 2>/dev/null || echo "${!var_name:-}")
+        # Use printenv only, avoid indirect variable reference to prevent errors
+        var_value=$(printenv "$var_name" 2>/dev/null || true)
+        
+        # Skip if variable doesn't exist or is empty
+        [ -z "$var_value" ] && continue
         
         # Check if value contains newlines
         if printf '%s' "$var_value" | grep -q $'\n'; then
             # Replace newlines with spaces and write back to GITHUB_ENV
+            # Use heredoc format to properly handle multiline values
             single_line_value=$(printf '%s' "$var_value" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-            echo "${var_name}=${single_line_value}" >> "$GITHUB_ENV"
+            {
+                echo "${var_name}<<EOF"
+                echo "$single_line_value"
+                echo "EOF"
+            } >> "$GITHUB_ENV"
         fi
     done <<EOF
 $var_names
@@ -56,6 +71,12 @@ fi
     
     # Skip if no variable name or if name is empty
     [ -z "$var_name" ] && continue
+    
+    # Skip variables with invalid names (contain colons, spaces, or start with numbers)
+    # These are likely continuation lines from multiline values that were split
+    if [[ "$var_name" =~ [:\ ] ]] || [[ "$var_name" =~ ^[0-9] ]]; then
+        continue
+    fi
     
     # Skip certain internal variables that might cause issues
     case "$var_name" in
