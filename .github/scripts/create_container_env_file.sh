@@ -7,46 +7,45 @@
 # Create or truncate the output file
 > .env.container
 
-# Get all unique environment variable names
-# Use compgen -e if available, otherwise fall back to parsing env output
-if command -v compgen >/dev/null 2>&1; then
-    var_names=$(compgen -e)
-else
-    var_names=$(env | cut -d= -f1 | sort -u)
-fi
-
-# Process each environment variable
-while IFS= read -r var_name; do
-    # Skip empty variable names
+# Process environment variables using printenv (more reliable than env)
+# Redirect both stdout and stderr to avoid GitHub Actions processing issues
+{
+    printenv 2>/dev/null || /usr/bin/env 2>/dev/null || true
+} | while IFS= read -r line || [ -n "$line" ]; do
+    # Skip empty lines
+    [ -z "$line" ] && continue
+    
+    # Extract variable name (everything before first =)
+    var_name="${line%%=*}"
+    
+    # Skip if no variable name or if name is empty
     [ -z "$var_name" ] && continue
     
-    # Get the actual value using indirect variable reference
-    eval "var_value=\${${var_name}}"
+    # Skip certain internal variables that might cause issues
+    case "$var_name" in
+        _|SHLVL|PWD|OLDPWD)
+            continue
+            ;;
+    esac
     
-    # Skip if variable doesn't exist or is empty (but allow empty strings)
-    if ! eval "[ -n \"\${${var_name}+x}\" ]"; then
-        continue
-    fi
+    # Extract value (everything after first =)
+    var_value="${line#*=}"
     
     # Replace newlines with spaces (Docker --env-file doesn't support multiline values)
     # This ensures Docker --env-file format is valid while preserving all content
-    # All values are converted to single-line format
-    single_line_value=$(printf '%s' "$var_value" | tr '\n' ' ')
+    single_line_value=$(printf '%s' "$var_value" | tr '\n' ' ' 2>/dev/null || printf '%s' "$var_value")
     # Remove trailing space if any
     single_line_value="${single_line_value% }"
     
     # Escape special characters that might cause issues in Docker env-file
     # Escape backslashes first
-    escaped_value=$(printf '%s' "$single_line_value" | sed 's/\\/\\\\/g')
-    # Escape dollar signs to prevent variable expansion issues
-    escaped_value=$(printf '%s' "$escaped_value" | sed 's/\$/\\$/g')
+    escaped_value=$(printf '%s' "$single_line_value" | sed 's/\\/\\\\/g' 2>/dev/null || printf '%s' "$single_line_value")
+    # Escape dollar signs to prevent variable expansion issues  
+    escaped_value=$(printf '%s' "$escaped_value" | sed 's/\$/\\$/g' 2>/dev/null || printf '%s' "$escaped_value")
     
     # Write to file in format: KEY=value
-    # Use printf to ensure proper handling of special characters
-    printf '%s=%s\n' "$var_name" "$escaped_value" >> .env.container
-done <<EOF
-$var_names
-EOF
+    printf '%s=%s\n' "$var_name" "$escaped_value" >> .env.container 2>/dev/null || true
+done
 
 echo "✅ Created .env.container file with proper multiline variable handling"
 
