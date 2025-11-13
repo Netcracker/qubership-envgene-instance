@@ -6,58 +6,62 @@
 
 # First, fix any multiline variables in GITHUB_ENV
 # This handles cases where vars from env: section were split into multiple variables
-if [ -n "$GITHUB_ENV" ]; then
-    # Read env output directly to catch orphaned variables (those with invalid names)
-    # These appear when multiline values are split
-    env_output=$(/usr/bin/env 2>/dev/null || printenv 2>/dev/null || true)
-    
-    # Process env output line by line to reconstruct split variables
+if [ -n "$GITHUB_ENV" ] && [ -f "$GITHUB_ENV" ]; then
+    # Read GITHUB_ENV file directly to see how variables are stored
+    # When multiline values are split, orphaned lines appear without KEY= format
+    # Use temporary file to avoid reading and writing to same file simultaneously
+    temp_file=$(mktemp)
     current_var=""
     current_value=""
-    orphaned_lines=()
+    declare -A processed_vars
     
+    # Read GITHUB_ENV file line by line and reconstruct split variables
     while IFS= read -r line || [ -n "$line" ]; do
         [ -z "$line" ] && continue
         
         # Check if line has format KEY=value
         if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
-            # Save previous variable if it exists
-            if [ -n "$current_var" ]; then
+            # Save previous variable if exists
+            if [ -n "$current_var" ] && [ -n "$current_value" ]; then
                 single_line_value=$(printf '%s' "$current_value" | tr '\n' ' ' | sed 's/[[:space:]]*$//' | sed 's/[[:space:]]\+/ /g')
-                echo "${current_var}=${single_line_value}" >> "$GITHUB_ENV"
+                echo "${current_var}=${single_line_value}" >> "$temp_file"
+                processed_vars["$current_var"]=1
             fi
             
             # Start new variable
             current_var="${BASH_REMATCH[1]}"
             current_value="${BASH_REMATCH[2]}"
-            orphaned_lines=()
         else
             # This is an orphaned line (no =, likely continuation of multiline value)
-            # Check if it looks like a continuation (starts with Key: or just a value)
-            if [[ "$line" =~ ^[A-Za-z0-9_]+:[[:space:]] ]] || [[ "$line" =~ ^[A-Za-z0-9_]+:[[:space:]]*$ ]]; then
-                # This looks like a continuation - add to current value
-                if [ -n "$current_var" ]; then
-                    current_value="${current_value} ${line}"
-                else
-                    orphaned_lines+=("$line")
-                fi
+            # Add it to current variable if we have one
+            if [ -n "$current_var" ]; then
+                current_value="${current_value} ${line}"
             fi
         fi
-    done <<EOF
-$env_output
-EOF
+    done < "$GITHUB_ENV"
     
     # Save last variable if exists
-    if [ -n "$current_var" ]; then
+    if [ -n "$current_var" ] && [ -n "$current_value" ]; then
         single_line_value=$(printf '%s' "$current_value" | tr '\n' ' ' | sed 's/[[:space:]]*$//' | sed 's/[[:space:]]\+/ /g')
-        echo "${current_var}=${single_line_value}" >> "$GITHUB_ENV"
+        echo "${current_var}=${single_line_value}" >> "$temp_file"
+        processed_vars["$current_var"]=1
+    fi
+    
+    # Append fixed variables to GITHUB_ENV
+    if [ -f "$temp_file" ] && [ -s "$temp_file" ]; then
+        cat "$temp_file" >> "$GITHUB_ENV"
+        rm -f "$temp_file"
     fi
     
     # Also process all valid variables to fix any that contain newlines
+    # Skip variables that were already processed above
     var_names=$(printenv | cut -d= -f1 2>/dev/null || compgen -e 2>/dev/null || true)
     
     while IFS= read -r var_name; do
         [ -z "$var_name" ] && continue
+        
+        # Skip if already processed
+        [[ -n "${processed_vars[$var_name]}" ]] && continue
         
         # Skip certain internal variables
         case "$var_name" in
