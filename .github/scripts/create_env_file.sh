@@ -1,8 +1,44 @@
 #!/bin/bash
 # Script to create .env file compatible with GitHub Actions
-# Properly handles multiline environment variables
-# For multiline values, we replace newlines with spaces to keep format valid
+# Automatically detects and fixes multiline environment variables
+# For multiline values, replaces newlines with spaces to keep format valid
 # This ensures all secrets are properly passed between workflow steps
+
+# First, fix any multiline variables in GITHUB_ENV
+# This handles cases where vars from env: section were split into multiple variables
+if [ -n "$GITHUB_ENV" ]; then
+    # Get all environment variable names
+    var_names=$(printenv | cut -d= -f1 2>/dev/null || compgen -e 2>/dev/null || true)
+    
+    # Process each variable to fix multiline values
+    while IFS= read -r var_name; do
+        [ -z "$var_name" ] && continue
+        
+        # Skip certain internal variables
+        case "$var_name" in
+            _|SHLVL|PWD|OLDPWD|GITHUB_ENV)
+                continue
+                ;;
+        esac
+        
+        # Skip GitHub internal variables (start with GITHUB_)
+        if [[ "$var_name" =~ ^GITHUB_ ]]; then
+            continue
+        fi
+        
+        # Get the actual value using printenv (preserves newlines)
+        var_value=$(printenv "$var_name" 2>/dev/null || echo "${!var_name:-}")
+        
+        # Check if value contains newlines
+        if printf '%s' "$var_value" | grep -q $'\n'; then
+            # Replace newlines with spaces and write back to GITHUB_ENV
+            single_line_value=$(printf '%s' "$var_value" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+            echo "${var_name}=${single_line_value}" >> "$GITHUB_ENV"
+        fi
+    done <<EOF
+$var_names
+EOF
+fi
 
 # Create or truncate the output file
 > "$1"
