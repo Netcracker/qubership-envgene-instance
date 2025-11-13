@@ -62,6 +62,7 @@ env:
   ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
   ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
   GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  TEST_VARIABLE: ${{ vars.MY_TEST_VARIABLE}}
 
   #DOCKER_IMAGE_NAMES
   DOCKER_IMAGE_NAME_PIPEGENE: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-pipegene"
