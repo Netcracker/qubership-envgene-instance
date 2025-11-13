@@ -29,28 +29,38 @@
     esac
     
     # Extract value (everything after first =)
+    # Handle case where value might contain = signs
     var_value="${line#*=}"
     
-    # Docker --env-file doesn't support spaces in values (treats them as delimiters)
-    # Replace newlines with spaces first, then replace all spaces with a safe delimiter
-    # We'll use __SPACE__ as a marker that can be replaced back in the application if needed
-    # Or the application can use the value as-is with __SPACE__ markers
+    # Skip if variable name contains spaces (invalid)
+    if [[ "$var_name" =~ [[:space:]] ]]; then
+        continue
+    fi
     
-    # Replace newlines with spaces
-    single_line_value=$(printf '%s' "$var_value" | tr '\n' ' ' 2>/dev/null || printf '%s' "$var_value")
-    # Remove trailing space if any
-    single_line_value="${single_line_value% }"
+    # Docker --env-file doesn't support spaces, tabs, or newlines in values
+    # Check if value contains any whitespace characters
+    # If it does, encode it in base64 to preserve the content
     
-    # Replace spaces with __SPACE__ marker to avoid Docker parsing issues
-    # This preserves all content while keeping Docker --env-file format valid
-    safe_value=$(printf '%s' "$single_line_value" | sed 's/ /__SPACE__/g' 2>/dev/null || printf '%s' "$single_line_value")
+    # Trim leading/trailing whitespace from value for checking
+    trimmed_value=$(printf '%s' "$var_value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' 2>/dev/null || printf '%s' "$var_value")
     
-    # Escape special characters that might cause issues in Docker env-file
-    escaped_value=$(printf '%s' "$safe_value" | sed 's/\\/\\\\/g' 2>/dev/null || printf '%s' "$safe_value")
-    escaped_value=$(printf '%s' "$escaped_value" | sed 's/\$/\\$/g' 2>/dev/null || printf '%s' "$escaped_value")
-    
-    # Write to file in format: KEY=value
-    printf '%s=%s\n' "$var_name" "$escaped_value" >> .env.container 2>/dev/null || true
+    # Check for whitespace (spaces, tabs, newlines) in the value
+    if printf '%s' "$var_value" | grep -q '[[:space:]]'; then
+        # Value contains whitespace - encode in base64
+        # Use base64 with -w 0 (no wrap) if available, otherwise use base64
+        encoded_value=$(printf '%s' "$var_value" | base64 -w 0 2>/dev/null || printf '%s' "$var_value" | base64 2>/dev/null || printf '%s' "$var_value")
+        # Remove any whitespace from encoded value (base64 shouldn't have any, but just in case)
+        encoded_value=$(printf '%s' "$encoded_value" | tr -d '\n\r\t ' 2>/dev/null || printf '%s' "$encoded_value")
+        # Write to file with BASE64: prefix to indicate encoding
+        printf '%s=BASE64:%s\n' "$var_name" "$encoded_value" >> .env.container 2>/dev/null || true
+    else
+        # Value doesn't contain whitespace - use as-is with minimal escaping
+        # Escape backslashes and dollar signs
+        escaped_value=$(printf '%s' "$var_value" | sed 's/\\/\\\\/g' 2>/dev/null || printf '%s' "$var_value")
+        escaped_value=$(printf '%s' "$escaped_value" | sed 's/\$/\\$/g' 2>/dev/null || printf '%s' "$escaped_value")
+        # Write to file in format: KEY=value
+        printf '%s=%s\n' "$var_name" "$escaped_value" >> .env.container 2>/dev/null || true
+    fi
 done
 
 echo "✅ Created .env.container file with proper multiline variable handling"
