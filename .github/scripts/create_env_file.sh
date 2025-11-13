@@ -42,13 +42,9 @@ if [ -n "$GITHUB_ENV" ]; then
         # Check if value contains newlines
         if printf '%s' "$var_value" | grep -q $'\n'; then
             # Replace newlines with spaces and write back to GITHUB_ENV
-            # Use heredoc format to properly handle multiline values
+            # Format: KEY=value (single line, spaces instead of newlines)
             single_line_value=$(printf '%s' "$var_value" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-            {
-                echo "${var_name}<<EOF"
-                echo "$single_line_value"
-                echo "EOF"
-            } >> "$GITHUB_ENV"
+            echo "${var_name}=${single_line_value}" >> "$GITHUB_ENV"
         fi
     done <<EOF
 $var_names
