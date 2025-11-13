@@ -128,7 +128,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          env > ${{ github.workspace }}/.env
+          .github/scripts/create_env_file.sh ${{ github.workspace }}/.env
 
       - name: Upload .env as artifact
         uses: actions/upload-artifact@v4
@@ -160,8 +160,13 @@ jobs:
       - name: Prepare environment
         run: |
           while IFS= read -r line; do
+            # Skip empty lines and comments
             if [[ -n "$line" && ! "$line" =~ ^# ]]; then
-              echo "$line" >> "$GITHUB_ENV"
+              # Only process lines that contain = (KEY=value format)
+              # This ensures we don't process malformed lines from multiline values
+              if [[ "$line" =~ = ]]; then
+                echo "$line" >> "$GITHUB_ENV"
+              fi
             fi
           done < ./.env
 
