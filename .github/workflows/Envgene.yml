@@ -261,7 +261,7 @@ jobs:
                 env_name=\$(cat set_variable.txt)
                 sed -i \"s|\\\\\\\"envgeneNullValue\\\\\\\"|\\\\\\\"test_value\\\\\\\"|g\" \"\${CI_PROJECT_DIR}/environments/\$env_name/Credentials/credentials.yml\"
               else
-                env_name=\$(echo \"\$ENV_NAME\" | awk -F \"/\" '{print \$NF}')
+                env_name=\$(echo \"\$ENV_NAME\" | awk -F \"/\" '\''{print \$NF}'\'')
                 export env_name
               fi
 
