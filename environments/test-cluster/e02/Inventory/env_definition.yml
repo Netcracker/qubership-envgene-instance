@@ -7,7 +7,7 @@ inventory:
   cloudPassport: "test-cloud-passport"
 envTemplate:
   name: "dev"
-  artifact: "qubership_envgene_templates:0.0.2"
+  artifact: "qubership_envgene_templates:0.0.1"
   envSpecificParamsets:
     cloud: ["cloud-specific", "integrations", "paramsetA"]
     main: ["internal-base-ns", "paramsetB"]
