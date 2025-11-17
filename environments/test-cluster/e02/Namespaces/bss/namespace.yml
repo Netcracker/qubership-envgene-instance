@@ -15,8 +15,8 @@ profile:
 deployParameters:
   BSS_NAMESPACE: "e02-bss"
   CORE_NAMESPACE: "e02-core"
-  ENVGENE_CONFIG_REF_NAME: "main"
-  ENVGENE_CONFIG_TAG: ""
+  ENVGENE_CONFIG_REF_NAME: "test/testing_mutlivalue_params"
+  ENVGENE_CONFIG_TAG: "No Ref tag"
 e2eParameters: {}
 technicalConfigurationParameters:
   BSS_NAMESPACE: "e02-bss"
@@ -25,4 +25,3 @@ deployParameterSets: []
 e2eParameterSets: []
 technicalConfigurationParameterSets: []
 tenantName: "dev"
-
