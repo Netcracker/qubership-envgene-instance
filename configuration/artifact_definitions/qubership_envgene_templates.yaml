@@ -6,6 +6,6 @@ registry:
   credentialsId: "github-packages"
   mavenConfig:
     repositoryDomainName: "https://maven.pkg.github.com/netcracker/qubership-envgene-template"
-    targetSnapshot: "https://maven.pkg.github.com/netcracker/qubership-envgene-template"
+    targetSnapshot: ""
     targetStaging: ""
     targetRelease: ""
