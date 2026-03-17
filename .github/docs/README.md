@@ -28,9 +28,9 @@ Only a limited number of core parameters are available in the GitHub version of 
 - [GENERATE_EFFECTIVE_SET](/docs/instance-pipeline-parameters.md#generate_effective_set)
 - [GET_PASSPORT](/docs/instance-pipeline-parameters.md#get_passport)
 - [CMDB_IMPORT](/docs/instance-pipeline-parameters.md#cmdb_import)
-- [GH_ADDITIONAL_PARAMS](/docs/instance-pipeline-parameters.md#GH_ADDITIONAL_PARAMS)
+- [GH_ADDITIONAL_PARAMS](/docs/instance-pipeline-parameters.md#gh_additional_params)
 
-The [GH_ADDITIONAL_PARAMS](/docs/instance-pipeline-parameters.md#GH_ADDITIONAL_PARAMS) parameter serves as a wrapper for all parameters except those listed above. This approach enables the transmission of all [Instance Pipeline parameters](/docs/instance-pipeline-parameters.md).
+The [GH_ADDITIONAL_PARAMS](/docs/instance-pipeline-parameters.md#gh_additional_params) parameter serves as a wrapper for all parameters except those listed above. This approach enables the transmission of all [Instance Pipeline parameters](/docs/instance-pipeline-parameters.md).
 
 ## How to Trigger the Pipeline
 
@@ -57,8 +57,8 @@ curl -X POST \
   -d '{
     "ref": "<branch-name>",
     "inputs": {
-      "<instance-pipeline-parameter-key>": "<instance-pipeline-parameter-value>"
-      "GH_ADDITIONAL_PARAMS": "<json-in-string>"
+      "<instance-pipeline-parameter-key>": "<instance-pipeline-parameter-value>",
+      "GH_ADDITIONAL_PARAMS": "KEY1=VALUE1,KEY2=VALUE2"
     }
   }'
 ```
@@ -67,7 +67,7 @@ curl -X POST \
 
 ```bash
 curl -X POST \
-  -H "Authorization: token ghp_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789" \
+  -H "Authorization: token token-placeholder-123" \
   -H "Accept: application/vnd.github.v3+json" \
   https://api.github.com/repos/qubership/instance-repo/actions/workflows/Envgene.yaml/dispatches \
   -d '{
@@ -75,7 +75,7 @@ curl -X POST \
         "inputs": {
             "ENV_NAMES": "test-cluster/e01",
             "ENV_BUILDER": "true",
-            `GENERATE_EFFECTIVE_SET`: "true"
+            "GENERATE_EFFECTIVE_SET": "true",
             "DEPLOYMENT_TICKET_ID": "QBSHP-0001",
             "GH_ADDITIONAL_PARAMS": "EFFECTIVE_SET_CONFIG={\"version\": \"v2.0\", \"app_chart_validation\": \"false\"}"
         }
@@ -95,7 +95,7 @@ When parameter keys from different sources overlap, their values are replaced ac
 
 Best practices for setting variables are:
 
-- Define in CI/CD variables [EnvGene repository variables](/docs/envgene-repository-variables.md)
+- Define in CI/CD variables [EnvGene repository variables](https://github.com/Netcracker/qubership-envgene/blob/main/docs/envgene-repository-variables.md)
 - Pass through GitHub Actions UI or GitHub API Call [Instance Pipeline parameters](/docs/instance-pipeline-parameters.md)
 - Use `pipeline_vars.env` for debug purposes
 
