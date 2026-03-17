@@ -8,10 +8,10 @@ inventory:
 envTemplate:
   name: "dev"
   templateArtifact:
-    registry: "artifactory"   # или ваш registry
-    repository: "..."         # ваш repository
+    registry: "github-packages"
+    repository: "https://maven.pkg.github.com/netcracker"
     artifact:
-      group_id: "org.qubership"           # подставьте нужный group_id
+      group_id: "org.qubership"
       artifact_id: "qubership_envgene_templates"
       version: "0.0.1"
   artifactIsZip: true    
