@@ -7,12 +7,16 @@ inventory:
   cloudPassport: "test-cloud-passport"
 envTemplate:
   name: "dev"
+  templateArtifact:
+    registry: "artifactory"   # или ваш registry
+    repository: "..."         # ваш repository
+    artifact:
+      group_id: "org.qubership"           # подставьте нужный group_id
+      artifact_id: "qubership_envgene_templates"
+      version: "0.0.1"
+  artifactIsZip: true    
   envSpecificParamsets:
     cloud: ["cloud-specific", "integrations", "paramsetA"]
     main: ["internal-base-ns", "paramsetB"]
-  additionalTemplateVariables:
-    key: "value"
-  artifactIsZip: true
-  artifact: "qubership_envgene_templates:0.0.1"
 generatedVersions:
   generateEnvironmentLatestVersion: "qubership_envgene_templates:0.0.1"  # This value is automatically generated during job run.
