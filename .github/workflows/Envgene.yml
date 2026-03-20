@@ -63,10 +63,10 @@ env:
   ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
   GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
-  
+
   #DOCKER_IMAGE_NAMES
   DOCKER_IMAGE_NAME_PIPEGENE: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-pipegene"
-  DOCKER_IMAGE_NAME_ENVGENE: "europe-west1-docker.pkg.dev/project-57115ebf-4c70-46af-bf2/andyroode-docker-repo/qubership-envgene"
+  DOCKER_IMAGE_NAME_ENVGENE: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-envgene"
   DOCKER_IMAGE_NAME_EFFECTIVE_SET_GENERATOR: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-effective-set-generator"
 
   #DOCKER_IMAGE_TAGS
@@ -160,7 +160,8 @@ jobs:
         uses: actions/checkout@v4.1.0
         with:
           fetch-depth: 0
-
+      
+      ### ENV VARS PROCESSING - START ###
       - name: Download environment-file
         uses: actions/download-artifact@v4
         with:
@@ -189,10 +190,13 @@ jobs:
       - name: Create env file for container
         run: env > .env.container
 
-      - name: Authenticate to Google Artifact Registry
+      - name: Authenticate to GAR (Google Artifact Registry)
         if: needs.process_environment_variables.outputs.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP'
         run: |
-          echo '${{ secrets.GCP_SA_KEY }}' | docker login -u _json_key --password-stdin europe-west1-docker.pkg.dev
+          REGISTRY_HOST=$(echo "${{ vars.DOCKER_REGISTRY }}" | cut -d'/' -f1)
+          echo '${{ secrets.GCP_SA_KEY }}' | docker login -u _json_key --password-stdin "$REGISTRY_HOST"
+      ### ENV VARS PROCESSING - END ###
+
 
       ### BG MANAGE ###
       - name: BG_MANAGE
