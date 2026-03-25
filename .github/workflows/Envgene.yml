@@ -332,7 +332,7 @@ jobs:
       - name: ENV_BUILD
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         run: |
-          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e COMMIT_ENV=true --env-file .env.container --user root -e HOME=/root \
+          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               source /module/venv/bin/activate
@@ -408,7 +408,7 @@ jobs:
       ### GIT COMMIT ###
       - name: GIT_COMMIT
         run: |
-          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root \
+          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e COMMIT_ENV=true --env-file .env.container --user root -e HOME=/root \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               source /module/venv/bin/activate
