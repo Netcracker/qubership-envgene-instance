@@ -1,6 +1,0 @@
----
-name: "cloud-specific"
-parameters:
-  # from deployment prarameters of Cloud
-  POSTGRES_DBA_USER: "test"
-  POSTGRES_DBA_PASSWORD: "test"

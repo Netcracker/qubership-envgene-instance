@@ -1,5 +1,0 @@
----
-name: "integrations"
-parameters:
-  TBAPI_URL: "http://test"
-  
