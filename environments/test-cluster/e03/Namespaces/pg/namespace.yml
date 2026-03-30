@@ -1,0 +1,25 @@
+# The contents of this file is generated from template artifact: qubership_envgene_templates.
+# Contents will be overwritten by next generation.
+# Please modify this contents only for development purposes or as workaround.
+name: "e03-pg"
+credentialsId: ""
+isServerSideMerge: false
+labels:
+  - "solutionInstance-e03"
+  - "solution-test-tenant"
+cleanInstallApprovalRequired: false
+mergeDeployParametersAndE2EParameters: false
+profile:
+  name: "dev_postgres_oss"
+  baseline: "dev"
+deployParameters:
+  ENVGENE_CONFIG_REF_NAME: "feat/check_updates"
+  ENVGENE_CONFIG_TAG: "No Ref tag"
+  PG_NAMESPACE_FROM_SD: ""
+  PG_VERSION_FROM_SD: ""
+e2eParameters: {}
+technicalConfigurationParameters: {}
+deployParameterSets: []
+e2eParameterSets: []
+technicalConfigurationParameterSets: []
+tenantName: "postgres-oss-template"

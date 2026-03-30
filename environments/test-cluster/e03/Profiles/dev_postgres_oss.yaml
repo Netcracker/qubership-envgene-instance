@@ -1,0 +1,22 @@
+# The contents of this file is generated from template artifact: qubership_envgene_templates.
+# Contents will be overwritten by next generation.
+# Please modify this contents only for development purposes or as workaround.
+name: "dev_postgres_oss"
+version: 1
+baseline: "dev"
+description: "Minimal resource profile override for OSS postgres template (SBOM_TEST)"
+applications:
+  - name: "postgres"
+    version: ""
+    sd: ""
+    services:
+      - name: "postgres"
+        parameters:
+          - name: "CPU_REQUEST"
+            value: "100m"
+          - name: "CPU_LIMIT"
+            value: "1"
+          - name: "MEMORY_REQUEST"
+            value: "256Mi"
+          - name: "MEMORY_LIMIT"
+            value: "1Gi"
