@@ -1,0 +1,30 @@
+global: &id002
+  deployDescriptor: &id001
+    postgres:
+      artifacts: []
+      deploy_param: ''
+      docker_digest: 60b180625695e90b6e450405d5f0bcb74bc8c52c65d1cd11aeb3da46cac06dd8
+      docker_registry: docker.io
+      docker_repository_name: library
+      docker_tag: 16-alpine
+      full_image_name: docker.io/library/postgres:16-alpine
+      git_branch: '16'
+      git_revision: ''
+      git_url: https://github.com/docker-library/postgres
+      image: docker.io/library/postgres:16-alpine
+      image_name: postgres
+      image_type: service
+      name: postgres
+      promote_artifacts: 'false'
+      qualifier: ''
+      version: 16.4-oss-1
+deployDescriptor: *id001
+postgres:
+  APPLICATION_NAME: postgres
+  DEPLOYMENT_SESSION_ID: TEST-TICKET-1
+  MANAGED_BY: argocd
+  deployDescriptor: *id001
+  global: *id002
+APPLICATION_NAME: postgres
+DEPLOYMENT_SESSION_ID: TEST-TICKET-1
+MANAGED_BY: argocd

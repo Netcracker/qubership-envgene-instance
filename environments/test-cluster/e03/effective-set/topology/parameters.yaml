@@ -1,0 +1,24 @@
+bg_domain: {}
+cluster:
+  api_port: '1111'
+  api_url: temp.cloud.com
+  protocol: https
+  public_url: test-env.managed.temp.cloud
+composite_structure: {}
+environments:
+  test-cluster/e01:
+    namespaces:
+      e01-bss:
+        deployPostfix: bss
+      e01-core:
+        deployPostfix: core
+  test-cluster/e02:
+    namespaces:
+      e02-bss:
+        deployPostfix: bss
+      e02-core:
+        deployPostfix: core
+  test-cluster/e03:
+    namespaces:
+      e03-pg:
+        deployPostfix: pg
