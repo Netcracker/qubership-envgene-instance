@@ -15,8 +15,8 @@ profile:
 deployParameters:
   ENVGENE_CONFIG_REF_NAME: "feat/check_updates"
   ENVGENE_CONFIG_TAG: "No Ref tag"
-  PG_NAMESPACE_FROM_SD: ""
-  PG_VERSION_FROM_SD: ""
+  PG_NAMESPACE_FROM_SD: "e03-pg"
+  PG_VERSION_FROM_SD: "16.4-oss-1"
 e2eParameters: {}
 technicalConfigurationParameters: {}
 deployParameterSets: []
