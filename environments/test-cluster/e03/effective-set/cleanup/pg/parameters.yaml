@@ -10,10 +10,10 @@ CLOUD_PUBLIC_HOST: test-env.managed.temp.cloud
 CMDB_URL: https://test-env.managed.temp.cloud
 CUSTOM_HOST: test-env.managed.temp.cloud
 DBAAS_AGGREGATOR_ADDRESS: https://dbaas.None
-DBAAS_AGGREGATOR_PASSWORD: envgeneNullValue
-DBAAS_AGGREGATOR_USERNAME: envgeneNullValue
-DBAAS_CLUSTER_DBA_CREDENTIALS_PASSWORD: envgeneNullValue
-DBAAS_CLUSTER_DBA_CREDENTIALS_USERNAME: envgeneNullValue
+DBAAS_AGGREGATOR_PASSWORD: test-dbaas-pass
+DBAAS_AGGREGATOR_USERNAME: test-dbaas-user
+DBAAS_CLUSTER_DBA_CREDENTIALS_PASSWORD: test-dbaas-pass
+DBAAS_CLUSTER_DBA_CREDENTIALS_USERNAME: test-dbaas-user
 DBAAS_ENABLED: false
 ENVGENE_CONFIG_REF_NAME: feat/check_updates
 ENVGENE_CONFIG_TAG: No Ref tag
@@ -25,8 +25,8 @@ MAAS_ENABLED: false
 NAMESPACE: e03-pg
 OPENSHIFT_SERVER: https://temp.cloud.com:1111
 ORIGIN_NAMESPACE: e03-pg
-PG_NAMESPACE_FROM_SD: ''
-PG_VERSION_FROM_SD: ''
+PG_NAMESPACE_FROM_SD: e03-pg
+PG_VERSION_FROM_SD: 16.4-oss-1
 POSTGRES_DBA_PASSWORD: test
 POSTGRES_DBA_USER: test
 PRIVATE_GATEWAY_URL: https://private-gateway-e03-pg.test-env.managed.temp.cloud
