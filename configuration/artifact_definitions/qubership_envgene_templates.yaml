@@ -5,7 +5,7 @@ registry:
   name: "google-artifact-registry"
   credentialsId: "gar-service-account"
   mavenConfig:
-    repositoryDomainName: "https://europe-west1-maven.pkg.dev/project-57115ebf-4c70-46af-bf2/andy-roode-maven-repo"
+    repositoryDomainName: "https://europe-west1-maven.pkg.dev/project-57115ebf-4c70-46af-bf2"
     targetSnapshot: ""
     targetStaging: ""
     targetRelease: "andy-roode-maven-repo"
