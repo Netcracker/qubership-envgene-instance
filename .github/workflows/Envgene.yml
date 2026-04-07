@@ -196,6 +196,11 @@ jobs:
         run: |
           REGISTRY_HOST=$(echo "${{ vars.DOCKER_REGISTRY }}" | cut -d'/' -f1)
           echo '${{ secrets.GCP_SA_KEY }}' | docker login -u _json_key --password-stdin "$REGISTRY_HOST"
+
+      - name: Authenticate to GAR for templates (Google Artifact Registry)
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
       ### ENV VARS PROCESSING - END ###
 
 
