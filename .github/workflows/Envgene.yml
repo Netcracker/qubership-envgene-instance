@@ -290,8 +290,10 @@ jobs:
       ### APP_REG_DEF_PROCESS - START ###
       - name: APP_REG_DEF_PROCESS
         if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
-          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root \
+          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container  -e GCP_SA_KEY=${{ env.GCP_SA_KEY }} --user root -e HOME=/root \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               set -eo pipefail
