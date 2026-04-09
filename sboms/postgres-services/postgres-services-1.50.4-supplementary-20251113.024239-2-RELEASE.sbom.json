@@ -137,7 +137,8 @@
           "name": "pgskipper-postgres-operator",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-postgres-operator@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -203,7 +204,8 @@
           "name": "pgskipper-monitoring-agent",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-monitoring-agent@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -269,7 +271,8 @@
           "name": "pgbouncer",
           "version": "1.22.1-debian-12-r9",
           "purl": "pkg:docker/bitnami/pgbouncer@1.22.1-debian-12-r9",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "bitnami"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -391,7 +394,8 @@
           "name": "pgskipper-backup-daemon",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-backup-daemon@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -468,7 +472,8 @@
           "name": "postgres-exporter",
           "version": "v0.19.1",
           "purl": "pkg:docker/prometheuscommunity/postgres-exporter@v0.19.1",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "prometheuscommunity"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -646,7 +651,8 @@
           "name": "pgskipper-dbaas-adapter",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-dbaas-adapter@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -712,7 +718,8 @@
           "name": "powa-web",
           "version": "5.0.1",
           "purl": "pkg:docker/powateam/powa-web@5.0.1",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "powateam"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -790,7 +797,8 @@
           "version": "from-upstream",
           "description": "Build from source or use published image if available",
           "purl": "pkg:github/albertodonato/query-exporter@main",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -856,7 +864,8 @@
           "name": "pgskipper-replication-controller",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-replication-controller@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -929,7 +938,8 @@
           "name": "vault-env",
           "version": "1.19.0",
           "purl": "pkg:docker/banzaicloud/vault-env@1.19.0",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "banzaicloud"
         }
       ],
       "mime-type": "application/vnd.qubership.service"

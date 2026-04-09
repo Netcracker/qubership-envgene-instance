@@ -142,7 +142,8 @@
           "version": "from-ci",
           "description": "Operator image built from this repository",
           "purl": "pkg:docker/netcracker/pgskipper-postgres-operator@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -228,7 +229,8 @@
           "name": "pgskipper-pg-patroni",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-pg-patroni@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -294,7 +296,8 @@
           "name": "pgskipper-pg-upgrade",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-pg-upgrade@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -367,7 +370,8 @@
           "name": "pgskipper-pgbackrest-sidecar",
           "version": "from-ci",
           "purl": "pkg:docker/netcracker/pgskipper-pgbackrest-sidecar@from-ci?repository_url=ghcr.io",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "netcracker"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
@@ -768,7 +772,8 @@
           "name": "vault-env",
           "version": "1.19.0",
           "purl": "pkg:docker/banzaicloud/vault-env@1.19.0",
-          "mime-type": "application/vnd.docker.image"
+          "mime-type": "application/vnd.docker.image",
+          "group": "banzaicloud"
         }
       ],
       "mime-type": "application/vnd.qubership.service"
