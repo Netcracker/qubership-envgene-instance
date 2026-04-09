@@ -1,0 +1,486 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:e9e7f1bc-6a4d-4f68-bd8d-4a5c6b7d8e9f",
+  "version": 2,
+  "metadata": {
+    "timestamp": "2026-03-31T12:00:00.000000+00:00",
+    "component": {
+      "type": "application",
+      "bom-ref": "BomRef.root.postgres-services",
+      "name": "postgres-services",
+      "version": "supplementary-netcracker-github",
+      "description": "Supplementary postgres-services SBOM mapped to public GitHub (Netcracker pgskipper/qubership where available) and public container registries. Replaces vendor CycloneDX for prod.platform.ha.postgres-services supplementary bundle.",
+      "properties": [
+        {
+          "name": "source_sbom",
+          "value": "postgres-services-1.50.4-supplementary-20251113.024239-2-RELEASE.sbom.json"
+        },
+        {
+          "name": "upstream_org",
+          "value": "https://github.com/Netcracker"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/Netcracker"
+        },
+        {
+          "type": "documentation",
+          "url": "https://github.com/Netcracker/pgskipper-operator/blob/main/docs/public/installation.md"
+        }
+      ]
+    },
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "sbom_rewrite",
+          "version": "2.0.0",
+          "description": "CycloneDX mapping: postgres-services supplementary → GitHub/OSS references"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgskipper.patroni.services",
+      "name": "patroni-services",
+      "version": "main",
+      "description": "Replaces: patroni-services (prod.platform.ha_postgres-operator postgres-operator image). Helm chart: charts/patroni-services in pgskipper-operator; same git revision lineage as vendor git_url.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "type": "other",
+          "url": "https://github.com/Netcracker/pgskipper-operator/tree/main/charts/patroni-services"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "patroni-services"
+        },
+        {
+          "name": "replaces_vendor_git",
+          "value": "https://git.netcracker.com/PROD.Platform.HA/postgres-operator"
+        },
+        {
+          "name": "container_image_note",
+          "value": "Operator service image built from pgskipper-operator CI; legacy tag contained postgres-operator suffix"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.pgskipper.patroni.services.image",
+          "name": "pgskipper-postgres-operator",
+          "version": "from-ci",
+          "purl": "pkg:docker/netcracker/pgskipper-postgres-operator@from-ci?repository_url=ghcr.io"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgskipper.monitoring.agent",
+      "name": "pgskipper-monitoring-agent",
+      "version": "main",
+      "description": "Replaces: pg_patroni_metric_collector (image pgskipper-monitoring-agent).",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Netcracker/pgskipper-monitoring-agent.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "pg_patroni_metric_collector"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.pgskipper.monitoring.agent.image",
+          "name": "pgskipper-monitoring-agent",
+          "version": "from-ci",
+          "purl": "pkg:docker/netcracker/pgskipper-monitoring-agent@from-ci?repository_url=ghcr.io"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgbouncer",
+      "name": "pgbouncer",
+      "version": "1.22.1-debian-12-r9",
+      "description": "Already upstream Bitnami image; use public Docker Hub instead of private Artifactory mirror.",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://hub.docker.com/r/bitnami/pgbouncer"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "pgbouncer"
+        },
+        {
+          "name": "full_image_name",
+          "value": "docker.io/bitnami/pgbouncer:1.22.1-debian-12-r9"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.pgbouncer.image",
+          "name": "pgbouncer",
+          "version": "1.22.1-debian-12-r9",
+          "purl": "pkg:docker/bitnami/pgbouncer@1.22.1-debian-12-r9"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.helm.postgres.services",
+      "name": "postgres-services-helm",
+      "version": "main",
+      "description": "Replaces: postgres-services Helm chart (application/vnd.qubership.app.chart). Chart sources under pgskipper-operator.",
+      "externalReferences": [
+        {
+          "type": "other",
+          "url": "https://github.com/Netcracker/pgskipper-operator/tree/main/charts"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "postgres-services"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgskipper.backup.daemon",
+      "name": "pgskipper-backup-daemon",
+      "version": "main",
+      "description": "Replaces: postgres_backup_daemon.",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Netcracker/pgskipper-backup-daemon.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "postgres_backup_daemon"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.pgskipper.backup.daemon.image",
+          "name": "pgskipper-backup-daemon",
+          "version": "from-ci",
+          "purl": "pkg:docker/netcracker/pgskipper-backup-daemon@from-ci?repository_url=ghcr.io"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.postgres.exporter",
+      "name": "postgres_exporter",
+      "version": "0.19.1",
+      "description": "Replaces: prod.platform.databases_postgres-exporter — vendor wrapper; use upstream Prometheus Community exporter.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/prometheus-community/postgres_exporter.git"
+        },
+        {
+          "type": "website",
+          "url": "https://hub.docker.com/r/prometheuscommunity/postgres-exporter"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "postgres_exporter"
+        },
+        {
+          "name": "full_image_name",
+          "value": "docker.io/prometheuscommunity/postgres-exporter:v0.19.1"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.postgres.exporter.image",
+          "name": "postgres-exporter",
+          "version": "v0.19.1",
+          "purl": "pkg:docker/prometheuscommunity/postgres-exporter@v0.19.1"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgskipper.operator.init",
+      "name": "postgres-operator-init",
+      "version": "main",
+      "description": "Replaces: postgres_operator_init image from prod.platform.ha_postgres-operator init tag.",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Netcracker/pgskipper-operator.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "postgres_operator_init"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgskipper.operator.tests",
+      "name": "pgskipper-operator-tests",
+      "version": "main",
+      "description": "Replaces: postgres_operator_tests image — Robot/Dockerfile under operator repo (no separate Netcracker repo for operator-tests).",
+      "externalReferences": [
+        {
+          "type": "other",
+          "url": "https://github.com/Netcracker/pgskipper-operator/tree/main/tests"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "postgres_operator_tests"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgskipper.dbaas.adapter",
+      "name": "pgskipper-dbaas-adapter",
+      "version": "main",
+      "description": "Replaces: postgresql_dbaas_adapter.",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Netcracker/pgskipper-dbaas-adapter.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "postgresql_dbaas_adapter"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.pgskipper.dbaas.adapter.image",
+          "name": "pgskipper-dbaas-adapter",
+          "version": "from-ci",
+          "purl": "pkg:docker/netcracker/pgskipper-dbaas-adapter@from-ci?repository_url=ghcr.io"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.powa.web",
+      "name": "powa-web",
+      "version": "5.0.1",
+      "description": "Replaces: powa_ui_docker — upstream PoWA (PostgreSQL Workload Analyzer); public image.",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/powa-team/powa-web.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "powa_ui_docker"
+        },
+        {
+          "name": "full_image_name",
+          "value": "docker.io/powateam/powa-web:5.0.1"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.powa.web.image",
+          "name": "powa-web",
+          "version": "5.0.1",
+          "purl": "pkg:docker/powateam/powa-web@5.0.1"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.query.exporter",
+      "name": "query-exporter",
+      "version": "main",
+      "description": "Replaces: qubership-query-exporter image. No public Netcracker repo with this name found; use OSS query-exporter (SQL metrics) or build from internal sources.",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0-only"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/albertodonato/query-exporter.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "query_exporter"
+        },
+        {
+          "name": "netcracker_github_note",
+          "value": "qubership-query-exporter not listed as public repo on github.com/Netcracker; verify internal mirror or adopt albertodonato/query-exporter"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.query.exporter.image.placeholder",
+          "name": "query-exporter",
+          "version": "from-upstream",
+          "description": "Build from source or use published image if available",
+          "purl": "pkg:github/albertodonato/query-exporter@main"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.pgskipper.replication.controller",
+      "name": "pgskipper-replication-controller",
+      "version": "main",
+      "description": "Replaces: replication_controller.",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Netcracker/pgskipper-replication-controller.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "replaces_vendor_component",
+          "value": "replication_controller"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.pgskipper.replication.controller.image",
+          "name": "pgskipper-replication-controller",
+          "version": "from-ci",
+          "purl": "pkg:docker/netcracker/pgskipper-replication-controller@from-ci?repository_url=ghcr.io"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "BomRef.vault.env",
+      "name": "vault-env",
+      "version": "1.19.0",
+      "description": "Replaces: vault_env — use public registry (same as vendor upstream).",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/bank-vaults/vault-env.git"
+        }
+      ],
+      "properties": [
+        {
+          "name": "full_image_name",
+          "value": "docker.io/banzaicloud/vault-env:1.19.0"
+        },
+        {
+          "name": "replaces_vendor_component",
+          "value": "vault_env"
+        }
+      ],
+      "components": [
+        {
+          "type": "container",
+          "bom-ref": "BomRef.vault.env.image",
+          "name": "vault-env",
+          "version": "1.19.0",
+          "purl": "pkg:docker/banzaicloud/vault-env@1.19.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "BomRef.maven.equivalent",
+      "name": "prod.platform.ha.postgres-services",
+      "version": "github-sources",
+      "description": "Logical replacement for pkg:maven com.netcracker.deploy.product:prod.platform.ha.postgres-services — supplementary bundle expressed as pgskipper + related repos.",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/Netcracker/pgskipper-operator"
+        }
+      ],
+      "purl": "pkg:github/Netcracker/pgskipper-operator@main"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "BomRef.root.postgres-services",
+      "dependsOn": [
+        "BomRef.pgskipper.patroni.services",
+        "BomRef.pgskipper.monitoring.agent",
+        "BomRef.pgbouncer",
+        "BomRef.helm.postgres.services",
+        "BomRef.pgskipper.backup.daemon",
+        "BomRef.postgres.exporter",
+        "BomRef.pgskipper.operator.init",
+        "BomRef.pgskipper.operator.tests",
+        "BomRef.pgskipper.dbaas.adapter",
+        "BomRef.powa.web",
+        "BomRef.query.exporter",
+        "BomRef.pgskipper.replication.controller",
+        "BomRef.vault.env",
+        "BomRef.maven.equivalent"
+      ]
+    }
+  ]
+}

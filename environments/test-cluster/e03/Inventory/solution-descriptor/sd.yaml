@@ -1,5 +1,8 @@
 version: 2.1
-type: deploy
+type: "solutionDeploy"
+deployMode: "composite"
 applications:
-  - version: "postgres:16.4-oss-1"
-    deployPostfix: "pg"
+  - version: "postgres-pg16:1.50.4-20251113.024157-2-RELEASE"
+    deployPostfix: "postgresql-pg16"
+  - version: "postgres-services:1.50.4-supplementary-20251113.024239-2-RELEASE"
+    deployPostfix: "postgresql-services"
