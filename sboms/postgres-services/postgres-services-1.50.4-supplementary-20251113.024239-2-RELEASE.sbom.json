@@ -82,16 +82,52 @@
       ],
       "properties": [
         {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/pgskipper-postgres-operator:latest"
+        },
+        {
+          "name": "container_image_note",
+          "value": "Operator service image built from pgskipper-operator CI; legacy tag contained postgres-operator suffix"
+        },
+        {
           "name": "replaces_vendor_component",
           "value": "patroni-services"
         },
         {
           "name": "replaces_vendor_git",
           "value": "https://git.netcracker.com/PROD.Platform.HA/postgres-operator"
-        },
-        {
-          "name": "container_image_note",
-          "value": "Operator service image built from pgskipper-operator CI; legacy tag contained postgres-operator suffix"
         }
       ],
       "components": [
@@ -119,6 +155,42 @@
         }
       ],
       "properties": [
+        {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/pgskipper-monitoring-agent:latest"
+        },
         {
           "name": "replaces_vendor_component",
           "value": "pg_patroni_metric_collector"
@@ -150,12 +222,44 @@
       ],
       "properties": [
         {
-          "name": "replaces_vendor_component",
-          "value": "pgbouncer"
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
         },
         {
           "name": "full_image_name",
           "value": "docker.io/bitnami/pgbouncer:1.22.1-debian-12-r9"
+        },
+        {
+          "name": "replaces_vendor_component",
+          "value": "pgbouncer"
         }
       ],
       "components": [
@@ -184,6 +288,42 @@
       ],
       "properties": [
         {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/postgres-services-helm:latest"
+        },
+        {
           "name": "replaces_vendor_component",
           "value": "postgres-services"
         }
@@ -203,6 +343,42 @@
         }
       ],
       "properties": [
+        {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/pgskipper-backup-daemon:latest"
+        },
         {
           "name": "replaces_vendor_component",
           "value": "postgres_backup_daemon"
@@ -245,12 +421,44 @@
       ],
       "properties": [
         {
-          "name": "replaces_vendor_component",
-          "value": "postgres_exporter"
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
         },
         {
           "name": "full_image_name",
           "value": "docker.io/prometheuscommunity/postgres-exporter:v0.19.1"
+        },
+        {
+          "name": "replaces_vendor_component",
+          "value": "postgres_exporter"
         }
       ],
       "components": [
@@ -279,6 +487,42 @@
       ],
       "properties": [
         {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/postgres-operator-init:latest"
+        },
+        {
           "name": "replaces_vendor_component",
           "value": "postgres_operator_init"
         }
@@ -299,6 +543,42 @@
       ],
       "properties": [
         {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/pgskipper-operator-tests:latest"
+        },
+        {
           "name": "replaces_vendor_component",
           "value": "postgres_operator_tests"
         }
@@ -318,6 +598,42 @@
         }
       ],
       "properties": [
+        {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/pgskipper-dbaas-adapter:latest"
+        },
         {
           "name": "replaces_vendor_component",
           "value": "postgresql_dbaas_adapter"
@@ -349,12 +665,44 @@
       ],
       "properties": [
         {
-          "name": "replaces_vendor_component",
-          "value": "powa_ui_docker"
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
         },
         {
           "name": "full_image_name",
           "value": "docker.io/powateam/powa-web:5.0.1"
+        },
+        {
+          "name": "replaces_vendor_component",
+          "value": "powa_ui_docker"
         }
       ],
       "components": [
@@ -390,12 +738,48 @@
       ],
       "properties": [
         {
-          "name": "replaces_vendor_component",
-          "value": "query_exporter"
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/query-exporter:latest"
         },
         {
           "name": "netcracker_github_note",
           "value": "qubership-query-exporter not listed as public repo on github.com/Netcracker; verify internal mirror or adopt albertodonato/query-exporter"
+        },
+        {
+          "name": "replaces_vendor_component",
+          "value": "query_exporter"
         }
       ],
       "components": [
@@ -424,6 +808,42 @@
         }
       ],
       "properties": [
+        {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
+        {
+          "name": "full_image_name",
+          "value": "ghcr.io/netcracker/pgskipper-replication-controller:latest"
+        },
         {
           "name": "replaces_vendor_component",
           "value": "replication_controller"
@@ -461,6 +881,38 @@
         }
       ],
       "properties": [
+        {
+          "name": "deploy_param",
+          "value": ""
+        },
+        {
+          "name": "docker_registry",
+          "value": "ghcr.io"
+        },
+        {
+          "name": "git_branch",
+          "value": "main"
+        },
+        {
+          "name": "git_revision",
+          "value": "main"
+        },
+        {
+          "name": "git_url",
+          "value": "https://github.com/Netcracker/pgskipper-operator.git"
+        },
+        {
+          "name": "image_type",
+          "value": "service"
+        },
+        {
+          "name": "promote_artifacts",
+          "value": "false"
+        },
+        {
+          "name": "qualifier",
+          "value": "prod.platform.ha_postgres"
+        },
         {
           "name": "full_image_name",
           "value": "docker.io/banzaicloud/vault-env:1.19.0"
