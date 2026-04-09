@@ -1,0 +1,196 @@
+global: &id002
+  deployDescriptor: &id001
+    pgskipper-backup-daemon:
+      artifacts: []
+      deploy_param: ''
+      docker_registry: ghcr.io
+      full_image_name: ghcr.io/netcracker/pgskipper-backup-daemon:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/pgskipper-backup-daemon:latest
+      image_type: service
+      name: pgskipper-backup-daemon
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    pgskipper-dbaas-adapter:
+      artifacts: []
+      deploy_param: ''
+      docker_registry: ghcr.io
+      full_image_name: ghcr.io/netcracker/pgskipper-dbaas-adapter:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/pgskipper-dbaas-adapter:latest
+      image_type: service
+      name: pgskipper-dbaas-adapter
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    pgskipper-operator:
+      artifacts: []
+      deploy_param: ''
+      docker_digest: ''
+      docker_registry: ghcr.io
+      docker_repository_name: netcracker
+      docker_tag: from-ci
+      full_image_name: ghcr.io/netcracker/pgskipper-postgres-operator:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/pgskipper-postgres-operator:latest
+      image_name: pgskipper-postgres-operator
+      image_type: service
+      name: pgskipper-operator
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    pgskipper-operator-tests:
+      artifacts: []
+      deploy_param: ''
+      docker_registry: ghcr.io
+      full_image_name: ghcr.io/netcracker/pgskipper-operator-tests:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/pgskipper-operator-tests:latest
+      image_type: service
+      name: pgskipper-operator-tests
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    pgskipper-patroni:
+      artifacts: []
+      deploy_param: ''
+      docker_digest: ''
+      docker_registry: ghcr.io
+      docker_repository_name: netcracker
+      docker_tag: from-ci
+      full_image_name: ghcr.io/netcracker/pgskipper-patroni:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/pgskipper-patroni:latest
+      image_name: pgskipper-pg-patroni
+      image_type: service
+      name: pgskipper-patroni
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    pgskipper-pgbackrest-sidecar:
+      artifacts: []
+      deploy_param: ''
+      docker_digest: ''
+      docker_registry: ghcr.io
+      docker_repository_name: netcracker
+      docker_tag: from-ci
+      full_image_name: ghcr.io/netcracker/pgskipper-pgbackrest-sidecar:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/pgskipper-pgbackrest-sidecar:latest
+      image_name: pgskipper-pgbackrest-sidecar
+      image_type: service
+      name: pgskipper-pgbackrest-sidecar
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    pgskipper-upgrade:
+      artifacts: []
+      deploy_param: ''
+      docker_digest: ''
+      docker_registry: ghcr.io
+      docker_repository_name: netcracker
+      docker_tag: from-ci
+      full_image_name: ghcr.io/netcracker/pgskipper-upgrade:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/pgskipper-upgrade:latest
+      image_name: pgskipper-pg-upgrade
+      image_type: service
+      name: pgskipper-upgrade
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    postgres-helm-charts:
+      artifacts: []
+      deploy_param: ''
+      docker_registry: ghcr.io
+      full_image_name: ghcr.io/netcracker/postgres-helm-charts:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/postgres-helm-charts:latest
+      image_type: service
+      name: postgres-helm-charts
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    postgres-operator-init:
+      artifacts: []
+      deploy_param: ''
+      docker_registry: ghcr.io
+      full_image_name: ghcr.io/netcracker/postgres-operator-init:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/postgres-operator-init:latest
+      image_type: service
+      name: postgres-operator-init
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    qubership-dbaas:
+      artifacts: []
+      deploy_param: ''
+      docker_registry: ghcr.io
+      full_image_name: ghcr.io/netcracker/qubership-dbaas:latest
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: ghcr.io/netcracker/qubership-dbaas:latest
+      image_type: service
+      name: qubership-dbaas
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: main
+    vault-env:
+      artifacts: []
+      deploy_param: ''
+      docker_digest: ''
+      docker_registry: ghcr.io
+      docker_repository_name: banzaicloud
+      docker_tag: 1.19.0
+      full_image_name: docker.io/banzaicloud/vault-env:1.19.0
+      git_branch: main
+      git_revision: main
+      git_url: https://github.com/Netcracker/pgskipper-operator.git
+      image: docker.io/banzaicloud/vault-env:1.19.0
+      image_name: vault-env
+      image_type: service
+      name: vault-env
+      promote_artifacts: 'false'
+      qualifier: prod.platform.ha_postgres
+      version: 1.19.0
+deployDescriptor: *id001
+pgskipper-backup-daemon: &id003
+  APPLICATION_NAME: postgresql-ha
+  DEPLOYMENT_SESSION_ID: TEST-TICKET-1
+  MANAGED_BY: argocd
+  deployDescriptor: *id001
+  global: *id002
+pgskipper-dbaas-adapter: *id003
+pgskipper-operator: *id003
+pgskipper-operator-tests: *id003
+pgskipper-patroni: *id003
+pgskipper-pgbackrest-sidecar: *id003
+pgskipper-upgrade: *id003
+postgres-helm-charts: *id003
+postgres-operator-init: *id003
+qubership-dbaas: *id003
+vault-env: *id003
+APPLICATION_NAME: postgresql-ha
+DEPLOYMENT_SESSION_ID: TEST-TICKET-1
+MANAGED_BY: argocd

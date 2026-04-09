@@ -21,4 +21,4 @@ environments:
   test-cluster/e03:
     namespaces:
       e03-pg:
-        deployPostfix: pg
+        deployPostfix: postgresql-pg16

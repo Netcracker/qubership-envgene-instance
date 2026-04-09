@@ -1,9 +1,9 @@
 API_DBAAS_ADDRESS: http://dbaas.dbaas:8888
-APPLICATION_NAME: postgres
-ARTIFACT_DESCRIPTOR_ARTIFACT_ID: postgres-application
-ARTIFACT_DESCRIPTOR_GROUP_ID: org.example.oss
+APPLICATION_NAME: postgres-pg16
+ARTIFACT_DESCRIPTOR_ARTIFACT_ID: prod.platform.ha.postgres
+ARTIFACT_DESCRIPTOR_GROUP_ID: org.qubership.deploy.product
 ARTIFACT_DESCRIPTOR_MAVEN_REPO: null
-ARTIFACT_DESCRIPTOR_VERSION: 16.4-oss-1
+ARTIFACT_DESCRIPTOR_VERSION: pg16-1.50.4-20251113.024157-2-RELEASE
 BUILD_TAG_NEW: keycloak-database
 CLIENT_PREFIX: e03-pg
 CLOUDNAME: test-env
@@ -29,7 +29,7 @@ NAMESPACE: e03-pg
 OPENSHIFT_SERVER: https://temp.cloud.com:1111
 ORIGIN_NAMESPACE: e03-pg
 PG_NAMESPACE_FROM_SD: e03-pg
-PG_VERSION_FROM_SD: 16.4-oss-1
+PG_VERSION_FROM_SD: 1.50.4-20251113.024157-2-RELEASE
 POSTGRES_DBA_PASSWORD: test
 POSTGRES_DBA_USER: test
 PRIVATE_GATEWAY_URL: https://private-gateway-e03-pg.test-env.managed.temp.cloud
@@ -47,11 +47,11 @@ VALUE: 'true'
 key1: value2
 global: &id001
   API_DBAAS_ADDRESS: http://dbaas.dbaas:8888
-  APPLICATION_NAME: postgres
-  ARTIFACT_DESCRIPTOR_ARTIFACT_ID: postgres-application
-  ARTIFACT_DESCRIPTOR_GROUP_ID: org.example.oss
+  APPLICATION_NAME: postgres-pg16
+  ARTIFACT_DESCRIPTOR_ARTIFACT_ID: prod.platform.ha.postgres
+  ARTIFACT_DESCRIPTOR_GROUP_ID: org.qubership.deploy.product
   ARTIFACT_DESCRIPTOR_MAVEN_REPO: null
-  ARTIFACT_DESCRIPTOR_VERSION: 16.4-oss-1
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-1.50.4-20251113.024157-2-RELEASE
   BUILD_TAG_NEW: keycloak-database
   CLIENT_PREFIX: e03-pg
   CLOUDNAME: test-env
@@ -77,7 +77,7 @@ global: &id001
   OPENSHIFT_SERVER: https://temp.cloud.com:1111
   ORIGIN_NAMESPACE: e03-pg
   PG_NAMESPACE_FROM_SD: e03-pg
-  PG_VERSION_FROM_SD: 16.4-oss-1
+  PG_VERSION_FROM_SD: 1.50.4-20251113.024157-2-RELEASE
   POSTGRES_DBA_PASSWORD: test
   POSTGRES_DBA_USER: test
   PRIVATE_GATEWAY_URL: https://private-gateway-e03-pg.test-env.managed.temp.cloud
@@ -93,4 +93,14 @@ global: &id001
   TRACING_UI_URL: https://test-env.managed.temp.cloud
   VALUE: 'true'
   key1: value2
-postgres: *id001
+pgskipper-backup-daemon: *id001
+pgskipper-dbaas-adapter: *id001
+pgskipper-operator: *id001
+pgskipper-operator-tests: *id001
+pgskipper-patroni: *id001
+pgskipper-pgbackrest-sidecar: *id001
+pgskipper-upgrade: *id001
+postgres-helm-charts: *id001
+postgres-operator-init: *id001
+qubership-dbaas: *id001
+vault-env: *id001

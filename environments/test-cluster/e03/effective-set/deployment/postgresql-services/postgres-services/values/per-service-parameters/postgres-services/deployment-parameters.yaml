@@ -1,0 +1,101 @@
+patroni-services:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: patroni-services-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-postgres-operator:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-postgres-operator
+  SERVICE_NAME: patroni-services
+  TAG: from-ci
+pgbouncer:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgbouncer-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: docker.io/bitnami/pgbouncer:1.22.1-debian-12-r9
+  IMAGE_REPOSITORY: docker.io/bitnami/pgbouncer
+  SERVICE_NAME: pgbouncer
+  TAG: 1.22.1-debian-12-r9
+pgskipper-backup-daemon:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-backup-daemon-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-backup-daemon:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-backup-daemon
+  SERVICE_NAME: pgskipper-backup-daemon
+  TAG: from-ci
+pgskipper-dbaas-adapter:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-dbaas-adapter-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-dbaas-adapter:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-dbaas-adapter
+  SERVICE_NAME: pgskipper-dbaas-adapter
+  TAG: from-ci
+pgskipper-monitoring-agent:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-monitoring-agent-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-monitoring-agent:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-monitoring-agent
+  SERVICE_NAME: pgskipper-monitoring-agent
+  TAG: from-ci
+pgskipper-operator-tests:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-operator-tests-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-operator-tests:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-operator-tests
+  SERVICE_NAME: pgskipper-operator-tests
+pgskipper-replication-controller:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-replication-controller-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-replication-controller:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-replication-controller
+  SERVICE_NAME: pgskipper-replication-controller
+  TAG: from-ci
+postgres-operator-init:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: postgres-operator-init-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/postgres-operator-init:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/postgres-operator-init
+  SERVICE_NAME: postgres-operator-init
+postgres-services-helm:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: postgres-services-helm-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/postgres-services-helm:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/postgres-services-helm
+  SERVICE_NAME: postgres-services-helm
+postgres_exporter:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: postgres_exporter-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: docker.io/prometheuscommunity/postgres-exporter:v0.19.1
+  IMAGE_REPOSITORY: docker.io/prometheuscommunity/postgres-exporter
+  SERVICE_NAME: postgres_exporter
+  TAG: v0.19.1
+powa-web:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: powa-web-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: docker.io/powateam/powa-web:5.0.1
+  IMAGE_REPOSITORY: docker.io/powateam/powa-web
+  SERVICE_NAME: powa-web
+  TAG: 5.0.1
+query-exporter:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: query-exporter-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/query-exporter:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/query-exporter
+  SERVICE_NAME: query-exporter
+  TAG: from-upstream
+vault-env:
+  ARTIFACT_DESCRIPTOR_VERSION: supplementary-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: vault-env-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: docker.io/banzaicloud/vault-env:1.19.0
+  IMAGE_REPOSITORY: docker.io/banzaicloud/vault-env
+  SERVICE_NAME: vault-env
+  TAG: 1.19.0

@@ -1,1 +1,1 @@
-e03-pg: /environments/test-cluster/e03/effective-set/cleanup/pg
+e03-pg: /environments/test-cluster/e03/effective-set/cleanup/postgresql-services

@@ -1,0 +1,82 @@
+pgskipper-backup-daemon:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-backup-daemon-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-backup-daemon:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-backup-daemon
+  SERVICE_NAME: pgskipper-backup-daemon
+pgskipper-dbaas-adapter:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-dbaas-adapter-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-dbaas-adapter:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-dbaas-adapter
+  SERVICE_NAME: pgskipper-dbaas-adapter
+pgskipper-operator:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-operator-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-postgres-operator:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-postgres-operator
+  SERVICE_NAME: pgskipper-operator
+  TAG: from-ci
+pgskipper-operator-tests:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-operator-tests-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-operator-tests:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-operator-tests
+  SERVICE_NAME: pgskipper-operator-tests
+pgskipper-patroni:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-patroni-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-patroni:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-patroni
+  SERVICE_NAME: pgskipper-patroni
+  TAG: from-ci
+pgskipper-pgbackrest-sidecar:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-pgbackrest-sidecar-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-pgbackrest-sidecar:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-pgbackrest-sidecar
+  SERVICE_NAME: pgskipper-pgbackrest-sidecar
+  TAG: from-ci
+pgskipper-upgrade:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: pgskipper-upgrade-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/pgskipper-upgrade:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/pgskipper-upgrade
+  SERVICE_NAME: pgskipper-upgrade
+  TAG: from-ci
+postgres-helm-charts:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: postgres-helm-charts-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/postgres-helm-charts:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/postgres-helm-charts
+  SERVICE_NAME: postgres-helm-charts
+postgres-operator-init:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: postgres-operator-init-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/postgres-operator-init:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/postgres-operator-init
+  SERVICE_NAME: postgres-operator-init
+qubership-dbaas:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: qubership-dbaas-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: ghcr.io/netcracker/qubership-dbaas:latest
+  IMAGE_REPOSITORY: ghcr.io/netcracker/qubership-dbaas
+  SERVICE_NAME: qubership-dbaas
+vault-env:
+  ARTIFACT_DESCRIPTOR_VERSION: pg16-netcracker-github
+  DEPLOYMENT_RESOURCE_NAME: vault-env-v1
+  DEPLOYMENT_VERSION: v1
+  DOCKER_TAG: docker.io/banzaicloud/vault-env:1.19.0
+  IMAGE_REPOSITORY: docker.io/banzaicloud/vault-env
+  SERVICE_NAME: vault-env
+  TAG: 1.19.0

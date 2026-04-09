@@ -1,0 +1,108 @@
+API_DBAAS_ADDRESS: http://dbaas.dbaas:8888
+APPLICATION_NAME: postgres-services
+ARTIFACT_DESCRIPTOR_ARTIFACT_ID: prod.platform.ha.postgres-services
+ARTIFACT_DESCRIPTOR_GROUP_ID: org.qubership.deploy.product
+ARTIFACT_DESCRIPTOR_MAVEN_REPO: null
+ARTIFACT_DESCRIPTOR_VERSION: 1.50.4-supplementary-20251113.024239-2-RELEASE
+BUILD_TAG_NEW: keycloak-database
+CLIENT_PREFIX: e03-pg
+CLOUDNAME: test-env
+CLOUD_API_HOST: temp.cloud.com
+CLOUD_API_PORT: '1111'
+CLOUD_DASHBOARD_URL: https://dashboard.test-env.managed.temp.cloud
+CLOUD_PRIVATE_HOST: test-env.managed.temp.cloud
+CLOUD_PROTOCOL: https
+CLOUD_PUBLIC_HOST: test-env.managed.temp.cloud
+CMDB_URL: https://test-env.managed.temp.cloud
+CUSTOM_HOST: test-env.managed.temp.cloud
+DBAAS_AGGREGATOR_ADDRESS: https://dbaas.None
+DBAAS_ENABLED: false
+DEPLOYMENT_SESSION_ID: TEST-TICKET-1
+ENVGENE_CONFIG_REF_NAME: feat/check_updates
+ENVGENE_CONFIG_TAG: No Ref tag
+ENV_NAME: e03
+GATEWAY_URL: http://internal-gateway-service:8080
+GRAFANA_UI_URL: https://test-env.managed.temp.cloud
+GRAYLOG_UI_URL: https://test-env.managed.temp.cloud
+MAAS_ENABLED: false
+NAMESPACE: e03-pg
+OPENSHIFT_SERVER: https://temp.cloud.com:1111
+ORIGIN_NAMESPACE: e03-pg
+PG_SERVICES_NAMESPACE_FROM_SD: e03-pg
+PG_SERVICES_VERSION_FROM_SD: 1.50.4-supplementary-20251113.024239-2-RELEASE
+POSTGRES_DBA_PASSWORD: test
+POSTGRES_DBA_USER: test
+PRIVATE_GATEWAY_URL: https://private-gateway-e03-pg.test-env.managed.temp.cloud
+PRIVATE_IDENTITY_PROVIDER_URL: https://private-gateway-e03-pg.test-env.managed.temp.cloud
+PRODUCTION_MODE: false
+PUBLIC_GATEWAY_URL: https://public-gateway-e03-pg.test-env.managed.temp.cloud
+PUBLIC_IDENTITY_PROVIDER_URL: https://public-gateway-e03-pg.test-env.managed.temp.cloud
+SERVER_HOSTNAME: test-env.managed.temp.cloud
+SSL_SECRET: defaultsslcertificate
+STATIC_CACHE_SERVICE_ROUTE_HOST: static-cache-service-e03-pg.test-env.managed.temp.cloud
+TBAPI_URL: http://test
+TENANTNAME: test-tenant
+TRACING_UI_URL: https://test-env.managed.temp.cloud
+VALUE: 'true'
+key1: value2
+global: &id001
+  API_DBAAS_ADDRESS: http://dbaas.dbaas:8888
+  APPLICATION_NAME: postgres-services
+  ARTIFACT_DESCRIPTOR_ARTIFACT_ID: prod.platform.ha.postgres-services
+  ARTIFACT_DESCRIPTOR_GROUP_ID: org.qubership.deploy.product
+  ARTIFACT_DESCRIPTOR_MAVEN_REPO: null
+  ARTIFACT_DESCRIPTOR_VERSION: 1.50.4-supplementary-20251113.024239-2-RELEASE
+  BUILD_TAG_NEW: keycloak-database
+  CLIENT_PREFIX: e03-pg
+  CLOUDNAME: test-env
+  CLOUD_API_HOST: temp.cloud.com
+  CLOUD_API_PORT: '1111'
+  CLOUD_DASHBOARD_URL: https://dashboard.test-env.managed.temp.cloud
+  CLOUD_PRIVATE_HOST: test-env.managed.temp.cloud
+  CLOUD_PROTOCOL: https
+  CLOUD_PUBLIC_HOST: test-env.managed.temp.cloud
+  CMDB_URL: https://test-env.managed.temp.cloud
+  CUSTOM_HOST: test-env.managed.temp.cloud
+  DBAAS_AGGREGATOR_ADDRESS: https://dbaas.None
+  DBAAS_ENABLED: false
+  DEPLOYMENT_SESSION_ID: TEST-TICKET-1
+  ENVGENE_CONFIG_REF_NAME: feat/check_updates
+  ENVGENE_CONFIG_TAG: No Ref tag
+  ENV_NAME: e03
+  GATEWAY_URL: http://internal-gateway-service:8080
+  GRAFANA_UI_URL: https://test-env.managed.temp.cloud
+  GRAYLOG_UI_URL: https://test-env.managed.temp.cloud
+  MAAS_ENABLED: false
+  NAMESPACE: e03-pg
+  OPENSHIFT_SERVER: https://temp.cloud.com:1111
+  ORIGIN_NAMESPACE: e03-pg
+  PG_SERVICES_NAMESPACE_FROM_SD: e03-pg
+  PG_SERVICES_VERSION_FROM_SD: 1.50.4-supplementary-20251113.024239-2-RELEASE
+  POSTGRES_DBA_PASSWORD: test
+  POSTGRES_DBA_USER: test
+  PRIVATE_GATEWAY_URL: https://private-gateway-e03-pg.test-env.managed.temp.cloud
+  PRIVATE_IDENTITY_PROVIDER_URL: https://private-gateway-e03-pg.test-env.managed.temp.cloud
+  PRODUCTION_MODE: false
+  PUBLIC_GATEWAY_URL: https://public-gateway-e03-pg.test-env.managed.temp.cloud
+  PUBLIC_IDENTITY_PROVIDER_URL: https://public-gateway-e03-pg.test-env.managed.temp.cloud
+  SERVER_HOSTNAME: test-env.managed.temp.cloud
+  SSL_SECRET: defaultsslcertificate
+  STATIC_CACHE_SERVICE_ROUTE_HOST: static-cache-service-e03-pg.test-env.managed.temp.cloud
+  TBAPI_URL: http://test
+  TENANTNAME: test-tenant
+  TRACING_UI_URL: https://test-env.managed.temp.cloud
+  VALUE: 'true'
+  key1: value2
+patroni-services: *id001
+pgbouncer: *id001
+pgskipper-backup-daemon: *id001
+pgskipper-dbaas-adapter: *id001
+pgskipper-monitoring-agent: *id001
+pgskipper-operator-tests: *id001
+pgskipper-replication-controller: *id001
+postgres-operator-init: *id001
+postgres-services-helm: *id001
+postgres_exporter: *id001
+powa-web: *id001
+query-exporter: *id001
+vault-env: *id001
