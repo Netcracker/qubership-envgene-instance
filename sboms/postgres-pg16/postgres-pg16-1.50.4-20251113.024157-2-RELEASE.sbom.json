@@ -389,6 +389,13 @@
       ],
       "purl": "pkg:github/Netcracker/pgskipper-operator@main",
       "mime-type": "application/vnd.qubership.generic"
+    },
+    {
+      "type": "application",
+      "mime-type": "application/vnd.qubership.app.chart",
+      "bom-ref": "BomRef.app.chart.postgresql-ha",
+      "name": "postgres",
+      "version": "0.0.0-pg16-1.50.4-20251113.024157-2-RELEASE"
     }
   ],
   "dependencies": [
