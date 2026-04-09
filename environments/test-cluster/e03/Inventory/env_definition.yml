@@ -6,7 +6,7 @@ inventory:
   cloudName: "test-env"
   cloudPassport: "test-cloud-passport"
 envTemplate:
-  name: "postgres-oss-template"
+  name: "postgres"
   artifact: "qubership_envgene_templates:test_sbom"
   envSpecificParamsets:
     cloud: ["cloud-specific", "integrations", "paramsetA"]
