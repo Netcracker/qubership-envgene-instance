@@ -99,3 +99,8 @@ vault-env:
   IMAGE_REPOSITORY: docker.io/banzaicloud/vault-env
   SERVICE_NAME: vault-env
   TAG: 1.19.0
+backupDaemon:
+  storage:
+    type: provisioned
+    size: 1Gi
+    storageClass: standard
