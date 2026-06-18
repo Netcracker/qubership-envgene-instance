@@ -1,4 +1,5 @@
 name: Test OpenBao write
+
 on:
   workflow_dispatch:
     inputs:
@@ -6,47 +7,64 @@ on:
         description: Test message to store in OpenBao
         required: false
         default: hello-from-github-actions
+
 permissions:
   contents: read
   id-token: write
+
 env:
   OPENBAO_ADDR: http://k8s-openbao-openbao-385ebb4da3-f9f1b7419044431a.elb.us-east-1.amazonaws.com:8200
   OPENBAO_AUDIENCE: http://k8s-openbao-openbao-385ebb4da3-f9f1b7419044431a.elb.us-east-1.amazonaws.com:8200
   OPENBAO_KV_PATH: secret/data/envgene/test
+
 jobs:
   write-test-secret:
     runs-on: ubuntu-latest
     steps:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Login to OpenBao via GitHub OIDC
         id: auth
         run: |
+          set -euo pipefail
+
           OIDC_TOKEN=$(curl -sLS \
             -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=${OPENBAO_AUDIENCE}" \
             | jq -r .value)
+
           if [ -z "$OIDC_TOKEN" ] || [ "$OIDC_TOKEN" = "null" ]; then
             echo "Failed to get GitHub OIDC token"
             exit 1
           fi
+          echo "::add-mask::${OIDC_TOKEN}"
+
           RESPONSE=$(curl -sS --max-time 30 -X POST \
             "${OPENBAO_ADDR}/v1/auth/jwt/login" \
             -H "Content-Type: application/json" \
             -d "{\"role\":\"github-actions\",\"jwt\":\"${OIDC_TOKEN}\"}")
+
           BAO_TOKEN=$(echo "$RESPONSE" | jq -r .auth.client_token)
+
           if [ -z "$BAO_TOKEN" ] || [ "$BAO_TOKEN" = "null" ]; then
             echo "OpenBao login failed:"
-            echo "$RESPONSE" | jq .
+            echo "$RESPONSE" | jq -r '.errors[]? // "unknown error"'
             exit 1
           fi
+
+          echo "::add-mask::${BAO_TOKEN}"
+          echo "OpenBao login successful"
           echo "token=${BAO_TOKEN}" >> "$GITHUB_OUTPUT"
+
       - name: Write test data to OpenBao KV
         env:
           BAO_TOKEN: ${{ steps.auth.outputs.token }}
         run: |
+          set -euo pipefail
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          curl -sS --max-time 30 -X POST \
+
+          HTTP_CODE=$(curl -sS --max-time 30 -o /tmp/openbao-write.json -w "%{http_code}" -X POST \
             "${OPENBAO_ADDR}/${OPENBAO_KV_PATH}" \
             -H "X-Vault-Token: ${BAO_TOKEN}" \
             -H "Content-Type: application/json" \
@@ -58,12 +76,38 @@ jobs:
                 \"ref\": \"${{ github.ref }}\",
                 \"written_at\": \"${TIMESTAMP}\"
               }
-            }" | jq .
-          echo "Written to ${OPENBAO_KV_PATH}"
+            }")
+
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "204" ]; then
+            echo "Write failed, HTTP ${HTTP_CODE}"
+            jq -r '.errors[]? // .' /tmp/openbao-write.json 2>/dev/null || cat /tmp/openbao-write.json
+            exit 1
+          fi
+
+          if jq -e '.errors | length > 0' /tmp/openbao-write.json >/dev/null 2>&1; then
+            echo "Write returned errors:"
+            jq -r '.errors[]' /tmp/openbao-write.json
+            exit 1
+          fi
+
+          echo "Write OK (HTTP ${HTTP_CODE})"
+          jq '{version: .data.version, created_time: .data.created_time}' /tmp/openbao-write.json 2>/dev/null || true
+
       - name: Read back (verify)
         env:
           BAO_TOKEN: ${{ steps.auth.outputs.token }}
         run: |
-          curl -sS --max-time 30 \
+          set -euo pipefail
+
+          HTTP_CODE=$(curl -sS --max-time 30 -o /tmp/openbao-read.json -w "%{http_code}" \
             -H "X-Vault-Token: ${BAO_TOKEN}" \
-            "${OPENBAO_ADDR}/${OPENBAO_KV_PATH}" | jq .
+            "${OPENBAO_ADDR}/${OPENBAO_KV_PATH}")
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Read failed, HTTP ${HTTP_CODE}"
+            jq -r '.errors[]?' /tmp/openbao-read.json 2>/dev/null
+            exit 1
+          fi
+
+          echo "Read OK — fields written:"
+          jq -r '.data.data | keys[]' /tmp/openbao-read.json
