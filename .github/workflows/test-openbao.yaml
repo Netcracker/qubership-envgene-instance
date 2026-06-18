@@ -1,0 +1,69 @@
+name: Test OpenBao write
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: Test message to store in OpenBao
+        required: false
+        default: hello-from-github-actions
+permissions:
+  contents: read
+  id-token: write
+env:
+  OPENBAO_ADDR: http://k8s-openbao-openbao-385ebb4da3-f9f1b7419044431a.elb.us-east-1.amazonaws.com:8200
+  OPENBAO_AUDIENCE: http://k8s-openbao-openbao-385ebb4da3-f9f1b7419044431a.elb.us-east-1.amazonaws.com:8200
+  OPENBAO_KV_PATH: secret/data/envgene/test
+jobs:
+  write-test-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Login to OpenBao via GitHub OIDC
+        id: auth
+        run: |
+          OIDC_TOKEN=$(curl -sLS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=${OPENBAO_AUDIENCE}" \
+            | jq -r .value)
+          if [ -z "$OIDC_TOKEN" ] || [ "$OIDC_TOKEN" = "null" ]; then
+            echo "Failed to get GitHub OIDC token"
+            exit 1
+          fi
+          RESPONSE=$(curl -sS --max-time 30 -X POST \
+            "${OPENBAO_ADDR}/v1/auth/jwt/login" \
+            -H "Content-Type: application/json" \
+            -d "{\"role\":\"github-actions\",\"jwt\":\"${OIDC_TOKEN}\"}")
+          BAO_TOKEN=$(echo "$RESPONSE" | jq -r .auth.client_token)
+          if [ -z "$BAO_TOKEN" ] || [ "$BAO_TOKEN" = "null" ]; then
+            echo "OpenBao login failed:"
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+          echo "token=${BAO_TOKEN}" >> "$GITHUB_OUTPUT"
+      - name: Write test data to OpenBao KV
+        env:
+          BAO_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          curl -sS --max-time 30 -X POST \
+            "${OPENBAO_ADDR}/${OPENBAO_KV_PATH}" \
+            -H "X-Vault-Token: ${BAO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"data\": {
+                \"message\": \"${{ inputs.message }}\",
+                \"run_id\": \"${{ github.run_id }}\",
+                \"repository\": \"${{ github.repository }}\",
+                \"ref\": \"${{ github.ref }}\",
+                \"written_at\": \"${TIMESTAMP}\"
+              }
+            }" | jq .
+          echo "Written to ${OPENBAO_KV_PATH}"
+      - name: Read back (verify)
+        env:
+          BAO_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          curl -sS --max-time 30 \
+            -H "X-Vault-Token: ${BAO_TOKEN}" \
+            "${OPENBAO_ADDR}/${OPENBAO_KV_PATH}" | jq .
