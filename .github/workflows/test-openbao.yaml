@@ -65,7 +65,7 @@ jobs:
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           HTTP_CODE=$(curl -sS --max-time 30 -o /tmp/openbao-write.json -w "%{http_code}" -X POST \
-            "${OPENBAO_ADDR}/${OPENBAO_KV_PATH}" \
+            "${OPENBAO_ADDR}/v1/${OPENBAO_KV_PATH}" \
             -H "X-Vault-Token: ${BAO_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "{
@@ -101,7 +101,7 @@ jobs:
 
           HTTP_CODE=$(curl -sS --max-time 30 -o /tmp/openbao-read.json -w "%{http_code}" \
             -H "X-Vault-Token: ${BAO_TOKEN}" \
-            "${OPENBAO_ADDR}/${OPENBAO_KV_PATH}")
+            "${OPENBAO_ADDR}/v1/${OPENBAO_KV_PATH}")
 
           if [ "$HTTP_CODE" != "200" ]; then
             echo "Read failed, HTTP ${HTTP_CODE}"
