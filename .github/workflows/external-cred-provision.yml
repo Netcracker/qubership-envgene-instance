@@ -47,7 +47,7 @@ jobs:
 
       - name: Create env file for container
         env:
-          BAO_ADDR: ${{ secrets.BAO_ADDR }}
+          BAO_ADDR: ${{ vars.BAO_ADDR }}
           BAO_TOKEN: ${{ secrets.BAO_TOKEN }}
         run: |
           set -euo pipefail
