@@ -1,0 +1,99 @@
+name: External credentials provisioning
+
+on:
+  workflow_dispatch:
+    inputs:
+      context_path:
+        description: Path to external-credentials.yaml in this repo
+        required: false
+        default: effective-set/external-credential/external-credentials.yaml
+      dry_run_only:
+        description: Stop after dry-run (no writes to OpenBao)
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      docker_image_tag:
+        description: qubership-envgene image tag (branch feature/external_creds → feature_external_creds)
+        required: false
+        default: feature_external_creds
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  CI_PROJECT_DIR: /workspace
+  DOCKER_IMAGE: ghcr.io/netcracker/qubership-envgene:${{ inputs.docker_image_tag }}
+
+jobs:
+  external-cred-provision:
+    name: external-cred-provision
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create env file for container
+        env:
+          BAO_ADDR: ${{ secrets.BAO_ADDR }}
+          BAO_TOKEN: ${{ secrets.BAO_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${BAO_ADDR}" ] || [ -z "${BAO_TOKEN}" ]; then
+            echo "Missing GitHub secrets BAO_ADDR and/or BAO_TOKEN"
+            exit 1
+          fi
+
+          echo "::add-mask::${BAO_TOKEN}"
+          {
+            echo "BAO_ADDR=${BAO_ADDR}"
+            echo "BAO_TOKEN=${BAO_TOKEN}"
+          } > .env.container
+
+      - name: Dry-run external credential provisioning
+        run: |
+          set -euo pipefail
+
+          docker run --rm \
+            -v "${{ github.workspace }}:${{ env.CI_PROJECT_DIR }}" \
+            -w "${{ env.CI_PROJECT_DIR }}" \
+            --env-file .env.container \
+            -e HOME=/root \
+            --user root \
+            "${{ env.DOCKER_IMAGE }}" \
+            bash -c "
+              set -eo pipefail
+              source /module/venv/bin/activate
+              external-cred-provision --dry-run --log-level INFO '${{ inputs.context_path }}'
+            "
+
+      - name: Apply external credential provisioning
+        if: inputs.dry_run_only == 'false'
+        run: |
+          set -euo pipefail
+
+          docker run --rm \
+            -v "${{ github.workspace }}:${{ env.CI_PROJECT_DIR }}" \
+            -w "${{ env.CI_PROJECT_DIR }}" \
+            --env-file .env.container \
+            -e HOME=/root \
+            --user root \
+            "${{ env.DOCKER_IMAGE }}" \
+            bash -c "
+              set -eo pipefail
+              source /module/venv/bin/activate
+              external-cred-provision --log-level INFO '${{ inputs.context_path }}'
+            "
