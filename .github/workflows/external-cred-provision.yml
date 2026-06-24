@@ -8,7 +8,7 @@ on:
         required: false
         default: effective-set/external-credential/external-credentials.yaml
       dry_run_only:
-        description: Stop after dry-run (no writes to OpenBao)
+        description: Stop after dry-run (no writes to secret stores)
         required: false
         default: "true"
         type: choice
@@ -47,21 +47,124 @@ jobs:
 
       - name: Create env file for container
         env:
+          # OpenBao (also mapped to VAULT_* — YAML uses ref+vault://)
           BAO_ADDR: ${{ vars.BAO_ADDR }}
           BAO_TOKEN: ${{ secrets.BAO_TOKEN }}
+          VAULT_STORE_ADDR: ${{ vars.VAULT_STORE_ADDR }}
+          VAULT_STORE_TOKEN: ${{ secrets.VAULT_STORE_TOKEN }}
+          # AWS default (unprefixed) + maas_store_* (secret_store_id=maas_store in YAML)
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          MAAS_STORE_AWS_ACCESS_KEY_ID: ${{ secrets.MAAS_STORE_AWS_ACCESS_KEY_ID }}
+          MAAS_STORE_AWS_SECRET_ACCESS_KEY: ${{ secrets.MAAS_STORE_AWS_SECRET_ACCESS_KEY }}
+          MAAS_STORE_AWS_DEFAULT_REGION: ${{ vars.MAAS_STORE_AWS_REGION || vars.AWS_REGION || 'us-east-1' }}
+          # Azure custom_store + azure_store
+          CUSTOM_STORE_AZURE_TENANT_ID: ${{ secrets.CUSTOM_STORE_AZURE_TENANT_ID }}
+          CUSTOM_STORE_AZURE_CLIENT_ID: ${{ secrets.CUSTOM_STORE_AZURE_CLIENT_ID }}
+          CUSTOM_STORE_AZURE_CLIENT_SECRET: ${{ secrets.CUSTOM_STORE_AZURE_CLIENT_SECRET }}
+          AZURE_STORE_AZURE_TENANT_ID: ${{ secrets.AZURE_STORE_AZURE_TENANT_ID }}
+          AZURE_STORE_AZURE_CLIENT_ID: ${{ secrets.AZURE_STORE_AZURE_CLIENT_ID }}
+          AZURE_STORE_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_STORE_AZURE_CLIENT_SECRET }}
+          # GCP dbaas_store
+          DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT: ${{ secrets.DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT }}
         run: |
           set -euo pipefail
 
-          if [ -z "${BAO_ADDR}" ] || [ -z "${BAO_TOKEN}" ]; then
-            echo "Missing GitHub secrets BAO_ADDR and/or BAO_TOKEN"
+          : > .env.container
+
+          append_env() {
+            local key="$1"
+            local value="$2"
+            local mask="${3:-false}"
+            if [ -n "${value}" ]; then
+              if [ "${mask}" = "true" ]; then
+                echo "::add-mask::${value}"
+              fi
+              printf '%s=%s\n' "${key}" "${value}" >> .env.container
+            fi
+          }
+
+          append_pair() {
+            local key_a="$1"
+            local val_a="$2"
+            local key_b="$3"
+            local val_b="$4"
+            local mask_b="${5:-false}"
+            if [ -n "${val_a}" ] && [ -n "${val_b}" ]; then
+              append_env "${key_a}" "${val_a}"
+              append_env "${key_b}" "${val_b}" "${mask_b}"
+              return 0
+            fi
+            if [ -n "${val_a}" ] || [ -n "${val_b}" ]; then
+              echo "${key_a} and ${key_b} must both be set"
+              exit 1
+            fi
+            return 1
+          }
+
+          # OpenBao + default Vault store (ref+vault:// without secret_store_id)
+          if append_pair "BAO_ADDR" "${BAO_ADDR:-}" "BAO_TOKEN" "${BAO_TOKEN:-}" true; then
+            append_env "VAULT_ADDR" "${BAO_ADDR}"
+            append_env "VAULT_TOKEN" "${BAO_TOKEN}" true
+          fi
+
+          # Named Vault store (secret_store_id=vault_store)
+          vault_store_addr="${VAULT_STORE_ADDR:-${BAO_ADDR:-}}"
+          vault_store_token="${VAULT_STORE_TOKEN:-${BAO_TOKEN:-}}"
+          if append_pair "vault_store_VAULT_ADDR" "${vault_store_addr}" "vault_store_VAULT_TOKEN" "${vault_store_token}" true; then
+            :
+          fi
+
+          # AWS default (unprefixed)
+          if append_pair "AWS_ACCESS_KEY_ID" "${AWS_ACCESS_KEY_ID:-}" "AWS_SECRET_ACCESS_KEY" "${AWS_SECRET_ACCESS_KEY:-}" true; then
+            append_env "AWS_DEFAULT_REGION" "${AWS_DEFAULT_REGION:-us-east-1}"
+            append_env "AWS_REGION" "${AWS_DEFAULT_REGION:-us-east-1}"
+          fi
+
+          # AWS maas_store (secret_store_id=maas_store)
+          maas_key="${MAAS_STORE_AWS_ACCESS_KEY_ID:-${AWS_ACCESS_KEY_ID:-}}"
+          maas_secret="${MAAS_STORE_AWS_SECRET_ACCESS_KEY:-${AWS_SECRET_ACCESS_KEY:-}}"
+          maas_region="${MAAS_STORE_AWS_DEFAULT_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+          if append_pair "maas_store_AWS_ACCESS_KEY_ID" "${maas_key}" "maas_store_AWS_SECRET_ACCESS_KEY" "${maas_secret}" true; then
+            append_env "maas_store_AWS_DEFAULT_REGION" "${maas_region}"
+            append_env "maas_store_AWS_REGION" "${maas_region}"
+          fi
+
+          # Azure custom_store
+          if [ -n "${CUSTOM_STORE_AZURE_TENANT_ID:-}" ] || [ -n "${CUSTOM_STORE_AZURE_CLIENT_ID:-}" ] || [ -n "${CUSTOM_STORE_AZURE_CLIENT_SECRET:-}" ]; then
+            if [ -z "${CUSTOM_STORE_AZURE_TENANT_ID:-}" ] || [ -z "${CUSTOM_STORE_AZURE_CLIENT_ID:-}" ] || [ -z "${CUSTOM_STORE_AZURE_CLIENT_SECRET:-}" ]; then
+              echo "custom_store Azure secrets incomplete (CUSTOM_STORE_AZURE_TENANT_ID, _CLIENT_ID, _CLIENT_SECRET)"
+              exit 1
+            fi
+            append_env "custom_store_AZURE_TENANT_ID" "${CUSTOM_STORE_AZURE_TENANT_ID}"
+            append_env "custom_store_AZURE_CLIENT_ID" "${CUSTOM_STORE_AZURE_CLIENT_ID}"
+            append_env "custom_store_AZURE_CLIENT_SECRET" "${CUSTOM_STORE_AZURE_CLIENT_SECRET}" true
+          fi
+
+          # Azure azure_store
+          if [ -n "${AZURE_STORE_AZURE_TENANT_ID:-}" ] || [ -n "${AZURE_STORE_AZURE_CLIENT_ID:-}" ] || [ -n "${AZURE_STORE_AZURE_CLIENT_SECRET:-}" ]; then
+            if [ -z "${AZURE_STORE_AZURE_TENANT_ID:-}" ] || [ -z "${AZURE_STORE_AZURE_CLIENT_ID:-}" ] || [ -z "${AZURE_STORE_AZURE_CLIENT_SECRET:-}" ]; then
+              echo "azure_store Azure secrets incomplete (AZURE_STORE_AZURE_TENANT_ID, _CLIENT_ID, _CLIENT_SECRET)"
+              exit 1
+            fi
+            append_env "azure_store_AZURE_TENANT_ID" "${AZURE_STORE_AZURE_TENANT_ID}"
+            append_env "azure_store_AZURE_CLIENT_ID" "${AZURE_STORE_AZURE_CLIENT_ID}"
+            append_env "azure_store_AZURE_CLIENT_SECRET" "${AZURE_STORE_AZURE_CLIENT_SECRET}" true
+          fi
+
+          # GCP dbaas_store — JSON key as inline content
+          if [ -n "${DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT:-}" ]; then
+            append_env "dbaas_store_GOOGLE_APPLICATION_CREDENTIALS_CONTENT" "${DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT}" true
+          fi
+
+          if [ ! -s .env.container ]; then
+            echo "No secret store credentials configured."
             exit 1
           fi
 
-          echo "::add-mask::${BAO_TOKEN}"
-          {
-            echo "BAO_ADDR=${BAO_ADDR}"
-            echo "BAO_TOKEN=${BAO_TOKEN}"
-          } > .env.container
+          echo "Configured stores in .env.container:"
+          cut -d= -f1 .env.container | sed 's/_TOKEN$/_TOKEN(***)*/; s/_SECRET$/_SECRET(***)*/; s/_SECRET_ACCESS_KEY$/_SECRET_ACCESS_KEY(***)*/; s/_CLIENT_SECRET$/_CLIENT_SECRET(***)*/; s/_CREDENTIALS_CONTENT$/_CREDENTIALS_CONTENT(***)*/' | sort -u
 
       - name: Dry-run external credential provisioning
         run: |
