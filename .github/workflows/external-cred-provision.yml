@@ -66,8 +66,9 @@ jobs:
           AZURE_STORE_AZURE_TENANT_ID: ${{ secrets.AZURE_STORE_AZURE_TENANT_ID }}
           AZURE_STORE_AZURE_CLIENT_ID: ${{ secrets.AZURE_STORE_AZURE_CLIENT_ID }}
           AZURE_STORE_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_STORE_AZURE_CLIENT_SECRET }}
-          # GCP dbaas_store
+          # GCP dbaas_store — write JSON to file (docker --env-file rejects multiline values)
           DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT: ${{ secrets.DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT }}
+          CI_PROJECT_DIR: /workspace
         run: |
           set -euo pipefail
 
@@ -153,9 +154,13 @@ jobs:
             append_env "azure_store_AZURE_CLIENT_SECRET" "${AZURE_STORE_AZURE_CLIENT_SECRET}" true
           fi
 
-          # GCP dbaas_store — JSON key as inline content
+          # GCP dbaas_store — JSON key file mounted into container
           if [ -n "${DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT:-}" ]; then
-            append_env "dbaas_store_GOOGLE_APPLICATION_CREDENTIALS_CONTENT" "${DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT}" true
+            mkdir -p runtime-secrets
+            gcp_key_file="${CI_PROJECT_DIR}/runtime-secrets/dbaas-store-gcp-sa.json"
+            printf '%s\n' "${DBAAS_STORE_GOOGLE_APPLICATION_CREDENTIALS_CONTENT}" > runtime-secrets/dbaas-store-gcp-sa.json
+            chmod 600 runtime-secrets/dbaas-store-gcp-sa.json
+            append_env "dbaas_store_GOOGLE_APPLICATION_CREDENTIALS" "${gcp_key_file}"
           fi
 
           if [ ! -s .env.container ]; then
@@ -164,7 +169,7 @@ jobs:
           fi
 
           echo "Configured stores in .env.container:"
-          cut -d= -f1 .env.container | sed 's/_TOKEN$/_TOKEN(***)*/; s/_SECRET$/_SECRET(***)*/; s/_SECRET_ACCESS_KEY$/_SECRET_ACCESS_KEY(***)*/; s/_CLIENT_SECRET$/_CLIENT_SECRET(***)*/; s/_CREDENTIALS_CONTENT$/_CREDENTIALS_CONTENT(***)*/' | sort -u
+          cut -d= -f1 .env.container | sed 's/_TOKEN$/_TOKEN(***)*/; s/_SECRET$/_SECRET(***)*/; s/_SECRET_ACCESS_KEY$/_SECRET_ACCESS_KEY(***)*/; s/_CLIENT_SECRET$/_CLIENT_SECRET(***)*/; s/_CREDENTIALS$/_CREDENTIALS(***)*/' | sort -u
 
       - name: Dry-run external credential provisioning
         run: |
