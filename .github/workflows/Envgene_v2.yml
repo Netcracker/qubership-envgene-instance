@@ -1,72 +1,75 @@
 name: "[IN DEV] EnvGene Execution v2"
 
-run-name: "EnvGene Execution - ${{ github.event.inputs.ENV_NAMES }}"
+run-name: "EnvGene Execution - ${{ inputs.ENV_NAMES }}"
 
+# Least privilege for the parameter job. Jobs that push commits or open PRs
+# must declare their own `permissions:` block (job level replaces this one).
 permissions:
-  actions: read
-  contents: write
-  pull-requests: write
+  contents: read
 
 on:
-    # Manual trigger only
-    workflow_dispatch:
-        inputs:
-            ENV_NAMES:
-                required: true
-                type: string
-                description: ""
-            DEPLOYMENT_TICKET_ID:
-                required: false
-                default: ""
-                type: string
-                description: ""
-            ENV_TEMPLATE_VERSION:
-                required: false
-                default: ""
-                type: string
-                description: ""
-            ENV_BUILDER:
-                required: false
-                default: "true"
-                type: choice
-                options: ["false", "true"]
-                description: ""
-            GENERATE_EFFECTIVE_SET:
-                required: false
-                default: "false"
-                type: choice
-                options: ["false", "true"]
-                description: ""
-            GET_PASSPORT:
-                required: false
-                default: "false"
-                type: choice
-                options: ["false", "true"]
-                description: ""
-            CMDB_IMPORT:
-                required: false
-                default: "false"
-                type: choice
-                options: ["false", "true"]
-                description: ""
-            GH_ADDITIONAL_PARAMS:
-                required: false
-                type: string
-                description: ""
-                default: ""
+  # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      ENV_NAMES:
+        required: true
+        type: string
+        description: "Environments to process, comma/space/semicolon separated (e.g. cluster-01/e01,cluster-01/e02)"
+      DEPLOYMENT_TICKET_ID:
+        required: false
+        default: ""
+        type: string
+        description: "Deployment ticket ID, passed through to generated artifacts"
+      ENV_TEMPLATE_VERSION:
+        required: false
+        default: ""
+        type: string
+        description: "Environment template artifact version (e.g. qubership_envgene_templates:0.0.2)"
+      ENV_BUILDER:
+        required: false
+        default: "true"
+        type: choice
+        options: ["false", "true"]
+        description: "Run environment generation from templates"
+      GENERATE_EFFECTIVE_SET:
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+        description: "Generate effective set from SD, SBOMs and registries"
+      GET_PASSPORT:
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+        description: "Fetch cloud passport before generation"
+      CMDB_IMPORT:
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+        description: "Import generated environment into CMDB"
+      GH_ADDITIONAL_PARAMS:
+        required: false
+        default: ""
+        type: string
+        description: "Extra KEY=VALUE pairs, comma separated (e.g. SD_VERSION=1.0.0,SD_SOURCE_TYPE=artifact)"
+
+# Serialize runs targeting the same environments: generation jobs commit to the repo.
+concurrency:
+  group: "envgene-v2-${{ github.ref }}-${{ inputs.ENV_NAMES }}"
+  cancel-in-progress: false
 
 env:
   #CONFIGURATION
+  # Non-secret values only. Workflow level env reaches every job automatically,
+  # so secrets belong in the job that needs them, never in the shared artifact.
   GITHUB_USER_EMAIL: opensourcegroup@netcracker.com
   GITHUB_USER_NAME: envgene
   SECRET_POSTFIX: custom_secret
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
   CI_PROJECT_DIR: /workspace
   INSTANCES_DIR: /workspace/environments
-  SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
-  ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
-  GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
 
   #DOCKER_IMAGE_NAMES
@@ -75,14 +78,19 @@ env:
 
   #DOCKER_IMAGE_TAGS
   DOCKER_IMAGE_TAG_ENVGENE: "1.44.0"
-  DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "1.44.0"            
+  DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "1.44.0"
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   process_environment_variables:
     name: "Input Parameters Processing"
-    runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04'  }}
+    runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
     outputs:
+      ENV_NAMES: ${{ env.ENV_NAMES }}
       BG_MANAGE: ${{ env.BG_MANAGE }}
       ENV_INVENTORY_CONTENT: ${{ env.ENV_INVENTORY_CONTENT }}
       CRED_ROTATION_PAYLOAD: ${{ env.CRED_ROTATION_PAYLOAD }}
@@ -97,7 +105,8 @@ jobs:
       DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ env.DOCKER_CLOUD_REGISTRY_PROVIDER }}
     steps:
       - name: Repository Checkout
-        uses: actions/checkout@v4.1.0
+        # Latest release still running on node20; v5+ needs runner >= 2.327.1 (node24)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
@@ -108,35 +117,95 @@ jobs:
             .github/pipeline_vars.env
 
       - name: Process Input Parameters
+        env:
+          DEPLOYMENT_TICKET_ID: ${{ inputs.DEPLOYMENT_TICKET_ID }}
+          ENV_NAMES: ${{ inputs.ENV_NAMES }}
+          ENV_BUILDER: ${{ inputs.ENV_BUILDER }}
+          GENERATE_EFFECTIVE_SET: ${{ inputs.GENERATE_EFFECTIVE_SET }}
+          GET_PASSPORT: ${{ inputs.GET_PASSPORT }}
+          CMDB_IMPORT: ${{ inputs.CMDB_IMPORT }}
+          ENV_TEMPLATE_VERSION: ${{ inputs.ENV_TEMPLATE_VERSION }}
+          GH_ADDITIONAL_PARAMS: ${{ inputs.GH_ADDITIONAL_PARAMS }}
         run: |
-           echo "DEPLOYMENT_TICKET_ID=${{ github.event.inputs.DEPLOYMENT_TICKET_ID }}" >> $GITHUB_ENV
-           echo "ENV_NAMES=${{ github.event.inputs.ENV_NAMES }}" >> $GITHUB_ENV
-           echo "ENV_BUILDER=${{ github.event.inputs.ENV_BUILDER }}" >> $GITHUB_ENV
-           echo "GENERATE_EFFECTIVE_SET=${{ github.event.inputs.GENERATE_EFFECTIVE_SET }}" >> $GITHUB_ENV
-           echo "GET_PASSPORT=${{ github.event.inputs.GET_PASSPORT }}" >> $GITHUB_ENV
-           echo "CMDB_IMPORT=${{ github.event.inputs.CMDB_IMPORT }}" >> $GITHUB_ENV
-           echo "ENV_TEMPLATE_VERSION=${{ github.event.inputs.ENV_TEMPLATE_VERSION }}" >> $GITHUB_ENV
-           echo "GH_ADDITIONAL_PARAMS=${{ github.event.inputs.GH_ADDITIONAL_PARAMS }}" >> $GITHUB_ENV
+          set -euo pipefail
+
+          if [[ ! "$ENV_NAMES" =~ ^[A-Za-z0-9_./,\;[:space:]-]+$ ]]; then
+            echo "::error::ENV_NAMES contains unsupported characters: $ENV_NAMES"
+            exit 1
+          fi
+
+          for name in DEPLOYMENT_TICKET_ID ENV_NAMES ENV_BUILDER GENERATE_EFFECTIVE_SET \
+                      GET_PASSPORT CMDB_IMPORT ENV_TEMPLATE_VERSION GH_ADDITIONAL_PARAMS; do
+            printf '%s=%s\n' "$name" "${!name}" >> "$GITHUB_ENV"
+          done
 
       - name: Process additional variables
         run: |
+          set -euo pipefail
           .github/scripts/process_additional_variables.sh
 
       - name: Create env_generation_params
         run: |
+          set -euo pipefail
           .github/scripts/create_env_generation_params.sh
 
-      - name: Show github_env
+      - name: Show resolved variable names
         run: |
-          cat $GITHUB_ENV
+          set -euo pipefail
+          echo "Variables available to downstream jobs:"
+          cut -d= -f1 "$GITHUB_ENV" | grep -v '^$' | sort -u || true
 
       - name: Create .env file
+        env:
+          # Names matching this pattern never leave the job.
+          DENY_PATTERN: '(SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|PRIVATE|_KEY$|^KEY$|^GITHUB_|^RUNNER_|^ACTIONS_|^INPUT_|^DENY_PATTERN$|^DENY_RUNTIME$)'
+          # Re-injecting these into a later job would hijack that job's shell.
+          DENY_RUNTIME: '^(PATH|HOME|PWD|OLDPWD|SHLVL|SHELL|IFS|USER|LOGNAME|HOSTNAME|TERM|TMPDIR|BASH_ENV|ENV|LD_PRELOAD|LD_LIBRARY_PATH|NODE_OPTIONS|_)$'
         run: |
-          env > ${{ github.workspace }}/.env
+          set -euo pipefail
+
+          delimiter="EOF_$(openssl rand -hex 12)"
+          : > "${{ github.workspace }}/.env"
+
+          while IFS= read -r -d '' entry; do
+            name="${entry%%=*}"
+            value="${entry#*=}"
+
+            if [[ "$name" =~ $DENY_PATTERN || "$name" =~ $DENY_RUNTIME ]]; then
+              continue
+            fi
+
+            # Multi-line values (e.g. ENV_INVENTORY_CONTENT) need the heredoc form
+            # so that consumers can append this file to $GITHUB_ENV as is.
+            if [[ "$value" == *$'\n'* ]]; then
+              printf '%s<<%s\n%s\n%s\n' "$name" "$delimiter" "$value" "$delimiter"
+            else
+              printf '%s=%s\n' "$name" "$value"
+            fi
+          done < <(env -0) >> "${{ github.workspace }}/.env"
 
       - name: Upload .env as artifact
-        uses: actions/upload-artifact@v4
+        # Latest release still running on node20; v6+ needs runner >= 2.327.1 (node24)
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-            include-hidden-files: true
-            name: environment-file
-            path: .env
+          include-hidden-files: true
+          name: environment-file
+          path: .env
+          retention-days: 1
+
+# Downstream jobs consume the artifact like this:
+#
+#   - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 (last node20)
+#     with:
+#       name: environment-file
+#   - run: cat ./.env >> "$GITHUB_ENV"
+#
+# and declare the secrets they actually need at job level, for example:
+#
+#   env:
+#     SECRET_KEY: ${{ secrets.SECRET_KEY }}
+#     ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
+#     ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
+#     GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+#
+# so that `env > .env.container` in that job still passes them to the containers.
