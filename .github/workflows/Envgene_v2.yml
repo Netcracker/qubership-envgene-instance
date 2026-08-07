@@ -2,8 +2,6 @@ name: "[IN DEV] EnvGene Execution v2"
 
 run-name: "EnvGene Execution - ${{ inputs.ENV_NAMES }}"
 
-# Least privilege for the parameter job. Jobs that push commits or open PRs
-# must declare their own `permissions:` block (job level replaces this one).
 permissions:
   contents: read
 
@@ -14,46 +12,46 @@ on:
       ENV_NAMES:
         required: true
         type: string
-        description: "Environments to process, comma/space/semicolon separated (e.g. cluster-01/e01,cluster-01/e02)"
+        description: ""
       DEPLOYMENT_TICKET_ID:
         required: false
         default: ""
         type: string
-        description: "Deployment ticket ID, passed through to generated artifacts"
+        description: ""
       ENV_TEMPLATE_VERSION:
         required: false
         default: ""
         type: string
-        description: "Environment template artifact version (e.g. qubership_envgene_templates:0.0.2)"
+        description: ""
       ENV_BUILDER:
         required: false
         default: "true"
         type: choice
         options: ["false", "true"]
-        description: "Run environment generation from templates"
+        description: ""
       GENERATE_EFFECTIVE_SET:
         required: false
         default: "false"
         type: choice
         options: ["false", "true"]
-        description: "Generate effective set from SD, SBOMs and registries"
+        description: ""
       GET_PASSPORT:
         required: false
         default: "false"
         type: choice
         options: ["false", "true"]
-        description: "Fetch cloud passport before generation"
+        description: ""
       CMDB_IMPORT:
         required: false
         default: "false"
         type: choice
         options: ["false", "true"]
-        description: "Import generated environment into CMDB"
+        description: ""
       GH_ADDITIONAL_PARAMS:
         required: false
         default: ""
         type: string
-        description: "Extra KEY=VALUE pairs, comma separated (e.g. SD_VERSION=1.0.0,SD_SOURCE_TYPE=artifact)"
+        description: ""
 
 # Serialize runs targeting the same environments: generation jobs commit to the repo.
 concurrency:
@@ -185,27 +183,9 @@ jobs:
           done < <(env -0) >> "${{ github.workspace }}/.env"
 
       - name: Upload .env as artifact
-        # Latest release still running on node20; v6+ needs runner >= 2.327.1 (node24)
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           include-hidden-files: true
           name: environment-file
           path: .env
           retention-days: 1
-
-# Downstream jobs consume the artifact like this:
-#
-#   - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 (last node20)
-#     with:
-#       name: environment-file
-#   - run: cat ./.env >> "$GITHUB_ENV"
-#
-# and declare the secrets they actually need at job level, for example:
-#
-#   env:
-#     SECRET_KEY: ${{ secrets.SECRET_KEY }}
-#     ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
-#     ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
-#     GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-#
-# so that `env > .env.container` in that job still passes them to the containers.
