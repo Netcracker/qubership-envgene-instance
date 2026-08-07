@@ -1,0 +1,5 @@
+# Runtime environment dumps produced by the pipeline.
+# They carry resolved parameters and, for .env.container, job level secrets.
+# Exact names only: .github/*.env files are tracked configuration.
+.env
+.env.container
