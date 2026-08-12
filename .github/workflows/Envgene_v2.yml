@@ -69,7 +69,6 @@ env:
   CI_PROJECT_DIR: /workspace
   INSTANCES_DIR: /workspace/environments
   DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
-  GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
   #DOCKER_IMAGE_NAMES
   DOCKER_IMAGE_NAME_ENVGENE: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-envgene"
@@ -237,7 +236,7 @@ jobs:
       ### ENVGENE_EXECUTION - START ###
       - name: ENVGENE_EXECUTION
         run: |
-          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e COMMIT_ENV=true --env-file .env.container --user root -e HOME=/root \
+          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e GITHUB_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} -e COMMIT_ENV=true --env-file .env.container --user root -e HOME=/root \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               set -eo pipefail
