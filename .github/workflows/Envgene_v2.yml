@@ -75,8 +75,8 @@ env:
   DOCKER_IMAGE_NAME_EFFECTIVE_SET_GENERATOR: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-effective-set-generator"
 
   #DOCKER_IMAGE_TAGS
-  DOCKER_IMAGE_TAG_ENVGENE: "1.44.0"
-  DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "1.44.0"
+  DOCKER_IMAGE_TAG_ENVGENE: "feature-modern-toolset"
+  DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "feature-modern-toolset"
 
 defaults:
   run:
@@ -216,7 +216,7 @@ jobs:
             fi
           done < ./.env
 
-          PACKAGE_NAME="envgene_$(date -u +%Y%m%d_%H%M%S)"
+          PACKAGE_NAME="generate_pipeline_$(date -u +%Y%m%d_%H%M%S)"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
 
         shell: bash
@@ -232,3 +232,52 @@ jobs:
           username: _json_key
           password: ${{ secrets.GCP_SA_KEY }}
       ### ENV VARS PROCESSING - END ###
+
+      ### ENVGENE_EXECUTION - START ###
+      - name: ENVGENE_EXECUTION
+        run: |
+          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e COMMIT_ENV=true --env-file .env.container --user root -e HOME=/root \
+            ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
+            bash -c "
+              set -eo pipefail
+              source /module/venv/bin/activate
+              echo 'Executing ENVGENE...'
+              /module/scripts/utils/handle_certs.sh
+              python3 /module/scripts/utils/sparse_checkout.py
+              source ~/.bashrc
+              python3 /module/scripts/pipeline/orchestrator.py
+              set -a && . envgene-vars.env && set +a
+
+              if [ "\$PIPELINE_TYPE" = "GITLAB_DEPLOY" ]; then
+                if [ "\$OPERATION_TYPE" != "CLEAN" ]; then
+                  python3 /python/argocd-dpg/src/argo/main.py generate structure \
+                    -p params.environment_id="\$FULL_ENV_NAME" \
+                    -p params.deployment_plan="\$CI_PROJECT_DIR/environments/\$CLUSTER_NAME/\$ENVIRONMENT_NAME/Inventory/deploy-plan.yml"
+                  [[ -v ENVGENE_AGE_PUBLIC_KEY ]] && sops --encrypt -i --age \$ENVGENE_AGE_PUBLIC_KEY ARGO_DPG_CONTEXT.env \
+                    || echo "Skipping argo-dpg context encryption because ENVGENE_AGE_PUBLIC_KEY is not defined"
+                fi
+                [[ "\$OPERATION_TYPE" = "CLEAN" ]] && export ESPUSHER_OVERWRITE="true" || export ESPUSHER_OVERWRITE="false"
+                python3 /python/es-pusher/src/espusher/main.py push \
+                  -p params.environment_id="\$FULL_ENV_NAME" \
+                  -p params.commit_message="DEVOPS-001 Push effective set for \"\$FULL_ENV_NAME\"" \
+                  -p params.overwrite="\$ESPUSHER_OVERWRITE"
+              fi
+              if [[ "\$PIPELINE_TYPE" != "GITLAB_DEPLOY" && "\$CMDB_IMPORT" = "true" ]]; then
+                /module/scripts/cmdb_import/cmdb_import.sh
+              fi
+            "
+
+      - name: ENVGENE_EXECUTION - Upload Build Env Package
+        uses: actions/upload-artifact@v4
+        if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: |
+            environments/
+            configuration/
+            sboms/
+            templates/
+            tmp/
+            ARGO_DPG_CONTEXT.env
+          include-hidden-files: true
+      ### ENVGENE_EXECUTION - END ###
