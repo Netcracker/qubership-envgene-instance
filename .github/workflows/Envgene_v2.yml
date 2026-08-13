@@ -194,6 +194,8 @@ jobs:
     name: "EnvGene - ${{ inputs.ENV_NAMES }}"
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
+    permissions:
+      contents: write
     needs:
       - process_environment_variables
     steps:
@@ -201,6 +203,7 @@ jobs:
         uses: actions/checkout@v4.1.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       ### ENV VARS PROCESSING - START ###
       - name: Download environment-file
