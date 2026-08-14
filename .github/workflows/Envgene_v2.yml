@@ -73,8 +73,8 @@ env:
   DOCKER_IMAGE_NAME_EFFECTIVE_SET_GENERATOR: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-effective-set-generator"
 
   #DOCKER_IMAGE_TAGS
-  DOCKER_IMAGE_TAG_ENVGENE: "feature-modern-toolset"
-  DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "feature-modern-toolset"
+  DOCKER_IMAGE_TAG_ENVGENE: "1.44.0"
+  DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "1.44.0"
 
 defaults:
   run:
@@ -125,11 +125,18 @@ jobs:
           PACKAGE_NAME="generate_pipeline_$(date -u +%Y%m%d_%H%M%S)"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
 
-          env > .env.container
+      - name: Create env file for container
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          COMMIT_ENV: "true"
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
+          ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
+        run: env > .env.container
 
       - name: Authenticate to GAR (Google Artifact Registry)
         if: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' }}
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ${{ vars.DOCKER_REGISTRY }}
           username: _json_key
@@ -137,7 +144,7 @@ jobs:
 
       - name: EnvGene Execution
         run: |
-          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e GITHUB_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} -e COMMIT_ENV=true --env-file .env.container --user root -e HOME=/root \
+          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               set -eo pipefail
@@ -174,7 +181,7 @@ jobs:
             "
 
       - name: Upload generated environment package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ env.PACKAGE_NAME }}
           path: |
