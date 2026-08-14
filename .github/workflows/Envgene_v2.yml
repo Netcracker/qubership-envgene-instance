@@ -125,6 +125,8 @@ jobs:
           PACKAGE_NAME="generate_pipeline_$(date -u +%Y%m%d_%H%M%S)"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
 
+          env > .env.container
+
       - name: Authenticate to GAR (Google Artifact Registry)
         if: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' }}
         uses: docker/login-action@v4
