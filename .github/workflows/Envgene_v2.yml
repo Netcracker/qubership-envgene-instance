@@ -55,13 +55,11 @@ on:
 
 # Serialize runs targeting the same environments: generation jobs commit to the repo.
 concurrency:
-  group: "envgene-v2-${{ github.ref }}-${{ inputs.ENV_NAMES }}"
+  group: "envgene-${{ github.ref }}-${{ inputs.ENV_NAMES }}"
   cancel-in-progress: false
 
 env:
   #CONFIGURATION
-  # Non-secret values only. Workflow level env reaches every job automatically,
-  # so secrets belong in the job that needs them, never in the shared artifact.
   GITHUB_USER_EMAIL: opensourcegroup@netcracker.com
   GITHUB_USER_NAME: envgene
   SECRET_POSTFIX: custom_secret
@@ -84,26 +82,11 @@ defaults:
 
 jobs:
   process_environment_variables:
-    name: "Input Parameters Processing"
+    name: "EnvGene Execution"
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
-    outputs:
-      ENV_NAMES: ${{ env.ENV_NAMES }}
-      BG_MANAGE: ${{ env.BG_MANAGE }}
-      ENV_INVENTORY_CONTENT: ${{ env.ENV_INVENTORY_CONTENT }}
-      CRED_ROTATION_PAYLOAD: ${{ env.CRED_ROTATION_PAYLOAD }}
-      ENV_BUILDER: ${{ env.ENV_BUILDER }}
-      GENERATE_EFFECTIVE_SET: ${{ env.GENERATE_EFFECTIVE_SET }}
-      ENV_INVENTORY_INIT: ${{ env.ENV_INVENTORY_INIT }}
-      ENV_SPECIFIC_PARAMS: ${{ env.ENV_SPECIFIC_PARAMS }}
-      ENV_TEMPLATE_NAME: ${{ env.ENV_TEMPLATE_NAME }}
-      SD_SOURCE_TYPE: ${{ env.SD_SOURCE_TYPE }}
-      SD_DATA: ${{ env.SD_DATA }}
-      SD_VERSION: ${{ env.SD_VERSION }}
-      DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ env.DOCKER_CLOUD_REGISTRY_PROVIDER }}
     steps:
       - name: Repository Checkout
-        # Latest release still running on node20; v5+ needs runner >= 2.327.1 (node24)
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
@@ -115,15 +98,6 @@ jobs:
             .github/pipeline_vars.env
 
       - name: Process Input Parameters
-        env:
-          DEPLOYMENT_TICKET_ID: ${{ inputs.DEPLOYMENT_TICKET_ID }}
-          ENV_NAMES: ${{ inputs.ENV_NAMES }}
-          ENV_BUILDER: ${{ inputs.ENV_BUILDER }}
-          GENERATE_EFFECTIVE_SET: ${{ inputs.GENERATE_EFFECTIVE_SET }}
-          GET_PASSPORT: ${{ inputs.GET_PASSPORT }}
-          CMDB_IMPORT: ${{ inputs.CMDB_IMPORT }}
-          ENV_TEMPLATE_VERSION: ${{ inputs.ENV_TEMPLATE_VERSION }}
-          GH_ADDITIONAL_PARAMS: ${{ inputs.GH_ADDITIONAL_PARAMS }}
         run: |
           set -euo pipefail
 
@@ -137,107 +111,20 @@ jobs:
             printf '%s=%s\n' "$name" "${!name}" >> "$GITHUB_ENV"
           done
 
-      - name: Process additional variables
-        run: |
-          set -euo pipefail
           .github/scripts/process_additional_variables.sh
-
-      - name: Create env_generation_params
-        run: |
-          set -euo pipefail
-          .github/scripts/create_env_generation_params.sh
-
-      - name: Show resolved variable names
-        run: |
-          set -euo pipefail
-          echo "Variables available to downstream jobs:"
-          cut -d= -f1 "$GITHUB_ENV" | grep -v '^$' | sort -u || true
-
-      - name: Create .env file
-        env:
-          # Names matching this pattern never leave the job.
-          DENY_PATTERN: '(SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|PRIVATE|_KEY$|^KEY$|^GITHUB_|^RUNNER_|^ACTIONS_|^INPUT_|^DENY_PATTERN$|^DENY_RUNTIME$)'
-          # Re-injecting these into a later job would hijack that job's shell.
-          DENY_RUNTIME: '^(PATH|HOME|PWD|OLDPWD|SHLVL|SHELL|IFS|USER|LOGNAME|HOSTNAME|TERM|TMPDIR|BASH_ENV|ENV|LD_PRELOAD|LD_LIBRARY_PATH|NODE_OPTIONS|_)$'
-        run: |
-          set -euo pipefail
-
-          delimiter="EOF_$(openssl rand -hex 12)"
-          : > "${{ github.workspace }}/.env"
-
-          while IFS= read -r -d '' entry; do
-            name="${entry%%=*}"
-            value="${entry#*=}"
-
-            if [[ "$name" =~ $DENY_PATTERN || "$name" =~ $DENY_RUNTIME ]]; then
-              continue
-            fi
-
-            # Multi-line values (e.g. ENV_INVENTORY_CONTENT) need the heredoc form
-            # so that consumers can append this file to $GITHUB_ENV as is.
-            if [[ "$value" == *$'\n'* ]]; then
-              printf '%s<<%s\n%s\n%s\n' "$name" "$delimiter" "$value" "$delimiter"
-            else
-              printf '%s=%s\n' "$name" "$value"
-            fi
-          done < <(env -0) >> "${{ github.workspace }}/.env"
-
-      - name: Upload .env as artifact
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          include-hidden-files: true
-          name: environment-file
-          path: .env
-          retention-days: 1
-
-  envgene_execution:
-    name: "EnvGene - ${{ inputs.ENV_NAMES }}"
-    runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
-    timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
-    permissions:
-      contents: write
-    needs:
-      - process_environment_variables
-    steps:
-      - name: Repository Checkout
-        uses: actions/checkout@v4.1.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      ### ENV VARS PROCESSING - START ###
-      - name: Download environment-file
-        uses: actions/download-artifact@v4
-        with:
-          name: environment-file
-
-      - name: Prepare environment
-        run: |
-          while IFS= read -r line; do
-            if [[ -n "$line" && ! "$line" =~ ^# ]]; then
-              echo "$line" >> "$GITHUB_ENV"
-            fi
-          done < ./.env
 
           PACKAGE_NAME="generate_pipeline_$(date -u +%Y%m%d_%H%M%S)"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
 
-        shell: bash
-
-      - name: Create env file for container
-        run: env > .env.container
-
       - name: Authenticate to GAR (Google Artifact Registry)
-        if: needs.process_environment_variables.outputs.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP'
+        if: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' }}
         uses: docker/login-action@v4
         with:
           registry: ${{ vars.DOCKER_REGISTRY }}
           username: _json_key
-          password: ${{ secrets.GCP_SA_KEY }}
-      ### ENV VARS PROCESSING - END ###
+          password: ${{ secrets.GCP_SA_KEY }}    
 
-      ### ENVGENE_EXECUTION - START ###
-      - name: ENVGENE_EXECUTION
+      - name: EnvGene Execution
         run: |
           docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} -e GITHUB_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} -e COMMIT_ENV=true --env-file .env.container --user root -e HOME=/root \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
@@ -275,9 +162,8 @@ jobs:
               fi
             "
 
-      - name: ENVGENE_EXECUTION - Upload Build Env Package
+      - name: Upload generated environment package
         uses: actions/upload-artifact@v4
-        if: needs.process_environment_variables.outputs.ENV_BUILDER == 'true'
         with:
           name: ${{ env.PACKAGE_NAME }}
           path: |
@@ -288,4 +174,3 @@ jobs:
             tmp/
             ARGO_DPG_CONTEXT.env
           include-hidden-files: true
-      ### ENVGENE_EXECUTION - END ###
