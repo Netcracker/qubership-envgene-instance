@@ -98,6 +98,15 @@ jobs:
             .github/pipeline_vars.env
 
       - name: Process Input Parameters
+        env:
+          DEPLOYMENT_TICKET_ID: ${{ inputs.DEPLOYMENT_TICKET_ID }}
+          ENV_NAMES: ${{ inputs.ENV_NAMES }}
+          ENV_BUILDER: ${{ inputs.ENV_BUILDER }}
+          GENERATE_EFFECTIVE_SET: ${{ inputs.GENERATE_EFFECTIVE_SET }}
+          GET_PASSPORT: ${{ inputs.GET_PASSPORT }}
+          CMDB_IMPORT: ${{ inputs.CMDB_IMPORT }}
+          ENV_TEMPLATE_VERSION: ${{ inputs.ENV_TEMPLATE_VERSION }}
+          GH_ADDITIONAL_PARAMS: ${{ inputs.GH_ADDITIONAL_PARAMS }}
         run: |
           set -euo pipefail
 
