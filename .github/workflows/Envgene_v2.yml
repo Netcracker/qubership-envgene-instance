@@ -23,10 +23,8 @@ on:
         type: string
         description: ""
       ENV_BUILDER:
-        required: false
-        default: "true"
-        type: choice
-        options: ["false", "true"]
+        required: true
+        type: string
         description: ""
       GENERATE_EFFECTIVE_SET:
         required: false
