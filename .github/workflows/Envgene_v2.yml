@@ -85,7 +85,7 @@ jobs:
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
     container:
-      image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
+      image: ${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-envgene:feature-modern-toolset
       options: --user root
       credentials:
         username: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && '_json_key' || github.actor }}
