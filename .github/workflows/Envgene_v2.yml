@@ -63,9 +63,6 @@ env:
   GITHUB_USER_EMAIL: opensourcegroup@netcracker.com
   GITHUB_USER_NAME: envgene
   SECRET_POSTFIX: custom_secret
-  CI_COMMIT_REF_NAME: ${{ github.ref_name }}
-  CI_PROJECT_DIR: /workspace
-  INSTANCES_DIR: /workspace/environments
   DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
 
   #DOCKER_IMAGE_NAMES
@@ -99,31 +96,11 @@ jobs:
 
       - name: Process Input Parameters
         env:
-          DEPLOYMENT_TICKET_ID: ${{ inputs.DEPLOYMENT_TICKET_ID }}
-          ENV_NAMES: ${{ inputs.ENV_NAMES }}
-          ENV_BUILDER: ${{ inputs.ENV_BUILDER }}
-          GENERATE_EFFECTIVE_SET: ${{ inputs.GENERATE_EFFECTIVE_SET }}
-          GET_PASSPORT: ${{ inputs.GET_PASSPORT }}
-          CMDB_IMPORT: ${{ inputs.CMDB_IMPORT }}
-          ENV_TEMPLATE_VERSION: ${{ inputs.ENV_TEMPLATE_VERSION }}
-          GH_ADDITIONAL_PARAMS: ${{ inputs.GH_ADDITIONAL_PARAMS }}
+          # All workflow_dispatch inputs as JSON — add new inputs only under on.workflow_dispatch.inputs.
+          WORKFLOW_INPUTS: ${{ toJSON(github.event.inputs) }}
         run: |
           set -euo pipefail
-
-          if [[ ! "$ENV_NAMES" =~ ^[A-Za-z0-9_./,\;[:space:]-]+$ ]]; then
-            echo "::error::ENV_NAMES contains unsupported characters: $ENV_NAMES"
-            exit 1
-          fi
-
-          for name in DEPLOYMENT_TICKET_ID ENV_NAMES ENV_BUILDER GENERATE_EFFECTIVE_SET \
-                      GET_PASSPORT CMDB_IMPORT ENV_TEMPLATE_VERSION GH_ADDITIONAL_PARAMS; do
-            printf '%s=%s\n' "$name" "${!name}" >> "$GITHUB_ENV"
-          done
-
-          .github/scripts/process_additional_variables.sh
-
-          PACKAGE_NAME="generate_pipeline_$(date -u +%Y%m%d_%H%M%S)"
-          echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
+          .github/scripts/process_variables.sh
 
       - name: Create env file for container
         env:
@@ -132,7 +109,25 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
           ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
-        run: env > .env.container
+        run: |
+          set -euo pipefail
+
+          # Dump job env for docker --env-file, skip runner/Actions noise and shell internals.
+          # Multiline values are skipped: docker --env-file does not support them.
+          deny_re='^(RUNNER_|ACTIONS_|INPUT_|AGENT_|JAVA_|ANDROID_|ImageOS|ImageVersion|CHROMEWEBDRIVER|EDGEWEBDRIVER|GECKOWEBDRIVER|POWERSHELL_|DOTNET_|NPM_CONFIG_|PIP_|PYTHON_|RUBY_|SWIFT_|XDG_|CI$|GITHUB_ACTION|GITHUB_ACTOR|GITHUB_API|GITHUB_BASE|GITHUB_ENV|GITHUB_EVENT|GITHUB_GRAPHQL|GITHUB_HEAD|GITHUB_JOB|GITHUB_OUTPUT|GITHUB_PATH|GITHUB_REF|GITHUB_REPOSITORY|GITHUB_RETENTION|GITHUB_RUN|GITHUB_SERVER|GITHUB_SHA|GITHUB_STATE|GITHUB_STEP|GITHUB_TRIGGERING|GITHUB_WORKFLOW|GITHUB_WORKSPACE|PATH$|PWD$|OLDPWD$|SHLVL$|SHELL$|HOME$|USER$|LOGNAME$|HOSTNAME$|TERM$|TMPDIR$|_|DENY_RE$)'
+
+          : > .env.container
+          while IFS= read -r -d '' entry; do
+            name="${entry%%=*}"
+            value="${entry#*=}"
+
+            [[ "$name" =~ $deny_re ]] && continue
+            [[ "$value" == *$'\n'* ]] && continue
+
+            printf '%s=%s\n' "$name" "$value"
+          done < <(env -0) >> .env.container
+
+          echo "Wrote $(wc -l < .env.container) variables to .env.container"
 
       - name: Authenticate to GAR (Google Artifact Registry)
         if: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' }}
@@ -144,7 +139,15 @@ jobs:
 
       - name: EnvGene Execution
         run: |
-          docker run --rm -v ${{ github.workspace }}:${{ env.CI_PROJECT_DIR }} -w ${{ env.CI_PROJECT_DIR }} --env-file .env.container --user root -e HOME=/root \
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            --env-file .env.container \
+            -e CI_COMMIT_REF_NAME=${{ github.ref_name }} \
+            -e CI_PROJECT_DIR=/workspace \
+            -e INSTANCES_DIR=/workspace/environments \
+            --user root \
+            -e HOME=/root \
             ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               set -eo pipefail
