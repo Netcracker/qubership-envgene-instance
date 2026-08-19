@@ -27,22 +27,16 @@ on:
         type: string
         description: ""
       GENERATE_EFFECTIVE_SET:
-        required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+        required: true
+        type: string
         description: ""
       GET_PASSPORT:
-        required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+        required: true
+        type: string
         description: ""
       CMDB_IMPORT:
-        required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+        required: true
+        type: string
         description: ""
       GH_ADDITIONAL_PARAMS:
         required: false
