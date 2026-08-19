@@ -6,7 +6,6 @@ permissions:
   contents: read
 
 on:
-  # Manual trigger only
   workflow_dispatch:
     inputs:
       ENV_NAMES:
@@ -53,7 +52,6 @@ on:
         type: string
         description: ""
 
-# Serialize runs targeting the same environments: generation jobs commit to the repo.
 concurrency:
   group: "envgene-${{ github.ref }}-${{ inputs.ENV_NAMES }}"
   cancel-in-progress: false
@@ -96,7 +94,6 @@ jobs:
 
       - name: Process Input Parameters
         env:
-          # All workflow_dispatch inputs as JSON — add new inputs only under on.workflow_dispatch.inputs.
           WORKFLOW_INPUTS: ${{ toJSON(github.event.inputs) }}
         run: |
           set -euo pipefail
@@ -112,10 +109,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Dump job env for docker --env-file.
-          # Keep GitHub CI context vars that envgene GitRepoManager needs (GITHUB_ACTIONS, etc.).
-          # Drop runner/Actions internals and shell host noise.
-          # Multiline values are skipped: docker --env-file does not support them.
           github_keep_re='^(GITHUB_ACTIONS|GITHUB_TOKEN|GITHUB_REPOSITORY|GITHUB_REPOSITORY_OWNER|GITHUB_REF|GITHUB_REF_NAME|GITHUB_REF_TYPE|GITHUB_SHA|GITHUB_SERVER_URL|GITHUB_API_URL|GITHUB_ACTOR|GITHUB_USER_EMAIL|GITHUB_USER_NAME)$'
           deny_re='^(RUNNER_|ACTIONS_|INPUT_|AGENT_|JAVA_|ANDROID_|ImageOS|ImageVersion|CHROMEWEBDRIVER|EDGEWEBDRIVER|GECKOWEBDRIVER|POWERSHELL_|DOTNET_|NPM_CONFIG_|PIP_|PYTHON_|RUBY_|SWIFT_|XDG_|CI$|PATH$|PWD$|OLDPWD$|SHLVL$|SHELL$|HOME$|USER$|LOGNAME$|HOSTNAME$|TERM$|TMPDIR$|_|GITHUB_KEEP_RE$|DENY_RE$)'
 
@@ -147,16 +140,7 @@ jobs:
 
       - name: EnvGene Execution
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            --env-file .env.container \
-            -e CI_COMMIT_REF_NAME=${{ github.ref_name }} \
-            -e CI_PROJECT_DIR=/workspace \
-            -e INSTANCES_DIR=/workspace/environments \
-            --user root \
-            -e HOME=/root \
-            ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container -e CI_COMMIT_REF_NAME=${{ github.ref_name }} -e CI_PROJECT_DIR=/workspace -e INSTANCES_DIR=/workspace/environments --user root -e HOME=/root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
             bash -c "
               set -eo pipefail
               source /module/venv/bin/activate
