@@ -112,16 +112,24 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Dump job env for docker --env-file, skip runner/Actions noise and shell internals.
+          # Dump job env for docker --env-file.
+          # Keep GitHub CI context vars that envgene GitRepoManager needs (GITHUB_ACTIONS, etc.).
+          # Drop runner/Actions internals and shell host noise.
           # Multiline values are skipped: docker --env-file does not support them.
-          deny_re='^(RUNNER_|ACTIONS_|INPUT_|AGENT_|JAVA_|ANDROID_|ImageOS|ImageVersion|CHROMEWEBDRIVER|EDGEWEBDRIVER|GECKOWEBDRIVER|POWERSHELL_|DOTNET_|NPM_CONFIG_|PIP_|PYTHON_|RUBY_|SWIFT_|XDG_|CI$|GITHUB_ACTION|GITHUB_ACTOR|GITHUB_API|GITHUB_BASE|GITHUB_ENV|GITHUB_EVENT|GITHUB_GRAPHQL|GITHUB_HEAD|GITHUB_JOB|GITHUB_OUTPUT|GITHUB_PATH|GITHUB_REF|GITHUB_REPOSITORY|GITHUB_RETENTION|GITHUB_RUN|GITHUB_SERVER|GITHUB_SHA|GITHUB_STATE|GITHUB_STEP|GITHUB_TRIGGERING|GITHUB_WORKFLOW|GITHUB_WORKSPACE|PATH$|PWD$|OLDPWD$|SHLVL$|SHELL$|HOME$|USER$|LOGNAME$|HOSTNAME$|TERM$|TMPDIR$|_|DENY_RE$)'
+          github_keep_re='^(GITHUB_ACTIONS|GITHUB_TOKEN|GITHUB_REPOSITORY|GITHUB_REPOSITORY_OWNER|GITHUB_REF|GITHUB_REF_NAME|GITHUB_REF_TYPE|GITHUB_SHA|GITHUB_SERVER_URL|GITHUB_API_URL|GITHUB_ACTOR|GITHUB_USER_EMAIL|GITHUB_USER_NAME)$'
+          deny_re='^(RUNNER_|ACTIONS_|INPUT_|AGENT_|JAVA_|ANDROID_|ImageOS|ImageVersion|CHROMEWEBDRIVER|EDGEWEBDRIVER|GECKOWEBDRIVER|POWERSHELL_|DOTNET_|NPM_CONFIG_|PIP_|PYTHON_|RUBY_|SWIFT_|XDG_|CI$|PATH$|PWD$|OLDPWD$|SHLVL$|SHELL$|HOME$|USER$|LOGNAME$|HOSTNAME$|TERM$|TMPDIR$|_|GITHUB_KEEP_RE$|DENY_RE$)'
 
           : > .env.container
           while IFS= read -r -d '' entry; do
             name="${entry%%=*}"
             value="${entry#*=}"
 
-            [[ "$name" =~ $deny_re ]] && continue
+            if [[ "$name" == GITHUB_* ]]; then
+              [[ "$name" =~ $github_keep_re ]] || continue
+            elif [[ "$name" =~ $deny_re ]]; then
+              continue
+            fi
+
             [[ "$value" == *$'\n'* ]] && continue
 
             printf '%s=%s\n' "$name" "$value"
