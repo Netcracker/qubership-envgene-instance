@@ -4,6 +4,7 @@ run-name: "EnvGene Execution - ${{ inputs.ENV_NAMES }}"
 
 permissions:
   contents: read
+  packages: read
 
 on:
   workflow_dispatch:
@@ -67,6 +68,13 @@ env:
   DOCKER_IMAGE_TAG_ENVGENE: "feature-modern-toolset"
   DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "feature-modern-toolset"
 
+  # GitLab-compatible paths for scripts inside the EnvGene image
+  CI_PROJECT_DIR: ${{ github.workspace }}
+  INSTANCES_DIR: ${{ github.workspace }}/environments
+  CI_COMMIT_REF_NAME: ${{ github.ref_name }}
+  HOME: /root
+  COMMIT_ENV: "true"
+
 defaults:
   run:
     shell: bash
@@ -76,6 +84,17 @@ jobs:
     name: "EnvGene Execution"
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
+    container:
+      image: ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }}
+      options: --user root
+      credentials:
+        username: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && '_json_key' || github.actor }}
+        password: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && secrets.GCP_SA_KEY || github.token }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
+      ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
     steps:
       - name: Repository Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -95,81 +114,8 @@ jobs:
           set -euo pipefail
           .github/scripts/process_variables.sh
 
-      - name: Create env file for container
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-          COMMIT_ENV: "true"
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
-          ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-
-          github_keep_re='^(GITHUB_ACTIONS|GITHUB_TOKEN|GITHUB_REPOSITORY|GITHUB_REPOSITORY_OWNER|GITHUB_REF|GITHUB_REF_NAME|GITHUB_REF_TYPE|GITHUB_SHA|GITHUB_SERVER_URL|GITHUB_API_URL|GITHUB_ACTOR|GITHUB_USER_EMAIL|GITHUB_USER_NAME)$'
-          deny_re='^(RUNNER_|ACTIONS_|INPUT_|AGENT_|JAVA_|ANDROID_|ImageOS|ImageVersion|CHROMEWEBDRIVER|EDGEWEBDRIVER|GECKOWEBDRIVER|POWERSHELL_|DOTNET_|NPM_CONFIG_|PIP_|PYTHON_|RUBY_|SWIFT_|XDG_|CI$|PATH$|PWD$|OLDPWD$|SHLVL$|SHELL$|HOME$|USER$|LOGNAME$|HOSTNAME$|TERM$|TMPDIR$|_|GITHUB_KEEP_RE$|DENY_RE$)'
-
-          : > .env.container
-          while IFS= read -r -d '' entry; do
-            name="${entry%%=*}"
-            value="${entry#*=}"
-
-            if [[ "$name" == GITHUB_* ]]; then
-              [[ "$name" =~ $github_keep_re ]] || continue
-            elif [[ "$name" =~ $deny_re ]]; then
-              continue
-            fi
-
-            [[ "$value" == *$'\n'* ]] && continue
-
-            printf '%s=%s\n' "$name" "$value"
-          done < <(env -0) >> .env.container
-
-          echo "Wrote $(wc -l < .env.container) variables to .env.container"
-
-      - name: Authenticate to GAR (Google Artifact Registry)
-        if: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' }}
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          registry: ${{ vars.DOCKER_REGISTRY }}
-          username: _json_key
-          password: ${{ secrets.GCP_SA_KEY }}    
-
       - name: EnvGene Execution
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace --env-file .env.container -e CI_COMMIT_REF_NAME=${{ github.ref_name }} -e CI_PROJECT_DIR=/workspace -e INSTANCES_DIR=/workspace/environments --user root -e HOME=/root ${{ env.DOCKER_IMAGE_NAME_ENVGENE }}:${{ env.DOCKER_IMAGE_TAG_ENVGENE }} \
-            bash -c "
-              set -eo pipefail
-              source /module/venv/bin/activate
-              echo 'Executing ENVGENE...'
-              /module/scripts/utils/handle_certs.sh
-              git config --global --add safe.directory \"\${CI_PROJECT_DIR}\"
-              # actions/checkout already adds origin; sparse_checkout.py expects a clean repo (GitLab-style).
-              git -C \"\${CI_PROJECT_DIR}\" remote remove origin 2>/dev/null || true
-              python3 /module/scripts/utils/sparse_checkout.py
-              if [[ -f \"\${HOME}/.bashrc\" ]]; then
-                source \"\${HOME}/.bashrc\"
-              fi
-              python3 /module/scripts/pipeline/orchestrator.py
-              set -a && . envgene-vars.env && set +a
-
-              if [ \"\$PIPELINE_TYPE\" = \"GITLAB_DEPLOY\" ]; then
-                if [ \"\$OPERATION_TYPE\" != \"CLEAN\" ]; then
-                  python3 /python/argocd-dpg/src/argo/main.py generate structure \
-                    -p params.environment_id=\"\$FULL_ENV_NAME\" \
-                    -p params.deployment_plan=\"\$CI_PROJECT_DIR/environments/\$CLUSTER_NAME/\$ENVIRONMENT_NAME/Inventory/deploy-plan.yml\"
-                  [[ -v ENVGENE_AGE_PUBLIC_KEY ]] && sops --encrypt -i --age \$ENVGENE_AGE_PUBLIC_KEY ARGO_DPG_CONTEXT.env \
-                    || echo \"Skipping argo-dpg context encryption because ENVGENE_AGE_PUBLIC_KEY is not defined\"
-                fi
-                [[ \"\$OPERATION_TYPE\" = \"CLEAN\" ]] && export ESPUSHER_OVERWRITE=\"true\" || export ESPUSHER_OVERWRITE=\"false\"
-                python3 /python/es-pusher/src/espusher/main.py push \
-                  -p params.environment_id=\"\$FULL_ENV_NAME\" \
-                  -p params.commit_message=\"DEVOPS-001 Push effective set for \\\"\$FULL_ENV_NAME\\\"\" \
-                  -p params.overwrite=\"\$ESPUSHER_OVERWRITE\"
-              fi
-              if [[ \"\$PIPELINE_TYPE\" != \"GITLAB_DEPLOY\" && \"\$CMDB_IMPORT\" = \"true\" ]]; then
-                /module/scripts/cmdb_import/cmdb_import.sh
-              fi
-            "
+        run: .github/scripts/envgene_execute.sh
 
       - name: Upload generated environment package
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
