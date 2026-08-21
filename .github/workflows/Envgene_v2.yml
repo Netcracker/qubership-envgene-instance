@@ -13,12 +13,67 @@ on:
         required: true
         type: string
         description: ""
+      CLUSTER_NAME:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      ENVIRONMENT_NAME:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      PIPELINE_TYPE:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      OPERATION_TYPE:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      BGD_OPERATION:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      BG_NS_TARGET:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      NAMESPACE_NAMES:
+        required: false
+        default: ""
+        type: string
+        description: ""
       DEPLOYMENT_TICKET_ID:
         required: false
         default: ""
         type: string
         description: ""
       ENV_TEMPLATE_VERSION:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      ENV_INVENTORY_CONTENT:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      CUSTOM_PARAMS:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      DEPLOYMENT_SESSION_ID:
+        required: false
+        default: ""
+        type: string
+        description: ""
+      APPLICATION_VERSIONS:
         required: false
         default: ""
         type: string
@@ -62,11 +117,8 @@ env:
 
   #DOCKER_IMAGE_NAMES
   DOCKER_IMAGE_NAME_ENVGENE: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-envgene"
-  DOCKER_IMAGE_NAME_EFFECTIVE_SET_GENERATOR: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-effective-set-generator"
-
   #DOCKER_IMAGE_TAGS
   DOCKER_IMAGE_TAG_ENVGENE: "feature-modern-toolset"
-  DOCKER_IMAGE_TAG_EFFECTIVE_SET_GENERATOR: "feature-modern-toolset"
 
   # GitLab-compatible paths for scripts inside the EnvGene image
   CI_PROJECT_DIR: ${{ github.workspace }}
