@@ -115,11 +115,6 @@ env:
   SECRET_POSTFIX: custom_secret
   DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
 
-  #DOCKER_IMAGE_NAMES
-  DOCKER_IMAGE_NAME_ENVGENE: "${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-envgene"
-  #DOCKER_IMAGE_TAGS
-  DOCKER_IMAGE_TAG_ENVGENE: "feature-modern-toolset"
-
   # GitLab-compatible paths for scripts inside the EnvGene image
   CI_PROJECT_DIR: ${{ github.workspace }}
   INSTANCES_DIR: ${{ github.workspace }}/environments
