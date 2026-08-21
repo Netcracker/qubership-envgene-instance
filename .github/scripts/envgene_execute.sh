@@ -1,13 +1,6 @@
 #!/bin/bash
-# Runs inside the EnvGene job container (GitHub Actions jobs.<id>.container).
-set -eo pipefail
-
-source /module/venv/bin/activate
-
-echo "Executing ENVGENE..."
 /module/scripts/utils/handle_certs.sh
 git config --global --add safe.directory "${CI_PROJECT_DIR}"
-# actions/checkout already adds origin; sparse_checkout.py expects a clean repo (GitLab-style).
 git -C "${CI_PROJECT_DIR}" remote remove origin 2>/dev/null || true
 python3 /module/scripts/utils/sparse_checkout.py
 if [[ -f "${HOME}/.bashrc" ]]; then
