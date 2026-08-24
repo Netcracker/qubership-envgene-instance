@@ -120,6 +120,9 @@ env:
   GITHUB_USER_NAME: envgene
 
   # GitLab-compatible paths for scripts inside the EnvGene image
+  CI_PROJECT_DIR: ${{ github.workspace }}
+  INSTANCES_DIR: ${{ github.workspace }}/environments
+  CI_COMMIT_REF_NAME: ${{ github.ref_name }}
 
 defaults:
   run:
