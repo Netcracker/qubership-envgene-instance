@@ -116,13 +116,13 @@ env:
   #CONFIGURATION
   SECRET_POSTFIX: custom_secret
   DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
+  GITHUB_USER_EMAIL: opensourcegroup@netcracker.com
+  GITHUB_USER_NAME: envgene
 
   # GitLab-compatible paths for scripts inside the EnvGene image
   CI_PROJECT_DIR: ${{ github.workspace }}
   INSTANCES_DIR: ${{ github.workspace }}/environments
   CI_COMMIT_REF_NAME: ${{ github.ref_name }}
-  HOME: /root
-  COMMIT_ENV: "true"
 
 defaults:
   run:
