@@ -114,8 +114,6 @@ concurrency:
 
 env:
   #CONFIGURATION
-  GITHUB_USER_EMAIL: opensourcegroup@netcracker.com
-  GITHUB_USER_NAME: envgene
   SECRET_POSTFIX: custom_secret
   DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
 
