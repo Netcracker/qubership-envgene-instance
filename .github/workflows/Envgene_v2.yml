@@ -80,27 +80,23 @@ on:
         description: ""
       ENV_BUILDER:
         required: false
-        default: "true"
-        type: choice
-        options: ["false", "true"]
+        default: true
+        type: boolean
         description: ""
       GENERATE_EFFECTIVE_SET:
         required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+        default: false
+        type: boolean
         description: ""
       GET_PASSPORT:
         required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+        default: false
+        type: boolean
         description: ""
       CMDB_IMPORT:
         required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+        default: false
+        type: boolean
         description: ""
       GH_ADDITIONAL_PARAMS:
         required: false
