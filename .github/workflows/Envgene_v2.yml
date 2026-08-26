@@ -135,7 +135,7 @@ jobs:
         password: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && secrets.GCP_SA_KEY || github.token }}
     env:
       #GIT CONFIG VALUES
-      GITHUB_USER_EMAIL: ${{ vars.GITHUB_USER_EMAIL || github.actor@users.noreply.github.com }}
+      GITHUB_USER_EMAIL: ${{ vars.GITHUB_USER_EMAIL || format('{0}@users.noreply.github.com', github.actor) }}
       GITHUB_USER_NAME: ${{ vars.GITHUB_USER_NAME || github.actor }}
 
       #SECRETS
