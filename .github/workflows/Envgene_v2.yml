@@ -114,7 +114,7 @@ defaults:
 
 env:
     #CONFIGURATION
-    SECRET_POSTFIX: ${{ vars.SECRET_POSTFIX || '' }}
+    SECRET_POSTFIX: ${{ vars.SECRET_POSTFIX || 'secret_postfix' }}
     DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
     
     # GitLab-compatible paths for scripts inside the EnvGene image
@@ -135,8 +135,8 @@ jobs:
         password: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && secrets.GCP_SA_KEY || github.token }}
     env:
       #GIT CONFIG VALUES
-      GITHUB_USER_EMAIL: ${{ github.actor }}@users.noreply.github.com
-      GITHUB_USER_NAME: ${{ github.actor }}
+      GITHUB_USER_EMAIL: ${{ vars.GITHUB_USER_EMAIL || github.actor@users.noreply.github.com }}
+      GITHUB_USER_NAME: ${{ vars.GITHUB_USER_NAME || github.actor }}
 
       #SECRETS
       GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
