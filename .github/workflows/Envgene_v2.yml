@@ -127,6 +127,8 @@ jobs:
   env-prepare:
     runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
     timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
+    outputs:
+      PACKAGE_NAME: ${{ steps.set-outputs.outputs.PACKAGE_NAME }}
     container:
       image: ${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-envgene:feature-modern-toolset
       options: --user root
@@ -164,6 +166,10 @@ jobs:
 
           git config --global --add safe.directory "${GITHUB_WORKSPACE}"
           git -C "${GITHUB_WORKSPACE}" remote remove origin 2>/dev/null || true
+
+      - name: Set job outputs
+        id: set-outputs
+        run: echo "PACKAGE_NAME=${PACKAGE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: EnvGene Execution
         run: |
@@ -210,3 +216,55 @@ jobs:
             tmp/
             ARGO_DPG_CONTEXT.env
           include-hidden-files: true
+
+  sync:
+    needs: env-prepare
+    if: inputs.PIPELINE_TYPE == 'GITLAB_DEPLOY' && inputs.OPERATION_TYPE != 'CLEAN'
+    runs-on: ${{ vars.GH_RUNNER_TAG_NAME || 'ubuntu-22.04' }}
+    timeout-minutes: ${{ fromJSON(vars.GH_RUNNER_SCRIPT_TIMEOUT || '10') }}
+    container:
+      image: ${{ vars.SYNCER_IMAGE }}
+      options: --user root
+      credentials:
+        username: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && '_json_key' || github.actor }}
+        password: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && secrets.GCP_SA_KEY || github.token }}
+    env:
+      CI_PROJECT_DIR: ${{ github.workspace }}
+      SOPS_AGE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
+      ENVGENE_AGE_PUBLIC_KEY: ${{ secrets.ENVGENE_AGE_PUBLIC_KEY }}
+      ENVGENE_AGE_PRIVATE_KEY: ${{ secrets.ENVGENE_AGE_PRIVATE_KEY }}
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+      OTEL_EXPORTER_OTLP_CERTIFICATE: ""
+    steps:
+      - name: Download environment package
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: ${{ needs.env-prepare.outputs.PACKAGE_NAME }}
+
+      - name: Sync
+        run: |
+          set -euo pipefail
+          cp -r "${CI_PROJECT_DIR}/configuration/certs" "${CI_PROJECT_DIR}/ca_bundle" || true
+          update-certificate
+          set -a
+          if [[ -n "${ENVGENE_AGE_PUBLIC_KEY:-}" ]]; then
+            source <(sops -d ARGO_DPG_CONTEXT.env)
+          else
+            source <(cat ARGO_DPG_CONTEXT.env)
+          fi
+          set +a
+          /usr/local/bin/uv run argo-app-life execute-by-args
+
+      - name: Upload sync artifacts
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: generate_pipeline-${{ github.run_id }}
+          path: |
+            debug_syncer_logs*.txt
+            syncer_logs*.txt
+            errors-trace
+            errors-trace.tar
+            deploy-report.json
+          if-no-files-found: ignore
+          retention-days: 1
