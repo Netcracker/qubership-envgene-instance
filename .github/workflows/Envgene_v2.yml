@@ -1,6 +1,6 @@
-name: "[IN DEV] EnvGene Execution v2"
+name: "EnvGene Execution"
 
-run-name: "EnvGene Execution - ${{ inputs.ENV_NAMES }}"
+run-name: "EnvGene Execution - ${{ github.event.inputs.ENV_NAMES }}"
 
 permissions:
   contents: read
