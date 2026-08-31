@@ -116,12 +116,12 @@ env:
     #CONFIGURATION
     SECRET_POSTFIX: ${{ vars.SECRET_POSTFIX || 'secret_postfix' }}
     DOCKER_CLOUD_REGISTRY_PROVIDER: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER || '' }}
-    
+
     # GitLab-compatible paths for scripts inside the EnvGene image
     CI_PROJECT_DIR: ${{ github.workspace }}
     INSTANCES_DIR: ${{ github.workspace }}/environments
     CI_COMMIT_REF_NAME: ${{ github.ref_name }}
-    
+
 
 jobs:
   env-prepare:
@@ -130,15 +130,15 @@ jobs:
     outputs:
       PACKAGE_NAME: ${{ steps.set-outputs.outputs.PACKAGE_NAME }}
     container:
-      image: ${{ vars.DOCKER_REGISTRY || 'ghcr.io/netcracker' }}/qubership-envgene:feature-modern-toolset
+      image: ${{ vars.DOCKER_REGISTRY || 'ghcr.io' }}/${{ vars.DOCKER_NAMESPACE || 'netcracker' }}/${{ vars.ENVGENE_IMAGE || 'qubership-envgene' }}:${{ vars.ENVGENE_VERSION || 'feature-modern-toolset' }}
       options: --user root
       credentials:
         username: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && '_json_key' || github.actor }}
         password: ${{ vars.DOCKER_CLOUD_REGISTRY_PROVIDER == 'GCP' && secrets.GCP_SA_KEY || github.token }}
     env:
       #GIT CONFIG VALUES
-      GITHUB_USER_EMAIL: ${{ vars.GITHUB_USER_EMAIL || format('{0}@users.noreply.github.com', github.actor) }}
-      GITHUB_USER_NAME: ${{ vars.GITHUB_USER_NAME || github.actor }}
+      GITHUB_USER_EMAIL: ${{ vars.GH_USER_EMAIL || format('{0}@users.noreply.github.com', github.actor) }}
+      GITHUB_USER_NAME: ${{ vars.GH_USER_NAME || github.actor }}
 
       #SECRETS
       GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
@@ -174,15 +174,15 @@ jobs:
       - name: EnvGene Execution
         run: |
           /module/scripts/utils/handle_certs.sh
+          python3 /module/scripts/pipeline/resolve_env_names.py
+          set -a && . ./envgene-resolved.env && set +a
           python3 /module/scripts/utils/sparse_checkout.py
+          source ~/.bashrc
           python3 /module/scripts/pipeline/orchestrator.py
           set -a && . envgene-vars.env && set +a
-
           if [[ "${PIPELINE_TYPE}" == "GITLAB_DEPLOY" ]]; then
-            if [[ "${OPERATION_TYPE}" != "CLEAN" ]]; then
-              python3 /python/argocd-dpg/src/argo/main.py generate structure \
-                -p params.environment_id="${FULL_ENV_NAME}" \
-                -p params.deployment_plan="${CI_PROJECT_DIR}/environments/${CLUSTER_NAME}/${ENVIRONMENT_NAME}/Inventory/deploy-plan.yml"
+            if [[ "${OPERATION_TYPE}" == "DEPLOY" || ( "${OPERATION_TYPE}" == "BGD" && "${BGD_OPERATION}" == "warmup" ) ]]; then
+              python3 /python/argocd-dpg/src/argo/main.py generate structure -p params.environment_id="${FULL_ENV_NAME}" -p params.deployment_plan="${CI_PROJECT_DIR}/environments/${CLUSTER_NAME}/${ENVIRONMENT_NAME}/Inventory/delta-deploy-plan.yml" --log-level "${ENVGENE_LOG_LEVEL}"
               if [[ -v ENVGENE_AGE_PUBLIC_KEY ]]; then
                 sops --encrypt -i --age "${ENVGENE_AGE_PUBLIC_KEY}" ARGO_DPG_CONTEXT.env
               else
@@ -194,10 +194,7 @@ jobs:
             else
               export ESPUSHER_OVERWRITE="false"
             fi
-            python3 /python/es-pusher/src/espusher/main.py push \
-              -p params.environment_id="${FULL_ENV_NAME}" \
-              -p params.commit_message="DEVOPS-001 Push effective set for \"${FULL_ENV_NAME}\"" \
-              -p params.overwrite="${ESPUSHER_OVERWRITE}"
+            python3 /python/es-pusher/src/espusher/main.py push -p params.environment_id="${FULL_ENV_NAME}" -p params.commit_message="DEVOPS-001 Push effective set for \"${FULL_ENV_NAME}\"" -p params.overwrite="${ESPUSHER_OVERWRITE}" --log-level "${ENVGENE_LOG_LEVEL}"
           fi
 
           if [[ "${PIPELINE_TYPE}" != "GITLAB_DEPLOY" && "${CMDB_IMPORT}" == "true" ]]; then
