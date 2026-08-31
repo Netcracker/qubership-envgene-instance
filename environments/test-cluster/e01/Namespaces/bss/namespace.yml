@@ -17,6 +17,7 @@ deployParameters:
   CORE_NAMESPACE: "e01-core"
   ENVGENE_CONFIG_REF_NAME: "main"
   ENVGENE_CONFIG_TAG: "No Ref tag"
+  key1: "value2" # paramset: paramsetB version: 2 source: instance
 e2eParameters: {}
 technicalConfigurationParameters:
   BSS_NAMESPACE: "e01-bss"
