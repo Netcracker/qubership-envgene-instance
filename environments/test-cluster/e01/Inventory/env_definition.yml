@@ -9,7 +9,7 @@ envTemplate:
   name: "dev"
   envSpecificParamsets:
     cloud: ["cloud-specific", "integrations", "paramsetA"]
-    main: ["internal-base-ns", "paramsetB"]
+    bss: ["paramsetB"]
   additionalTemplateVariables:
     key: "value"
   artifactIsZip: true

@@ -10,7 +10,7 @@ envTemplate:
   artifact: "qubership_envgene_templates:0.0.1"
   envSpecificParamsets:
     cloud: ["cloud-specific", "integrations", "paramsetA"]
-    main: ["internal-base-ns", "paramsetB"]
+    bss: ["paramsetB"]
   additionalTemplateVariables:
     key: "value"
   artifactIsZip: true
